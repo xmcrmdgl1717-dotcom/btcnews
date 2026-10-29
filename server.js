@@ -13,7 +13,7 @@ const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR);
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-// 初始化 JSON 数据库
+// 初始化 JSON 数据库文件
 const DB_FILES = {
     users: path.join(DB_DIR, 'users.json'),
     articles: path.join(DB_DIR, 'articles.json'),
@@ -26,10 +26,11 @@ Object.keys(DB_FILES).forEach(key => {
         let initialData = [];
         if (key === 'surveys') initialData = { questions: [], submissions: [] };
         if (key === 'tasks') initialData = [
-            { id: 1, title: 'DeFi 认知问卷', reward: 180, time: '2 分钟', type: 'survey' },
-            { id: 2, title: '注册并验证钱包', reward: 420, time: '5 分钟', type: 'wallet' },
-            { id: 3, title: '观看产品短片', reward: 60, time: '3 分钟', type: 'video' },
-            { id: 4, title: '邀请好友加入', reward: 250, time: '长期', type: 'invite' }
+            { id: 1, type: 'survey', title: 'DeFi 认知问卷', reward: 180, time: '2 分钟', desc: '8 道选择题' },
+            { id: 2, type: 'offer', title: '注册并验证钱包', reward: 420, time: '5 分钟', desc: '完成钱包注册与邮箱验证' },
+            { id: 3, type: 'video', title: '观看产品短片', reward: 60, time: '3 分钟', desc: '观看短片并回答 1 个问题' },
+            { id: 4, type: 'invite', title: '邀请好友加入', reward: 250, time: '长期', desc: '好友完成首份问卷，双方得奖励' },
+            { id: 5, type: 'offer', title: '下载并体验 App', reward: 350, time: '10 分钟', desc: '安装指定应用并注册' },
         ];
         fs.writeFileSync(DB_FILES[key], JSON.stringify(initialData, null, 2));
     }
@@ -49,9 +50,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ================= 前台 API =================
+// ================= 前台及用户中心 API =================
 
-// 跑马灯数据 (合并真实+假数据)
+// 跑马灯数据
 app.get('/api/marquee', (req, res) => {
     const users = readDB('users').slice(-10).reverse();
     let list = users.map(u => ({ name: u.email.split('@')[0], amount: (Math.random() * 500).toFixed(0) }));
@@ -62,18 +63,18 @@ app.get('/api/marquee', (req, res) => {
     res.json(list);
 });
 
-// 用户注册
+// 注册
 app.post('/api/register', (req, res) => {
     const { email, password } = req.body;
     const users = readDB('users');
     if (users.find(u => u.email === email)) return res.status(400).json({ error: '邮箱已注册' });
-    const newUser = { id: uuidv4(), email, password, balance: 0, time: new Date().toISOString() };
+    const newUser = { id: uuidv4(), email, password, balance: 0, totalEarned: 0, time: new Date().toISOString() };
     users.push(newUser);
     writeDB('users', users);
     res.json({ success: true, user: newUser });
 });
 
-// 用户登录
+// 登录
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
     const users = readDB('users');
@@ -85,26 +86,51 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+// 获取当前用户详细信息
+app.get('/api/user/profile', (req, res) => {
+    const { email } = req.query;
+    const users = readDB('users');
+    const user = users.find(u => u.email === email);
+    if (user) {
+        res.json({ 
+            success: true, 
+            user: { 
+                email: user.email, 
+                balance: user.balance || 0, 
+                totalEarned: user.totalEarned || 0,
+                inviteCode: user.inviteCode || 'WAD' + Math.random().toString(36).substr(2, 6).toUpperCase()
+            } 
+        });
+    } else {
+        res.status(404).json({ error: '用户不存在' });
+    }
+});
+
 // 获取任务列表
-app.get('/api/tasks', (req, res) => {
+app.get('/api/user/tasks', (req, res) => {
     res.json(readDB('tasks'));
 });
 
-// 完成任务
-app.post('/api/tasks/complete', (req, res) => {
-    const { taskId, email } = req.body;
+// 完成任务增加余额
+app.post('/api/user/tasks/complete', (req, res) => {
+    const { email, taskId, reward } = req.body;
     const users = readDB('users');
-    const tasks = readDB('tasks');
     const user = users.find(u => u.email === email);
-    const task = tasks.find(t => t.id === taskId);
-    
-    if (user && task) {
-        user.balance = (user.balance || 0) + task.reward;
+    if (user) {
+        user.balance = (user.balance || 0) + reward;
+        user.totalEarned = (user.totalEarned || 0) + reward;
         writeDB('users', users);
-        res.json({ success: true, balance: user.balance });
+        res.json({ success: true, balance: user.balance, totalEarned: user.totalEarned });
     } else {
-        res.status(404).json({ error: '用户或任务不存在' });
+        res.status(404).json({ error: '用户不存在' });
     }
+});
+
+// 提现申请
+app.post('/api/user/withdraw', (req, res) => {
+    const { email, amount, method } = req.body;
+    // 实际生产环境中这里需要扣减余额并生成订单
+    res.json({ success: true, message: `提现申请已提交（${method}），金额 ${amount} 金币` });
 });
 
 // 获取最新文章
