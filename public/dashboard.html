@@ -3,246 +3,155 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>用户中心 - W-Airdrop</title>
+<title>赚钱 - W-Airdrop</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    .task-tab { cursor: pointer; border-bottom: 2px solid transparent; padding-bottom: 0.5rem; color: #6b7280; }
-    .task-tab.active { border-bottom-color: #2563eb; color: #2563eb; font-weight: bold; }
+    .nav-link { color: #4b5563; font-weight: 500; transition: color 0.2s; cursor: pointer; }
+    .nav-link:hover, .nav-link.active { color: #2563eb; }
+    .offer-card { transition: transform 0.2s, box-shadow 0.2s; }
+    .offer-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border-color: #e5e7eb; }
 </style>
 </head>
-<body class="bg-[#f3f4f9] font-sans text-gray-800">
+<body class="bg-white font-sans text-gray-800">
 
 <!-- 顶部导航 -->
-<header class="bg-white shadow-sm sticky top-0 z-40">
+<header class="border-b border-gray-100 sticky top-0 bg-white z-40">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <!-- Logo -->
         <a href="/" class="flex items-center gap-2">
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
             <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
         </a>
+        
+        <!-- 导航 -->
+        <nav class="hidden md:flex items-center gap-8 text-sm">
+            <a href="#" class="nav-link active">赚钱</a>
+            <a href="#" class="nav-link">优惠</a>
+            <a href="#" class="nav-link">问卷</a>
+            <a href="#" class="nav-link">提现</a>
+            <div class="relative group cursor-pointer flex items-center gap-1 nav-link">
+                奖励
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+        </nav>
+
+        <!-- 右侧用户区 -->
         <div class="flex items-center gap-4">
-            <a href="/" class="text-sm font-medium text-gray-500 hover:text-blue-600">返回首页</a>
-            <span id="navEmail" class="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full"></span>
-            <button onclick="logout()" class="text-sm font-medium text-red-500 hover:text-red-700">退出</button>
+            <!-- 金币余额 -->
+            <div class="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-full">
+                <span class="text-yellow-500 font-bold text-lg">🪙</span>
+                <span class="font-bold text-gray-800" id="navBalance">0</span>
+            </div>
+            <!-- 用户邮箱 -->
+            <span class="text-sm font-medium text-gray-600 hidden sm:block" id="navEmail">---</span>
+            <!-- 退出 -->
+            <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500 transition-colors">退出</button>
+            <!-- 消息图标 -->
+            <button class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            </button>
         </div>
     </div>
 </header>
 
-<main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
-    
-    <!-- 账户总览 -->
-    <div class="bg-gradient-to-r from-[#0A3466] to-[#1e4b8f] rounded-2xl p-6 md:p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-            <h2 class="text-sm font-medium text-blue-200 mb-1">我的总资产 (金币)</h2>
-            <div class="flex items-baseline gap-2">
-                <span class="text-5xl font-bold" id="userBalance">0</span>
-                <span class="text-blue-200">Coins</span>
-            </div>
-            <div class="flex gap-6 mt-4 text-sm text-blue-100">
-                <p>累计赚取: <span class="font-bold text-white" id="totalEarned">0</span></p>
-                <p>我的邀请码: <span class="font-bold text-white" id="inviteCode">---</span></p>
-            </div>
-        </div>
-        <button onclick="openWithdrawModal()" class="bg-white text-[#0A3466] px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition-colors shadow-lg whitespace-nowrap">
-            申请提现
-        </button>
+<main class="max-w-6xl mx-auto px-4 py-10">
+    <!-- 页面标题 -->
+    <div class="mb-10">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2">赚钱</h1>
+        <p class="text-gray-500 text-sm">完成优惠、问卷和游戏，立即获得金币。</p>
     </div>
 
-    <!-- 任务中心 -->
-    <div class="bg-white rounded-2xl shadow-sm p-6">
-        <h2 class="text-2xl font-bold mb-6 text-[#0A3466]">任务中心</h2>
-        
-        <div class="flex gap-6 border-b mb-6 overflow-x-auto whitespace-nowrap">
-            <div class="task-tab active" onclick="filterTasks('all', this)">全部任务</div>
-            <div class="task-tab" onclick="filterTasks('survey', this)">问卷</div>
-            <div class="task-tab" onclick="filterTasks('offer', this)">优惠</div>
-            <div class="task-tab" onclick="filterTasks('video', this)">视频</div>
-            <div class="task-tab" onclick="filterTasks('invite', this)">邀请</div>
-        </div>
-
-        <div id="taskList" class="space-y-3">
-            <!-- 动态渲染 -->
+    <!-- 1. 优惠墙 -->
+    <div class="mb-12">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">优惠墙</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="offerWall">
+            <!-- JS 动态渲染卡片 -->
         </div>
     </div>
 
-    <!-- 公告区或帮助中心 -->
-    <div class="bg-blue-50 rounded-2xl p-6 border border-blue-100">
-        <h3 class="font-bold text-blue-800 mb-2">温馨提示</h3>
-        <p class="text-sm text-blue-600 leading-relaxed">请确保您已完成实名认证并绑定了有效的接收地址。完成的任务奖励通常在 10 分钟内到账。如有疑问请及时联系客服。</p>
+    <!-- 2. 看视频 -->
+    <div class="mb-12">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">看视频</h2>
+        <div class="bg-gray-50 rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border border-gray-100">
+            <div class="flex items-center gap-4 mb-4 md:mb-0">
+                <div class="w-14 h-14 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-gray-400 font-bold text-xl shadow-sm">TV</div>
+                <div>
+                    <h3 class="font-bold text-lg text-gray-900">Cheddar.tv</h3>
+                    <p class="text-sm text-gray-500">完成优惠、问卷和游戏，立即获得金币。</p>
+                </div>
+            </div>
+            <button onclick="startTask()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 w-full md:w-auto">登录后开始</button>
+        </div>
+    </div>
+
+    <!-- 3. 游戏时长 -->
+    <div class="mb-12">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">游戏时长</h2>
+        <div class="bg-white rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border border-gray-200">
+            <div class="flex items-center gap-4 mb-4 md:mb-0">
+                <div class="w-14 h-14 bg-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm">P</div>
+                <div>
+                    <h3 class="font-bold text-lg text-gray-900">Playtime Rewards</h3>
+                    <p class="text-sm text-gray-500">认真完成问卷，提交后即具备奖励资格。</p>
+                </div>
+            </div>
+            <button onclick="startTask()" class="bg-gray-100 text-gray-700 px-8 py-2.5 rounded-lg font-medium hover:bg-gray-200 w-full md:w-auto">优惠</button>
+        </div>
     </div>
 
 </main>
 
-<!-- 提现弹窗 -->
-<div id="withdrawModal" class="hidden fixed inset-0 bg-black/80 z-50 items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-2xl p-6 relative">
-        <button onclick="closeWithdrawModal()" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-gray-800">&times;</button>
-        <h3 class="text-xl font-bold mb-4 text-center">申请提现</h3>
-        
-        <div class="space-y-4 mb-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">选择提现方式</label>
-                <select id="withdrawMethod" class="w-full border p-3 rounded-xl outline-none focus:border-blue-500">
-                    <option value="PayPal">PayPal</option>
-                    <option value="Bitcoin">比特币 (BTC)</option>
-                    <option value="Litecoin">莱特币 (LTC)</option>
-                    <option value="Visa">虚拟 Visa 卡</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">提现金币数量 (最低 500)</label>
-                <input type="number" id="withdrawAmount" placeholder="请输入数量" class="w-full border p-3 rounded-xl outline-none focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">收款账号/钱包地址</label>
-                <input type="text" id="withdrawAccount" placeholder="请输入接收账号" class="w-full border p-3 rounded-xl outline-none focus:border-blue-500">
-            </div>
-        </div>
-        
-        <button onclick="submitWithdraw()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">确认提现</button>
-    </div>
-</div>
-
 <script>
-    // 1. 身份验证（未登录则踢回首页）
+    // 获取用户信息
     const currentUser = JSON.parse(localStorage.getItem('wad_user'));
     if (!currentUser) {
         window.location.href = '/';
     }
+    
+    document.getElementById('navEmail').innerText = currentUser.email;
+    document.getElementById('navBalance').innerText = currentUser.balance || 0;
 
-    let allTasks = [];
-    let currentFilter = 'all';
+    // 优惠墙假数据（根据截图还原）
+    const offers = [
+        { name: 'Torox', reward: '+85%', color: 'text-purple-600 bg-purple-50' },
+        { name: 'BitLabs', reward: '+20%', color: 'text-blue-600 bg-blue-50' },
+        { name: 'AdGate Media', reward: '+15%', color: 'text-cyan-600 bg-cyan-50' },
+        { name: 'OfferToro', reward: '+25%', color: 'text-orange-600 bg-orange-50' },
+        { name: 'Prime Surveys', reward: '', color: 'text-gray-600 bg-gray-100' },
+        { name: 'CPX Research', reward: '', color: 'text-gray-600 bg-gray-100' },
+        { name: 'Adscend Media', reward: '+10%', color: 'text-green-600 bg-green-50' },
+        { name: 'MyChips', reward: '', color: 'text-gray-600 bg-gray-100' },
+        { name: 'TimeWall', reward: '', color: 'text-gray-600 bg-gray-100' },
+        { name: 'Lootably', reward: '', color: 'text-gray-600 bg-gray-100' },
+        { name: 'Polltastic', reward: '', color: 'text-gray-600 bg-gray-100' },
+        { name: 'TheoremReach', reward: '', color: 'text-gray-600 bg-gray-100' }
+    ];
 
-    // 2. 初始化
-    async function init() {
-        document.getElementById('navEmail').innerText = currentUser.email;
-        await loadProfile();
-        await loadTasks();
-    }
-
-    // 3. 加载个人信息
-    async function loadProfile() {
-        try {
-            const res = await fetch(`/api/user/profile?email=${currentUser.email}`);
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('userBalance').innerText = data.user.balance;
-                document.getElementById('totalEarned').innerText = data.user.totalEarned;
-                document.getElementById('inviteCode').innerText = data.user.inviteCode;
-                
-                // 同步更新本地存储的余额，防止首页不同步
-                currentUser.balance = data.user.balance;
-                localStorage.setItem('wad_user', JSON.stringify(currentUser));
-            }
-        } catch(e) { console.error('获取信息失败', e); }
-    }
-
-    // 4. 加载任务列表
-    async function loadTasks() {
-        const res = await fetch('/api/user/tasks');
-        allTasks = await res.json();
-        renderTasks();
-    }
-
-    // 5. 渲染任务UI
-    function renderTasks() {
-        const container = document.getElementById('taskList');
-        const filtered = currentFilter === 'all' ? allTasks : allTasks.filter(t => t.type === currentFilter);
-        
-        if (filtered.length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-6">暂无该类型的任务</p>`;
-            return;
-        }
-
-        container.innerHTML = filtered.map(t => `
-            <div class="flex items-center justify-between p-4 border border-gray-100 bg-white rounded-xl hover:shadow-md transition-shadow">
+    // 渲染优惠墙
+    const wall = document.getElementById('offerWall');
+    wall.innerHTML = offers.map(o => `
+        <div class="offer-card bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between cursor-pointer" onclick="startTask()">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 border border-gray-100">${o.name[0]}</div>
                 <div>
-                    <h4 class="font-bold text-[15px] text-[#0A3466]">${t.title}</h4>
-                    <p class="text-xs text-gray-500 mt-1">${t.desc} · 耗时 ${t.time}</p>
+                    <h4 class="font-bold text-sm text-gray-900">${o.name}</h4>
+                    <p class="text-xs text-gray-500 mt-0.5">可做任务</p>
                 </div>
-                <button onclick="completeTask(${t.id}, ${t.reward})" class="bg-blue-50 text-blue-600 px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-600 hover:text-white transition-colors whitespace-nowrap">
-                    +${t.reward} 金币
-                </button>
             </div>
-        `).join('');
+            ${o.reward ? `<span class="${o.color} px-2 py-1 rounded text-xs font-bold">${o.reward}</span>` : `<span class="text-gray-400 text-xs">→</span>`}
+        </div>
+    `).join('');
+
+    // 模拟点击任务
+    function startTask() {
+        alert('任务功能开发中，即将跳转到任务页面！');
     }
 
-    // 6. 切换任务Tab
-    function filterTasks(type, el) {
-        currentFilter = type;
-        document.querySelectorAll('.task-tab').forEach(tab => tab.classList.remove('active'));
-        el.classList.add('active');
-        renderTasks();
-    }
-
-    // 7. 点击完成任务 (加钱)
-    async function completeTask(taskId, reward) {
-        const res = await fetch('/api/user/tasks/complete', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ email: currentUser.email, taskId, reward })
-        });
-        const data = await res.json();
-        
-        if (data.success) {
-            // 更新页面余额
-            document.getElementById('userBalance').innerText = data.balance;
-            document.getElementById('totalEarned').innerText = data.totalEarned;
-            
-            // 更新本地存储
-            currentUser.balance = data.balance;
-            localStorage.setItem('wad_user', JSON.stringify(currentUser));
-            
-            alert(`任务完成！+${reward} 金币已到账。`);
-        } else {
-            alert(data.error);
-        }
-    }
-
-    // 8. 提现逻辑
-    function openWithdrawModal() {
-        if (currentUser.balance < 500) {
-            alert('当前余额不足 500 金币，请继续完成任务！');
-            return;
-        }
-        document.getElementById('withdrawModal').classList.remove('hidden');
-        document.getElementById('withdrawModal').classList.add('flex');
-    }
-
-    function closeWithdrawModal() {
-        document.getElementById('withdrawModal').classList.add('hidden');
-        document.getElementById('withdrawModal').classList.remove('flex');
-    }
-
-    async function submitWithdraw() {
-        const method = document.getElementById('withdrawMethod').value;
-        const amount = Number(document.getElementById('withdrawAmount').value);
-        const account = document.getElementById('withdrawAccount').value;
-
-        if (!amount || amount < 500) return alert('提现金额必须大于等于 500');
-        if (amount > currentUser.balance) return alert('余额不足');
-        if (!account) return alert('请输入收款账号');
-
-        const res = await fetch('/api/user/withdraw', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ email: currentUser.email, amount, method, account })
-        });
-        const data = await res.json();
-        
-        if (data.success) {
-            alert(data.message);
-            closeWithdrawModal();
-            // 实际场景中应该扣除余额
-        }
-    }
-
-    // 9. 退出登录
+    // 退出登录
     function logout() {
         localStorage.removeItem('wad_user');
         window.location.href = '/';
     }
-
-    init();
 </script>
 </body>
 </html>
