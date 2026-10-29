@@ -23,6 +23,7 @@
             <div class="menu-item px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-50" onclick="switchTab('articles', this)">📝 文章管理</div>
             <div class="menu-item px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-50" onclick="switchTab('surveys', this)">📋 问卷管理</div>
             <div class="menu-item px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-50" onclick="switchTab('offers', this)">🎁 优惠管理</div>
+            <div class="menu-item px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-50" onclick="switchTab('languages', this)">🌐 多语言管理</div>
         </nav>
         <div class="p-4 border-t"><button onclick="logout()" class="w-full bg-red-50 text-red-600 py-2 rounded-lg font-medium hover:bg-red-100">退出登录</button></div>
     </aside>
@@ -45,7 +46,12 @@
                         <h3 class="font-bold mb-4" id="articleFormTitle">发布新文章</h3>
                         <div class="space-y-3 mb-4">
                             <input type="hidden" id="editArticleId">
-                            <select id="artLang" class="w-full border p-2 rounded"><option value="zh">🇨🇳 中文</option><option value="en">🇺🇸 English</option></select>
+                            <select id="artLang" class="w-full border p-2 rounded">
+                                <option value="zh">🇨🇳 中文</option>
+                                <option value="en">🇺🇸 English</option>
+                                <option value="vi">🇻🇳 Tiếng Việt</option>
+                                <option value="ko">🇰🇷 한국어</option>
+                            </select>
                             <input type="text" id="artTitle" placeholder="文章标题" class="w-full border p-2 rounded">
                             <textarea id="artSummary" placeholder="文章摘要 (前两行展示)" class="w-full border p-2 rounded" rows="2"></textarea>
                             <div class="flex items-center gap-2"><input type="file" id="artCoverFile" accept="image/*" class="text-sm w-full"><input type="text" id="artCoverUrl" placeholder="封面图URL" class="flex-1 border p-2 rounded text-sm bg-gray-50" readonly></div>
@@ -67,6 +73,7 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm mb-6"><h3 class="font-bold mb-2">问卷题目配置 (JSON格式)</h3><textarea id="surveyConfig" class="w-full border p-3 rounded font-mono text-sm" rows="10"></textarea><button onclick="saveSurvey()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-blue-700">保存题目</button></div>
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="p-4 border-b">提交时间</th><th class="p-4 border-b">答案数据</th></tr></thead><tbody id="surveyList"></tbody></table></div>
             </div>
+            
             <div id="tab-offers" class="content-section">
                 <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
                     <h3 class="font-bold mb-4">添加新优惠</h3>
@@ -86,6 +93,26 @@
                     <table class="w-full text-left text-sm">
                         <thead class="bg-gray-50"><tr><th class="p-4 border-b">颜色</th><th class="p-4 border-b">分类</th><th class="p-4 border-b">标题</th><th class="p-4 border-b">奖励</th><th class="p-4 border-b">操作</th></tr></thead>
                         <tbody id="offerList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 多语言管理 -->
+            <div id="tab-languages" class="content-section">
+                <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+                    <h3 class="font-bold mb-4">添加/修改语言</h3>
+                    <div class="grid grid-cols-4 gap-3 mb-3">
+                        <input type="text" id="lCode" placeholder="代码 (如 fr)" class="border p-2 rounded">
+                        <input type="text" id="lName" placeholder="语言名称 (如 Français)" class="border p-2 rounded">
+                        <input type="text" id="lFlag" placeholder="旗帜 (如 🇫🇷)" class="border p-2 rounded">
+                        <select id="lActive" class="border p-2 rounded"><option value="true">启用</option><option value="false">禁用</option></select>
+                    </div>
+                    <button onclick="saveLanguage()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">保存语言</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50"><tr><th class="p-4 border-b">代码</th><th class="p-4 border-b">名称</th><th class="p-4 border-b">旗帜</th><th class="p-4 border-b">状态</th><th class="p-4 border-b">操作</th></tr></thead>
+                        <tbody id="languageList"></tbody>
                     </table>
                 </div>
             </div>
@@ -169,6 +196,25 @@
     async function deleteOffer(id) { if(!confirm('确认删除？')) return; await fetch('/api/admin/offers/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
     async function saveSurvey() { try { const questions = JSON.parse(document.getElementById('surveyConfig').value); await fetch('/api/admin/survey/questions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ questions }) }); alert('问卷题目已更新'); } catch (e) { alert('JSON 格式错误'); } }
     
+    // 语言管理方法
+    async function saveLanguage() {
+        const payload = {
+            code: document.getElementById('lCode').value,
+            name: document.getElementById('lName').value,
+            flag: document.getElementById('lFlag').value,
+            active: document.getElementById('lActive').value === 'true'
+        };
+        if(!payload.code || !payload.name) return alert('请填写代码和名称');
+        await fetch('/api/admin/languages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
+        fetchData();
+        document.getElementById('lCode').value = ''; document.getElementById('lName').value = ''; document.getElementById('lFlag').value = '';
+    }
+    async function deleteLanguage(code) {
+        if(!confirm('确认删除？')) return;
+        await fetch('/api/admin/languages/' + code, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } });
+        fetchData();
+    }
+
     async function fetchData() {
         const res = await fetch('/api/admin/data', { headers: { 'x-admin-pwd': adminPwd } });
         if(res.status === 403) return alert('密码错误');
@@ -202,6 +248,16 @@
                 <td class="p-4 font-bold">${o.title}</td>
                 <td class="p-4 text-yellow-600">🪙 ${o.reward}</td>
                 <td class="p-4"><button onclick="deleteOffer('${o.id}')" class="text-red-500 hover:underline">删除</button></td>
+            </tr>
+        `).join('');
+
+        document.getElementById('languageList').innerHTML = data.languages.map(l => `
+            <tr class="border-b">
+                <td class="p-4 font-bold">${l.code}</td>
+                <td class="p-4">${l.name}</td>
+                <td class="p-4 text-xl">${l.flag}</td>
+                <td class="p-4"><span class="${l.active ? 'text-green-600' : 'text-gray-400'}">${l.active ? '启用中' : '已禁用'}</span></td>
+                <td class="p-4"><button onclick="deleteLanguage('${l.code}')" class="text-red-500 hover:underline">删除</button></td>
             </tr>
         `).join('');
     }
