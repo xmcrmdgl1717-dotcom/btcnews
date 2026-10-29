@@ -50,6 +50,7 @@
                     <a href="#" onclick="changeLang('en')" class="block px-4 py-2 text-sm hover:bg-gray-100">🇺🇸 English</a>
                 </div>
             </div>
+            <!-- 这里会根据登录状态动态渲染 -->
             <div id="authBtnArea"></div>
         </div>
     </div>
@@ -147,6 +148,7 @@
 
 <!-- ================= 弹窗区 ================= -->
 
+<!-- Safari 拦截 -->
 <div id="safariModal" class="modal">
     <div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white relative">
         <button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
@@ -156,23 +158,33 @@
     </div>
 </div>
 
+<!-- 注册弹窗 -->
 <div id="registerModal" class="modal">
     <div class="bg-white w-[90%] max-w-sm rounded-2xl p-6 relative">
         <button onclick="closeModal('registerModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
         <h3 class="text-xl font-bold mb-6 text-center">注册账号</h3>
         <input type="email" id="regEmail" placeholder="Email" class="w-full border p-3 rounded-xl mb-3">
-        <input type="password" id="regPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-6">
+        <input type="password" id="regPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-4">
         <button onclick="doRegister()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">立即注册</button>
+        <!-- 新增：去登录链接 -->
+        <div class="text-center text-sm text-gray-500 mt-4">
+            已有账号？ <a href="javascript:void(0)" onclick="switchToLogin()" class="text-blue-600 font-bold hover:underline">去登录</a>
+        </div>
     </div>
 </div>
 
+<!-- 登录弹窗 -->
 <div id="loginModal" class="modal">
     <div class="bg-white w-[90%] max-w-sm rounded-2xl p-6 relative">
         <button onclick="closeModal('loginModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
         <h3 class="text-xl font-bold mb-6 text-center">登录账号</h3>
         <input type="email" id="loginEmail" placeholder="Email" class="w-full border p-3 rounded-xl mb-3">
-        <input type="password" id="loginPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-6">
+        <input type="password" id="loginPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-4">
         <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">登录</button>
+        <!-- 新增：去注册链接 -->
+        <div class="text-center text-sm text-gray-500 mt-4">
+            还没有账号？ <a href="javascript:void(0)" onclick="switchToRegister()" class="text-blue-600 font-bold hover:underline">立即注册</a>
+        </div>
     </div>
 </div>
 
@@ -206,13 +218,22 @@
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     function copyLink() { navigator.clipboard.writeText(window.location.href); document.getElementById('copyMsg').classList.remove('hidden'); }
 
+    // === 新增：弹窗切换逻辑 ===
+    function switchToLogin() {
+        closeModal('registerModal');
+        openModal('loginModal');
+    }
+    function switchToRegister() {
+        closeModal('loginModal');
+        openModal('registerModal');
+    }
+
     // 登录状态检测与 UI 更新
     function updateAuthUI() {
         const area = document.getElementById('authBtnArea');
         const user = JSON.parse(localStorage.getItem('wad_user'));
         
         if (user) {
-            // 如果已登录，显示余额和头像，点击头像跳转至仪表盘
             area.innerHTML = `
                 <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='/dashboard.html'">
                     <span class="text-sm font-bold text-blue-600">💰 ${user.balance || 0}</span>
@@ -222,22 +243,27 @@
                 </div>
             `;
         } else {
-            // 未登录显示登录按钮
             area.innerHTML = `<button onclick="triggerSafariCheck('login')" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700">登录</button>`;
         }
     }
 
+    // 注册逻辑优化：成功后自动登录并跳转仪表盘
     async function doRegister() {
         const email = document.getElementById('regEmail').value;
         const password = document.getElementById('regPass').value;
         if(!email || !password) return alert('请填写完整');
+        
         const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password}) });
         const data = await res.json();
+        
         if (data.success) {
-            alert('注册成功，请登录');
-            closeModal('registerModal');
-            openModal('loginModal');
-        } else alert(data.error);
+            alert('注册成功！正在为您自动登录...');
+            // 将后端返回的用户信息存入本地，并跳转控制台
+            localStorage.setItem('wad_user', JSON.stringify(data.user));
+            window.location.href = '/dashboard.html'; 
+        } else {
+            alert(data.error);
+        }
     }
 
     async function doLogin() {
@@ -246,7 +272,6 @@
         const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password}) });
         const data = await res.json();
         if(data.success) {
-            // 登录成功后，保存信息并跳转到独立的仪表盘
             localStorage.setItem('wad_user', JSON.stringify(data.user));
             window.location.href = '/dashboard.html'; 
         } else alert(data.error);
