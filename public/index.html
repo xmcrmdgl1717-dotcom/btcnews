@@ -6,7 +6,7 @@
 <title>W-Airdrop</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    /* 跑马灯动画 */
+    /* 跑马灯无缝动画 */
     .marquee-content { display: flex; white-space: nowrap; animation: scroll 30s linear infinite; }
     @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     .marquee-content:hover { animation-play-state: paused; }
@@ -19,7 +19,7 @@
     .lang-menu { display: none; }
     .lang-menu.active { display: block; }
     
-    /* FAQ 折叠图标动画 */
+    /* FAQ 展开箭头 */
     details summary::-webkit-details-marker { display: none; }
     .faq-icon { transition: transform 0.2s; }
     details[open] .faq-icon { transform: rotate(45deg); }
@@ -27,11 +27,9 @@
 </head>
 <body class="bg-[#f3f4f9] font-sans text-gray-800">
 
-<!-- ================= 1. 顶部跑马灯 ================= -->
+<!-- ================= 1. 跑马灯 ================= -->
 <div class="bg-[#0b1b3a] text-white text-[13px] py-2 overflow-hidden relative">
-    <div class="marquee-content" id="marqueeData">
-        <!-- 内容由 JS 动态生成，包含真实和假数据，并复制一份以实现无缝滚动 -->
-    </div>
+    <div class="marquee-content" id="marqueeData"></div>
 </div>
 
 <!-- ================= 2. 导航栏 ================= -->
@@ -42,9 +40,20 @@
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
             <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
         </div>
+        
+        <!-- 中间导航菜单 -->
+        <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+            <a href="#earn" class="hover:text-blue-600 transition-colors" data-i18n="navEarn">赚钱</a>
+            <a href="#offers" class="hover:text-blue-600 transition-colors" data-i18n="navOffers">优惠</a>
+            <a href="#surveys" class="hover:text-blue-600 transition-colors" data-i18n="navSurveys">问卷</a>
+            <a href="#withdraw" class="hover:text-blue-600 transition-colors" data-i18n="navWithdraw">提现</a>
+            <a href="#rewards" class="hover:text-blue-600 transition-colors" data-i18n="navRewards">奖励</a>
+            <a href="#leaderboard" class="hover:text-blue-600 transition-colors" data-i18n="navLeaderboard">排行榜</a>
+        </nav>
+
         <!-- 右侧操作 -->
-        <div class="flex items-center gap-4">
-            <!-- 语言切换 -->
+        <div class="flex items-center gap-3">
+            <!-- 语言 -->
             <div class="relative">
                 <button onclick="toggleLangMenu()" class="flex items-center gap-1 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600">🌐 <span id="currentLangText">中文</span></button>
                 <div id="langMenu" class="lang-menu absolute right-0 mt-2 w-32 bg-white border shadow-xl rounded-lg overflow-hidden z-50">
@@ -54,15 +63,16 @@
                     <a href="#" onclick="changeLang('ko')" class="block px-4 py-2 text-sm hover:bg-gray-100">🇰🇷 한국어</a>
                 </div>
             </div>
-            <!-- 登录按钮 -->
-            <button onclick="triggerSafariCheck('login')" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors" data-i18n="login">登录</button>
+            <!-- 登录/用户区 -->
+            <div id="authBtnArea">
+                <!-- 动态渲染 -->
+            </div>
         </div>
     </div>
 </header>
 
 <main class="max-w-4xl mx-auto px-4 py-8 space-y-16">
-
-    <!-- ================= 3. 新闻图文模块 ================= -->
+    <!-- ================= 3. 新闻图文 ================= -->
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer" onclick="triggerSafariCheck('article')">
         <h2 class="text-xl font-bold mb-2 leading-snug" id="newsTitle">加载中...</h2>
         <p class="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2" id="newsSummary"></p>
@@ -70,18 +80,15 @@
         <div class="text-blue-600 font-medium text-sm text-center" data-i18n="readMore">查看全文</div>
     </div>
 
-    <!-- ================= 4. 参与奖励 Hero ================= -->
-    <div class="text-center space-y-5 py-4">
+    <!-- ================= 4. Hero 区 ================= -->
+    <div id="earn" class="text-center space-y-5 py-4">
         <h1 class="text-3xl md:text-4xl font-extrabold text-[#0A3466] leading-tight" data-i18n="heroTitle">
             WEB3智能时代 Bitget Bitpie Trust Phantom Solflare Coin98 Uniswap Exodus <br>
             <span class="text-blue-600">8家顶级公司联合打造空投发送333ETH奖励</span>
         </h1>
         <p class="text-gray-500 max-w-2xl mx-auto text-lg" data-i18n="heroDesc">使用我们8家产品的用户都能参加，无需任何操作，简单领取奖励，24小时内免费空投发放。</p>
-        
         <div class="flex justify-center pt-4">
-            <button onclick="triggerSafariCheck('register')" class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-700 shadow-xl shadow-blue-600/30 transition-transform hover:scale-105" data-i18n="claimBtn">
-                免费领取
-            </button>
+            <button onclick="triggerSafariCheck('register')" class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-700 shadow-xl shadow-blue-600/30 transition-transform hover:scale-105" data-i18n="claimBtn">免费领取</button>
         </div>
     </div>
 
@@ -94,39 +101,27 @@
     </div>
 
     <!-- ================= 6. 如何领取 ================= -->
-    <div class="bg-white p-8 rounded-2xl shadow-sm">
+    <div id="withdraw" class="bg-white p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold text-center mb-2">如何领取</h2>
         <p class="text-center text-gray-500 text-sm mb-8">1. 注册账号 → 2. 认真填表 → 3. 领币到账</p>
         <div class="grid md:grid-cols-3 gap-6">
-            <div class="p-5 bg-[#f3f4f9] rounded-xl">
-                <div class="text-4xl font-bold text-gray-200 mb-2">01</div>
-                <h3 class="font-bold text-lg mb-1">注册账号</h3>
-                <p class="text-sm text-gray-600">使用邮箱注册，并设置登录密码与支付密码。</p>
-            </div>
-            <div class="p-5 bg-[#f3f4f9] rounded-xl">
-                <div class="text-4xl font-bold text-gray-200 mb-2">02</div>
-                <h3 class="font-bold text-lg mb-1">认真填表</h3>
-                <p class="text-sm text-gray-600">认真完成问卷，提交后即具备奖励资格。</p>
-            </div>
-            <div class="p-5 bg-[#f3f4f9] rounded-xl">
-                <div class="text-4xl font-bold text-gray-200 mb-2">03</div>
-                <h3 class="font-bold text-lg mb-1">领币到账</h3>
-                <p class="text-sm text-gray-600">随时通过加密货币热门币链进行提现，门槛低，到账时间快。</p>
-            </div>
+            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">01</div><h3 class="font-bold text-lg mb-1">注册账号</h3><p class="text-sm text-gray-600">使用邮箱注册，并设置登录密码与支付密码。</p></div>
+            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">02</div><h3 class="font-bold text-lg mb-1">认真填表</h3><p class="text-sm text-gray-600">认真完成问卷，提交后即具备奖励资格。</p></div>
+            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">03</div><h3 class="font-bold text-lg mb-1">领币到账</h3><p class="text-sm text-gray-600">随时通过加密货币热门币链进行提现，门槛低，到账时间快。</p></div>
         </div>
     </div>
 
-    <!-- ================= 7. 精选优惠 ================= -->
-    <div>
+    <!-- ================= 7. 精选优惠 (任务区) ================= -->
+    <div id="offers">
         <div class="flex justify-between items-end mb-6">
             <div>
                 <h2 class="text-2xl font-bold text-[#0A3466]">精选优惠</h2>
                 <p class="text-gray-500 text-sm mt-1">浏览每日更新高收益任务，做完即刻结算。</p>
             </div>
-            <a href="#" class="text-blue-600 text-sm font-medium hover:underline">查看全部 →</a>
+            <a href="#" onclick="triggerSafariCheck('login')" class="text-blue-600 text-sm font-medium hover:underline">登录做任务 →</a>
         </div>
         <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer">
+            <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer" onclick="triggerSafariCheck('login')">
                 <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 mb-3">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
@@ -137,7 +132,7 @@
                     <span class="text-gray-400 text-xs">2 分钟</span>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer">
+            <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer" onclick="triggerSafariCheck('login')">
                 <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-3">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                 </div>
@@ -148,7 +143,7 @@
                     <span class="text-gray-400 text-xs">5 分钟</span>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer">
+            <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer" onclick="triggerSafariCheck('login')">
                 <div class="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600 mb-3">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
@@ -159,7 +154,7 @@
                     <span class="text-gray-400 text-xs">3 分钟</span>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer">
+            <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer" onclick="triggerSafariCheck('login')">
                 <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mb-3">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </div>
@@ -174,121 +169,49 @@
     </div>
 
     <!-- ================= 8. 为什么选择我们 ================= -->
-    <div class="bg-white p-8 rounded-2xl shadow-sm">
+    <div id="surveys" class="bg-white p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold text-center mb-8">为什么选择我们</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div>
-                <div class="text-3xl mb-2">⚡</div>
-                <h3 class="font-bold mb-1">即时到账</h3>
-                <p class="text-xs text-gray-500">审核通过后自动打款</p>
-            </div>
-            <div>
-                <div class="text-3xl mb-2">🛡️</div>
-                <h3 class="font-bold mb-1">100% 安全</h3>
-                <p class="text-xs text-gray-500">无需私钥或钱包授权</p>
-            </div>
-            <div>
-                <div class="text-3xl mb-2">📈</div>
-                <h3 class="font-bold mb-1">高额回报</h3>
-                <p class="text-xs text-gray-500">单份问卷最高 420 金币</p>
-            </div>
-            <div>
-                <div class="text-3xl mb-2">🎁</div>
-                <h3 class="font-bold mb-1">额外奖金</h3>
-                <p class="text-xs text-gray-500">每日签到与排行榜加成</p>
-            </div>
+            <div><div class="text-3xl mb-2">⚡</div><h3 class="font-bold mb-1">即时到账</h3><p class="text-xs text-gray-500">审核通过后自动打款</p></div>
+            <div><div class="text-3xl mb-2">🛡️</div><h3 class="font-bold mb-1">100% 安全</h3><p class="text-xs text-gray-500">无需私钥或钱包授权</p></div>
+            <div><div class="text-3xl mb-2">📈</div><h3 class="font-bold mb-1">高额回报</h3><p class="text-xs text-gray-500">单份问卷最高 420 金币</p></div>
+            <div><div class="text-3xl mb-2">🎁</div><h3 class="font-bold mb-1">额外奖金</h3><p class="text-xs text-gray-500">每日签到与排行榜加成</p></div>
         </div>
     </div>
 
-    <!-- ================= 9. 幸运用户 (排行榜) ================= -->
-    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
+    <!-- ================= 9. 排行榜 ================= -->
+    <div id="leaderboard" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold mb-2">幸运用户</h2>
         <p class="text-sm text-gray-500 mb-6">与其他用户竞争，登上每日和每月排行榜赢取额外金币。</p>
-        
         <div class="flex gap-2 mb-6">
             <button class="bg-blue-50 text-blue-600 font-bold px-4 py-1.5 rounded-lg text-sm">每日</button>
             <button class="text-gray-500 font-medium px-4 py-1.5 rounded-lg text-sm hover:bg-gray-50">每月</button>
         </div>
-
         <div class="space-y-3">
-            <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-xl transition-colors">
-                <div class="flex items-center gap-3">
-                    <span class="text-gray-400 font-bold w-4">#1</span>
-                    <div class="w-10 h-10 bg-[#0A3466] text-white rounded-full flex items-center justify-center text-sm font-bold">JM</div>
-                    <span class="font-medium text-sm">Johnny Midan</span>
-                </div>
-                <span class="font-bold text-yellow-500 text-sm">🪙 221,109</span>
-            </div>
-            <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-xl transition-colors">
-                <div class="flex items-center gap-3">
-                    <span class="text-gray-400 font-bold w-4">#2</span>
-                    <div class="w-10 h-10 bg-[#0A3466] text-white rounded-full flex items-center justify-center text-sm font-bold">BY</div>
-                    <span class="font-medium text-sm">Bebazz YT</span>
-                </div>
-                <span class="font-bold text-yellow-500 text-sm">🪙 148,000</span>
-            </div>
-            <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-xl transition-colors">
-                <div class="flex items-center gap-3">
-                    <span class="text-gray-400 font-bold w-4">#3</span>
-                    <div class="w-10 h-10 bg-[#0A3466] text-white rounded-full flex items-center justify-center text-sm font-bold">A</div>
-                    <span class="font-medium text-sm">Awatix</span>
-                </div>
-                <span class="font-bold text-yellow-500 text-sm">🪙 54,000</span>
-            </div>
+            <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-xl transition-colors"><div class="flex items-center gap-3"><span class="text-gray-400 font-bold w-4">#1</span><div class="w-10 h-10 bg-[#0A3466] text-white rounded-full flex items-center justify-center text-sm font-bold">JM</div><span class="font-medium text-sm">Johnny Midan</span></div><span class="font-bold text-yellow-500 text-sm">🪙 221,109</span></div>
+            <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-xl transition-colors"><div class="flex items-center gap-3"><span class="text-gray-400 font-bold w-4">#2</span><div class="w-10 h-10 bg-[#0A3466] text-white rounded-full flex items-center justify-center text-sm font-bold">BY</div><span class="font-medium text-sm">Bebazz YT</span></div><span class="font-bold text-yellow-500 text-sm">🪙 148,000</span></div>
+            <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-xl transition-colors"><div class="flex items-center gap-3"><span class="text-gray-400 font-bold w-4">#3</span><div class="w-10 h-10 bg-[#0A3466] text-white rounded-full flex items-center justify-center text-sm font-bold">A</div><span class="font-medium text-sm">Awatix</span></div><span class="font-bold text-yellow-500 text-sm">🪙 54,000</span></div>
         </div>
     </div>
 
     <!-- ================= 10. 用户评价 ================= -->
-    <div>
+    <div id="rewards">
         <h2 class="text-2xl font-bold text-center mb-6">用户怎么说</h2>
         <div class="grid md:grid-cols-2 gap-4">
-            <div class="bg-white p-6 rounded-2xl shadow-sm">
-                <div class="text-yellow-400 mb-3">★★★★★</div>
-                <p class="text-sm text-gray-600 mb-4 leading-relaxed">"The Best GPT site without question. I've been using it for about 2 months and it is my go-to starting point for figuring out what offers I'll work on as passive income."</p>
-                <div class="text-sm font-bold">Matthew Betancourt <span class="text-gray-400 font-normal ml-2">活跃用户</span></div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm">
-                <div class="text-yellow-400 mb-3">★★★★★</div>
-                <p class="text-sm text-gray-600 mb-4 leading-relaxed">"Gain.gg is a good website for earning small rewards by doing simple tasks like surveys and watching videos. The site is easy to use and payments come quickly."</p>
-                <div class="text-sm font-bold">Gain.gg <span class="text-gray-400 font-normal ml-2">活跃用户</span></div>
-            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm"><div class="text-yellow-400 mb-3">★★★★★</div><p class="text-sm text-gray-600 mb-4 leading-relaxed">"The Best GPT site without question. I've been using it for about 2 months..."</p><div class="text-sm font-bold">Matthew Betancourt <span class="text-gray-400 font-normal ml-2">活跃用户</span></div></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm"><div class="text-yellow-400 mb-3">★★★★★</div><p class="text-sm text-gray-600 mb-4 leading-relaxed">"Gain.gg is a good website for earning small rewards by doing simple tasks..."</p><div class="text-sm font-bold">Gain.gg <span class="text-gray-400 font-normal ml-2">活跃用户</span></div></div>
         </div>
     </div>
 
-    <!-- ================= 11. 常见问题 FAQ ================= -->
+    <!-- ================= 11. FAQ ================= -->
     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold mb-2">常见问题</h2>
         <p class="text-sm text-gray-500 mb-6">有问题？我们来帮你。如果这里没有答案，支持团队随时待命。</p>
-        
         <div class="space-y-4">
-            <details class="group border-b border-gray-100 pb-4">
-                <summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base">
-                    如何领取？
-                    <span class="faq-icon text-blue-500 text-xl font-light">+</span>
-                </summary>
-                <p class="text-sm text-gray-500 mt-3 leading-relaxed">只要您有使用我们的8家产品，免费注册登录后，认真完成每一项表格，提交后就能免费领取。</p>
-            </details>
-            <details class="group border-b border-gray-100 pb-4">
-                <summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base">
-                    有哪些领取方式？
-                    <span class="faq-icon text-blue-500 text-xl font-light">+</span>
-                </summary>
-                <p class="text-sm text-gray-500 mt-3 leading-relaxed">支持PayPal、比特币、莱特币、银行转账，以及Amazon、虚拟Visa卡等热门礼品卡。我们会定期增加新方式。</p>
-            </details>
-            <details class="group border-b border-gray-100 pb-4">
-                <summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base">
-                    领取有手续费吗？
-                    <span class="faq-icon text-blue-500 text-xl font-light">+</span>
-                </summary>
-                <p class="text-sm text-gray-500 mt-3 leading-relaxed">大多数方式免手续费，包括莱特币、Solana、虚拟Visa卡和全部礼品卡。银行转账等会收取少量费用以覆盖转账成本。</p>
-            </details>
-            <details class="group pb-2">
-                <summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base">
-                    领取需要多久？
-                    <span class="faq-icon text-blue-500 text-xl font-light">+</span>
-                </summary>
-                <p class="text-sm text-gray-500 mt-3 leading-relaxed">我们会尽快处理，通常在数小时内完成。</p>
-            </details>
+            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center">如何领取？<span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed">只要您有使用我们的8家产品，免费注册登录后，认真完成每一项表格，提交后就能免费领取。</p></details>
+            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center">有哪些领取方式？<span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed">支持PayPal、比特币、莱特币、银行转账，以及Amazon、虚拟Visa卡等热门礼品卡。</p></details>
+            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center">领取有手续费吗？<span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed">大多数方式免手续费，包括莱特币、Solana、虚拟Visa卡和全部礼品卡。</p></details>
+            <details class="group pb-2"><summary class="font-bold cursor-pointer flex justify-between items-center">领取需要多久？<span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed">我们会尽快处理，通常在数小时内完成。</p></details>
         </div>
     </div>
 
@@ -296,98 +219,99 @@
     <div>
         <h2 class="text-xl font-bold text-center mb-6">陆续增加合作商家</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm hover:text-blue-500 transition-colors cursor-pointer border border-transparent hover:border-blue-100">Bitget</div>
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm hover:text-blue-500 transition-colors cursor-pointer border border-transparent hover:border-blue-100">Bitpie</div>
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm hover:text-blue-500 transition-colors cursor-pointer border border-transparent hover:border-blue-100">Trust Wallet</div>
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm hover:text-blue-500 transition-colors cursor-pointer border border-transparent hover:border-blue-100">Phantom</div>
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm hover:text-blue-500 transition-colors cursor-pointer border border-transparent hover:border-blue-100">Solflare</div>
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm hover:text-blue-500 transition-colors cursor-pointer border border-transparent hover:border-blue-100">Coin98</div>
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm hover:text-blue-500 transition-colors cursor-pointer border border-transparent hover:border-blue-100">Uniswap</div>
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm hover:text-blue-500 transition-colors cursor-pointer border border-transparent hover:border-blue-100">Exodus</div>
+            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm">Bitget</div>
+            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm">Bitpie</div>
+            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm">Trust Wallet</div>
+            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-center font-bold text-gray-400 text-sm">Phantom</div>
         </div>
     </div>
 </main>
 
-<!-- ================= 13. 底部 Footer ================= -->
+<!-- ================= 13. Footer ================= -->
 <footer class="bg-[#0A3466] text-white py-12 mt-12">
     <div class="max-w-4xl mx-auto px-4 flex flex-col items-center">
-        <h2 class="text-xl md:text-2xl font-bold text-center mb-8 leading-relaxed">
-            8 家顶级公司 联合打造 空投发送 333ETH 奖励
-        </h2>
-        
-        <div class="mb-8">
-            <button class="flex items-center gap-2 border border-white/20 rounded-lg px-4 py-2 text-sm hover:bg-white/10 transition-colors">
-                <span>🌐</span> 简体中文
-            </button>
-        </div>
-
-        <div class="text-center text-xs text-white/50 space-y-2">
-            <p>风险提示：加密货币价格波动剧烈，参与任何空投或奖励活动前请自行判断风险。我们不会索要您的私钥或助记词。</p>
-            <p>© 2024 W-Airdrop. 保留所有权利。</p>
-        </div>
+        <h2 class="text-xl md:text-2xl font-bold text-center mb-8 leading-relaxed">8 家顶级公司 联合打造 空投发送 333ETH 奖励</h2>
+        <div class="mb-8"><button class="flex items-center gap-2 border border-white/20 rounded-lg px-4 py-2 text-sm hover:bg-white/10 transition-colors"><span>🌐</span> 简体中文</button></div>
+        <div class="text-center text-xs text-white/50 space-y-2"><p>风险提示：加密货币价格波动剧烈，参与任何空投或奖励活动前请自行判断风险。</p><p>© 2024 W-Airdrop. 保留所有权利。</p></div>
     </div>
 </footer>
 
-
 <!-- ================= 弹窗区 ================= -->
 
-<!-- 1. Safari 拦截 -->
+<!-- Safari 拦截 -->
 <div id="safariModal" class="modal">
     <div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-blue-900 relative">
         <button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
-        <div class="w-14 h-14 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-        </div>
+        <div class="w-14 h-14 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></div>
         <h3 class="text-xl font-bold mb-2" data-i18n="safariTitle">请使用 Safari 浏览器打开</h3>
         <p class="text-sm text-gray-300 mb-4" data-i18n="safariDesc">请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。</p>
-        <div class="text-xs text-gray-400 mb-2 uppercase tracking-widest">Safari Required</div>
-        <p class="text-xs text-gray-400 mb-6 leading-relaxed px-2">点击浏览器菜单并选择「在 Safari 中打开」，或复制当前链接后在 Safari 中粘贴访问。</p>
         <button onclick="copyLink()" class="w-full bg-[#1e3a8a] border border-blue-500 py-3 rounded-xl font-bold" data-i18n="copyBtn">复制当前链接</button>
         <p id="copyMsg" class="text-green-400 text-sm hidden mt-2">已复制</p>
     </div>
 </div>
 
-<!-- 2. 注册 -->
+<!-- 注册 -->
 <div id="registerModal" class="modal">
     <div class="bg-white w-[90%] max-w-sm rounded-2xl p-6 relative">
         <button onclick="closeModal('registerModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
         <h3 class="text-xl font-bold mb-1 text-center" data-i18n="registerTitle">注册账号</h3>
-        <p class="text-xs text-gray-500 text-center mb-6">只需邮箱即可完成注册，无需实名认证</p>
+        <p class="text-xs text-gray-500 text-center mb-6">只需邮箱即可完成注册</p>
         <input type="email" id="regEmail" placeholder="Email" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl text-sm outline-none mb-3">
         <input type="password" id="regPass" placeholder="Password" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl text-sm outline-none mb-6">
         <button onclick="doRegister()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="registerBtn">立即注册</button>
     </div>
 </div>
 
-<!-- 3. 问卷 -->
-<div id="surveyModal" class="modal">
-    <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
-        <button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
-        <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyTitle">用户习惯请您认真填写</h3>
-        <p class="text-xs text-gray-400 text-center mb-6">预计耗时: 2 分钟 | 提交即具空投资格</p>
-        <div id="surveyQuestions" class="space-y-4 mb-8"></div>
-        <button onclick="submitSurvey()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="nextBtn">下一步</button>
+<!-- 登录 -->
+<div id="loginModal" class="modal">
+    <div class="bg-white w-[90%] max-w-sm rounded-2xl p-6 relative">
+        <button onclick="closeModal('loginModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
+        <h3 class="text-xl font-bold mb-1 text-center">登录账号</h3>
+        <p class="text-xs text-gray-500 text-center mb-6">请输入您的邮箱和密码</p>
+        <input type="email" id="loginEmail" placeholder="Email (123@163.com)" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl text-sm outline-none mb-3">
+        <input type="password" id="loginPass" placeholder="Password (123@163.com)" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl text-sm outline-none mb-6">
+        <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">登录</button>
+    </div>
+</div>
+
+<!-- 个人中心 (任务列表) -->
+<div id="profileModal" class="modal">
+    <div class="bg-white w-[90%] max-w-md rounded-2xl p-6 relative">
+        <button onclick="closeModal('profileModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
+        <div class="flex items-center gap-3 mb-6 border-b pb-4">
+            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold" id="profileAvatar">U</div>
+            <div>
+                <h3 class="font-bold text-lg" id="profileEmail">未登录</h3>
+                <p class="text-sm text-gray-500">余额: <span class="font-bold text-blue-600" id="profileBalance">0</span> 金币</p>
+            </div>
+        </div>
+        <h4 class="font-bold mb-3">我的任务</h4>
+        <div id="taskList" class="space-y-2 max-h-60 overflow-y-auto">
+            <!-- JS 动态渲染 -->
+        </div>
+        <button onclick="logout()" class="w-full mt-6 bg-gray-100 text-gray-600 py-2 rounded-lg font-bold hover:bg-gray-200">退出登录</button>
     </div>
 </div>
 
 <script>
     // 多语言字典
     const i18n = {
-        zh: { login: "登录", readMore: "查看全文", claimBtn: "免费领取", safariTitle: "请使用 Safari 浏览器打开", safariDesc: "请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。", copyBtn: "复制当前链接", registerTitle: "注册账号", registerBtn: "立即注册", surveyTitle: "用户习惯请您认真填写", nextBtn: "下一步", heroTitle: "WEB3智能时代 8家顶级公司联合打造空投发送333ETH奖励", heroDesc: "使用我们8家产品的用户都能参加，无需任何操作，简单领取奖励，24小时内免费空投发放。" },
-        en: { login: "Login", readMore: "Read More", claimBtn: "Claim Free", safariTitle: "Please open in Safari", safariDesc: "Please use the native Safari browser on iPhone / iPad.", copyBtn: "Copy Link", registerTitle: "Register", registerBtn: "Register Now", surveyTitle: "Please fill out the survey", nextBtn: "Next", heroTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", heroDesc: "Users of our 8 products can participate, no action required, simply claim rewards, airdropped for free within 24 hours." },
-        vi: { login: "Đăng nhập", readMore: "Đọc thêm", claimBtn: "Nhận miễn phí", safariTitle: "Vui lòng mở bằng Safari", safariDesc: "Vui lòng sử dụng trình duyệt Safari gốc trên iPhone / iPad.", copyBtn: "Sao chép liên kết", registerTitle: "Đăng ký", registerBtn: "Đăng ký ngay", surveyTitle: "Vui lòng điền khảo sát", nextBtn: "Tiếp theo", heroTitle: "8 công ty hàng đầu cùng ra mắt Airdrop 333 ETH", heroDesc: "Người dùng 8 sản phẩm có thể tham gia, nhận thưởng miễn phí trong 24h." },
-        ko: { login: "로그인", readMore: "더보기", claimBtn: "무료 청구", safariTitle: "Safari로 열어주세요", safariDesc: "iPhone / iPad의 기본 Safari 브라우저를 사용하세요.", copyBtn: "링크 복사", registerTitle: "회원가입", registerBtn: "지금 가입", surveyTitle: "설문 조사를 작성해주세요", nextBtn: "다음", heroTitle: "8개 최고 기업 공동 333 ETH 에어드롭", heroDesc: "8개 제품 사용자 누구나 참여 가능, 24시간 내 무료 에어드롭." }
+        zh: { login: "登录", readMore: "查看全文", claimBtn: "免费领取", safariTitle: "请使用 Safari 浏览器打开", safariDesc: "请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。", copyBtn: "复制当前链接", registerTitle: "注册账号", registerBtn: "立即注册", heroTitle: "WEB3智能时代 8家顶级公司联合打造空投发送333ETH奖励", heroDesc: "使用我们8家产品的用户都能参加，无需任何操作，简单领取奖励，24小时内免费空投发放。", navEarn: "赚钱", navOffers: "优惠", navSurveys: "问卷", navWithdraw: "提现", navRewards: "奖励", navLeaderboard: "排行榜" },
+        en: { login: "Login", readMore: "Read More", claimBtn: "Claim Free", safariTitle: "Please open in Safari", safariDesc: "Please use the native Safari browser on iPhone / iPad.", copyBtn: "Copy Link", registerTitle: "Register", registerBtn: "Register Now", heroTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", heroDesc: "Users of our 8 products can participate...", navEarn: "Earn", navOffers: "Offers", navSurveys: "Surveys", navWithdraw: "Withdraw", navRewards: "Rewards", navLeaderboard: "Leaderboard" },
+        vi: { login: "Đăng nhập", readMore: "Đọc thêm", claimBtn: "Nhận miễn phí", safariTitle: "Vui lòng mở bằng Safari", safariDesc: "Vui lòng sử dụng trình duyệt Safari gốc...", copyBtn: "Sao chép liên kết", registerTitle: "Đăng ký", registerBtn: "Đăng ký ngay", heroTitle: "8 công ty hàng đầu cùng ra mắt Airdrop 333 ETH", heroDesc: "Người dùng 8 sản phẩm có thể tham gia...", navEarn: "Kiếm tiền", navOffers: "Ưu đãi", navSurveys: "Khảo sát", navWithdraw: "Rút tiền", navRewards: "Phần thưởng", navLeaderboard: "Bảng xếp hạng" },
+        ko: { login: "로그인", readMore: "더보기", claimBtn: "무료 청구", safariTitle: "Safari로 열어주세요", safariDesc: "iPhone / iPad의 기본 Safari 브라우저를 사용하세요.", copyBtn: "링크 복사", registerTitle: "회원가입", registerBtn: "지금 가입", heroTitle: "8개 최고 기업 공동 333 ETH 에어드롭", heroDesc: "8개 제품 사용자 누구나 참여 가능...", navEarn: "수익", navOffers: "혜택", navSurveys: "설문조사", navWithdraw: "출금", navRewards: "보상", navLeaderboard: "리더보드" }
     };
     
     let currentLang = 'zh';
     let latestArticleId = null;
+    let currentUser = JSON.parse(localStorage.getItem('wad_user')) || null;
 
-    // 语言切换
+    // 语言
     function toggleLangMenu() { document.getElementById('langMenu').classList.toggle('active'); }
     function changeLang(lang) {
         currentLang = lang;
         document.getElementById('langMenu').classList.remove('active');
-        document.getElementById('currentLangText').innerText = lang.toUpperCase();
+        document.getElementById('currentLangText').innerText = lang === 'zh' ? '中文' : lang.toUpperCase();
         applyLanguage();
         loadNews();
     }
@@ -406,7 +330,10 @@
     }
     function triggerSafariCheck(action) {
         if (isSafari()) {
-            if (action === 'login' || action === 'register') openModal('registerModal');
+            if (action === 'login') {
+                if(currentUser) openProfile(); else openModal('loginModal');
+            }
+            else if (action === 'register') openModal('registerModal');
             else if (action === 'article' && latestArticleId) window.location.href = `/article.html?id=${latestArticleId}`;
         } else {
             openModal('safariModal');
@@ -418,28 +345,114 @@
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     function copyLink() { navigator.clipboard.writeText(window.location.href); document.getElementById('copyMsg').classList.remove('hidden'); }
 
-    // === 跑马灯生成 ===
+    // 用户状态
+    function updateAuthUI() {
+        const area = document.getElementById('authBtnArea');
+        if (currentUser) {
+            area.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-bold text-blue-600">💰 ${currentUser.balance || 0}</span>
+                    <button onclick="openProfile()" class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                        ${currentUser.email[0].toUpperCase()}
+                    </button>
+                </div>
+            `;
+        } else {
+            area.innerHTML = `<button onclick="triggerSafariCheck('login')" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700" data-i18n="login">登录</button>`;
+            applyLanguage();
+        }
+    }
+
+    async function doRegister() {
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPass').value;
+        if(!email || !password) return alert('请填写完整');
+        const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password}) });
+        const data = await res.json();
+        if (data.success) {
+            alert('注册成功，请登录');
+            closeModal('registerModal');
+            openModal('loginModal');
+        } else alert(data.error);
+    }
+
+    async function doLogin() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPass').value;
+        const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password}) });
+        const data = await res.json();
+        if(data.success) {
+            currentUser = data.user;
+            localStorage.setItem('wad_user', JSON.stringify(currentUser));
+            closeModal('loginModal');
+            updateAuthUI();
+        } else alert(data.error);
+    }
+
+    function logout() {
+        localStorage.removeItem('wad_user');
+        currentUser = null;
+        updateAuthUI();
+        closeModal('profileModal');
+    }
+
+    // 个人中心任务
+    async function openProfile() {
+        document.getElementById('profileAvatar').innerText = currentUser.email[0].toUpperCase();
+        document.getElementById('profileEmail').innerText = currentUser.email;
+        document.getElementById('profileBalance').innerText = currentUser.balance || 0;
+        
+        const res = await fetch('/api/tasks');
+        const tasks = await res.json();
+        let html = '';
+        tasks.forEach(t => {
+            html += `
+                <div class="border-b p-3 flex justify-between items-center hover:bg-gray-50 rounded-lg">
+                    <div>
+                        <h4 class="font-bold text-sm">${t.title}</h4>
+                        <span class="text-xs text-gray-500">耗时: ${t.time}</span>
+                    </div>
+                    <button onclick="completeTask(${t.id})" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-100">
+                        去完成 +${t.reward}
+                    </button>
+                </div>
+            `;
+        });
+        document.getElementById('taskList').innerHTML = html;
+        openModal('profileModal');
+    }
+
+    async function completeTask(id) {
+        const res = await fetch('/api/tasks/complete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({taskId: id, email: currentUser.email}) });
+        const data = await res.json();
+        if(data.success) {
+            currentUser.balance = data.balance;
+            localStorage.setItem('wad_user', JSON.stringify(currentUser));
+            document.getElementById('profileBalance').innerText = currentUser.balance;
+            updateAuthUI();
+            alert('任务完成！奖励已到账。');
+        }
+    }
+
+    // 跑马灯
     async function loadMarquee() {
         try {
             const res = await fetch('/api/marquee');
             const data = await res.json();
             let html = '';
-            // 将数据复制两份，实现绝对无缝滚动
             [...data, ...data].forEach(item => {
                 html += `<span class="inline-flex items-center gap-2 px-4"><i class="w-2 h-2 rounded-full bg-green-500"></i>${item.name} <b class="text-green-400">+${item.amount}</b></span>`;
             });
             document.getElementById('marqueeData').innerHTML = html;
-        } catch(e) { console.log('跑马灯加载失败'); }
+        } catch(e) {}
     }
 
-    // === 新闻加载 (带默认兜底数据) ===
+    // 新闻
     async function loadNews() {
         try {
             const res = await fetch(`/api/articles/latest?lang=${currentLang}`);
             const data = await res.json();
-            
             if (data && data.title) {
-                // 后台有数据
                 latestArticleId = data.id;
                 document.getElementById('newsTitle').innerText = data.title;
                 document.getElementById('newsSummary').innerText = data.summary;
@@ -449,70 +462,19 @@
                     img.classList.remove('hidden');
                 }
             } else {
-                // 后台没数据，展示兜底图文（你的定制要求1）
-                latestArticleId = 'default'; // 标记为默认
+                latestArticleId = 'default';
                 document.getElementById('newsTitle').innerText = "比特币一度跌破8万美元：三星引发科技股震荡，美联储鹰派立场施压";
                 document.getElementById('newsSummary').innerText = "受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温，比特币跌破8万美元。加密货币期货市场爆仓金额达3.56亿美元。周四亚洲交易时段，比特币一度跌破8万美元，终结此前连续两天的反弹势头。";
-                
                 const img = document.getElementById('newsCover');
-                img.src = "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=800&auto=format&fit=crop"; // 暂时用一张比特币网图兜底
+                img.src = "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=800&auto=format&fit=crop";
                 img.classList.remove('hidden');
             }
-        } catch (e) { console.log('新闻加载失败'); }
-    }
-
-    // === 注册与问卷 ===
-    async function doRegister() {
-        const email = document.getElementById('regEmail').value;
-        const password = document.getElementById('regPass').value;
-        if(!email || !password) return alert('请填写邮箱和密码');
-        
-        try {
-            const res = await fetch('/api/register', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({email, password}) 
-            });
-            const data = await res.json();
-            if (data.success) {
-                closeModal('registerModal');
-                loadSurveyQuestions();
-                openModal('surveyModal');
-            } else alert(data.error);
-        } catch(e) { alert('网络错误，请重试'); }
-    }
-
-    async function loadSurveyQuestions() {
-        try {
-            const res = await fetch('/api/survey/questions');
-            const questions = await res.json();
-            
-            if(!questions || questions.length === 0) {
-                // 如果后台没配置问卷，给个默认的
-                document.getElementById('surveyQuestions').innerHTML = `<p class="text-sm">问卷暂未配置，请直接提交。</p>`;
-                return;
-            }
-
-            let html = '';
-            questions.forEach((q, i) => {
-                html += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
-                q.options.forEach(opt => {
-                    html += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="q${i}" value="${opt}" class="accent-blue-500"> ${opt}</label>`;
-                });
-                html += `</div>`;
-            });
-            document.getElementById('surveyQuestions').innerHTML = html;
-        } catch(e) { console.log(e); }
-    }
-
-    async function submitSurvey() {
-        // 问卷提交逻辑
-        alert('提交成功，奖励24小时内发放');
-        closeModal('surveyModal');
+        } catch (e) {}
     }
 
     // 初始化
     applyLanguage();
+    updateAuthUI();
     loadMarquee();
     loadNews();
 </script>
