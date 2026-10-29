@@ -63,12 +63,21 @@ app.get('/api/marquee', (req, res) => {
     res.json(list);
 });
 
-// 注册
+// 注册 (支持接收支付密码)
 app.post('/api/register', (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, payPassword } = req.body;
     const users = readDB('users');
     if (users.find(u => u.email === email)) return res.status(400).json({ error: '邮箱已注册' });
-    const newUser = { id: uuidv4(), email, password, balance: 0, totalEarned: 0, time: new Date().toISOString() };
+    
+    const newUser = { 
+        id: uuidv4(), 
+        email, 
+        password, 
+        payPassword: payPassword || '',
+        balance: 0, 
+        totalEarned: 0, 
+        time: new Date().toISOString() 
+    };
     users.push(newUser);
     writeDB('users', users);
     res.json({ success: true, user: newUser });
@@ -129,7 +138,6 @@ app.post('/api/user/tasks/complete', (req, res) => {
 // 提现申请
 app.post('/api/user/withdraw', (req, res) => {
     const { email, amount, method } = req.body;
-    // 实际生产环境中这里需要扣减余额并生成订单
     res.json({ success: true, message: `提现申请已提交（${method}），金额 ${amount} 金币` });
 });
 
