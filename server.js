@@ -18,9 +18,10 @@ const DB_FILES = {
     surveys: path.join(DB_DIR, 'surveys.json'),
     offers: path.join(DB_DIR, 'offers.json'),
     languages: path.join(DB_DIR, 'languages.json'),
-    partners: path.join(DB_DIR, 'partners.json') // 新增合作墙文件
+    partners: path.join(DB_DIR, 'partners.json') // 合作墙
 };
 
+// 初始化数据文件
 Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
@@ -29,21 +30,13 @@ Object.keys(DB_FILES).forEach(key => {
             { code: 'zh', name: '简体中文', flag: '🇨🇳', active: true },
             { code: 'en', name: 'English', flag: '🇺🇸', active: true },
             { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳', active: true },
-            { code: 'de', name: 'Deutsch', flag: '🇩🇪', active: true },
-            { code: 'ar', name: 'العربية', flag: '🇦🇪', active: true },
-            { code: 'es', name: 'Español', flag: '🇦🇷', active: true },
-            { code: 'pt', name: 'Português', flag: '🇧🇷', active: true },
-            { code: 'ko', name: '한국어', flag: '🇰🇷', active: true },
-            { code: 'uk', name: 'Українська', flag: '🇺🇦', active: true },
-            { code: 'tr', name: 'Türkçe', flag: '🇹🇷', active: true }
+            { code: 'ko', name: '한국어', flag: '🇰🇷', active: true }
         ];
-        if (key === 'articles') {
-            initialData = [
-                { id: uuidv4(), lang: 'zh', title: '比特币一度跌破8万美元：三星引发科技股震荡', summary: '受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温。', coverUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=800&auto=format&fit=crop', content: '<p>受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温，比特币跌破8万美元。</p>', time: new Date(Date.now() - 1000).toISOString() },
-                { id: uuidv4(), lang: 'zh', title: 'Web3 智能时代：8家顶级公司联合打造空投生态', summary: 'Bitget、Bitpie、Trust Wallet 等8家顶级加密产品公司强强联手，推出 333ETH 超大空投奖励池。', coverUrl: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?q=80&w=800&auto=format&fit=crop', content: '<p>WEB3智能时代已经到来，8家顶级公司联合打造空投发放333ETH奖励，用户只需完成简短的问卷调查即可获得资格。</p>', time: new Date(Date.now() - 2000).toISOString() },
-                { id: uuidv4(), lang: 'zh', title: '如何安全地参与加密问卷调查并保护隐私', summary: '在参与各类 Web3 问卷和空投时，请务必保护好您的私钥和助记词。', coverUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=800&auto=format&fit=crop', content: '<p>参与问卷调查前，请确认平台正规性。任何要求提供私钥或助记词的行为都是诈骗。</p>', time: new Date(Date.now() - 3000).toISOString() }
-            ];
-        }
+        if (key === 'articles') initialData = [
+            { id: uuidv4(), lang: 'zh', title: '比特币一度跌破8万美元：三星引发科技股震荡', summary: '受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温。', coverUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=800&auto=format&fit=crop', content: '<p>受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温，比特币跌破8万美元。</p>', time: new Date(Date.now() - 1000).toISOString() },
+            { id: uuidv4(), lang: 'zh', title: 'Web3 智能时代：8家顶级公司联合打造空投生态', summary: 'Bitget、Bitpie、Trust Wallet 等8家顶级加密产品公司强强联手，推出 333ETH 超大空投奖励池。', coverUrl: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?q=80&w=800&auto=format&fit=crop', content: '<p>WEB3智能时代已经到来，8家顶级公司联合打造空投发放333ETH奖励，用户只需完成简短的问卷调查即可获得资格。</p>', time: new Date(Date.now() - 2000).toISOString() },
+            { id: uuidv4(), lang: 'zh', title: '如何安全地参与加密问卷调查并保护隐私', summary: '在参与各类 Web3 问卷和空投时，请务必保护好您的私钥和助记词。', coverUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=800&auto=format&fit=crop', content: '<p>参与问卷调查前，请确认平台正规性。任何要求提供私钥或助记词的行为都是诈骗。</p>', time: new Date(Date.now() - 3000).toISOString() }
+        ];
         if (key === 'offers') initialData = [
             { id: 1, category: 'game', title: 'Raid: Shadow Legends', reward: '384,926', color: '#1e293b' },
             { id: 2, category: 'game', title: 'The Best Bet USA', reward: '58,017', color: '#166534' },
@@ -64,7 +57,6 @@ Object.keys(DB_FILES).forEach(key => {
             { id: 17, category: 'signup', title: 'Betterment Invest & Save Money', reward: '25,846', color: '#0f766e' },
             { id: 18, category: 'app', title: 'Can You Spot It - 5 Differences', reward: '86,865', color: '#be185d' }
         ];
-        // 初始化合作墙默认数据
         if (key === 'partners') initialData = [
             { id: uuidv4(), name: 'Bitget', imageUrl: '' },
             { id: uuidv4(), name: 'Bitpie', imageUrl: '' },
@@ -175,14 +167,7 @@ const auth = (req, res, next) => {
 app.post('/api/admin/upload', auth, upload.single('image'), (req, res) => res.json({ url: `/uploads/${req.file.filename}` }));
 
 app.get('/api/admin/data', auth, (req, res) => {
-    res.json({ 
-        users: readDB('users'), 
-        articles: readDB('articles'), 
-        surveys: readDB('surveys'), 
-        offers: readDB('offers'),
-        languages: readDB('languages'),
-        partners: readDB('partners') // 返回合作墙数据
-    });
+    res.json({ users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'), offers: readDB('offers'), languages: readDB('languages'), partners: readDB('partners') });
 });
 
 // 合作墙管理
@@ -193,7 +178,6 @@ app.post('/api/admin/partners', auth, (req, res) => {
     writeDB('partners', partners);
     res.json({ success: true });
 });
-
 app.delete('/api/admin/partners/:id', auth, (req, res) => {
     let partners = readDB('partners').filter(p => p.id !== req.params.id);
     writeDB('partners', partners);
