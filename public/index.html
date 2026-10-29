@@ -6,44 +6,33 @@
 <title>W-Airdrop - 8家顶级公司联合打造</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    /* 跑马灯动画 */
     .marquee-content { display: flex; white-space: nowrap; animation: scroll 30s linear infinite; }
     @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     .marquee-content:hover { animation-play-state: paused; }
-    
-    /* 弹窗遮罩 */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; align-items: center; justify-content: center; padding: 1rem; }
     .modal.active { display: flex; }
-    
-    /* 隐藏滚动条 */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* 轮播图对齐 */
     .snap-x-mandatory { scroll-snap-type: x mandatory; }
     .snap-center { scroll-snap-align: center; }
-    
-    /* 语言下拉 */
     .lang-menu { display: none; }
     .lang-menu.active { display: block; }
 </style>
 </head>
 <body class="bg-[#f3f4f9] font-sans text-gray-800">
 
-<!-- ================= 1. 跑马灯 (左侧固定, 右侧滚动) ================= -->
+<!-- 跑马灯 (左侧固定, 右侧滚动) -->
 <div class="bg-[#0b1b3a] text-white text-[13px] py-2 flex items-center overflow-hidden">
-    <!-- 左侧固定的“实时” -->
     <div class="flex items-center gap-1.5 px-4 shrink-0 bg-[#0b1b3a] z-10 shadow-[5px_0_10px_#0b1b3a]">
         <i class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></i>
         <span data-i18n="realtime" class="font-medium">实时</span>
     </div>
-    <!-- 右侧滚动的数据 -->
     <div class="flex-1 overflow-hidden relative">
         <div class="marquee-content" id="marqueeData"></div>
     </div>
 </div>
 
-<!-- ================= 2. 导航栏 ================= -->
+<!-- 导航栏 -->
 <header class="bg-white shadow-sm sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2">
@@ -61,14 +50,11 @@
         </nav>
 
         <div class="flex items-center gap-3">
-            <!-- 多语言切换 -->
             <div class="relative">
                 <button onclick="toggleLangMenu()" class="flex items-center gap-1 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600">
                     🌐 <span id="currentLangText">中文</span>
                 </button>
-                <div id="langMenu" class="lang-menu absolute right-0 mt-2 w-36 bg-white border shadow-xl rounded-lg overflow-hidden z-50 max-h-80 overflow-y-auto">
-                    <!-- JS 动态渲染 -->
-                </div>
+                <div id="langMenu" class="lang-menu absolute right-0 mt-2 w-36 bg-white border shadow-xl rounded-lg overflow-hidden z-50 max-h-80 overflow-y-auto"></div>
             </div>
             <div id="authBtnArea"></div>
         </div>
@@ -77,13 +63,13 @@
 
 <main class="max-w-4xl mx-auto px-4 py-8 space-y-16">
 
-    <!-- ================= 3. 新闻图文 (多篇轮播) ================= -->
+    <!-- 新闻图文轮播 -->
     <div class="relative w-full">
         <div id="newsCarousel" class="flex overflow-x-auto snap-x-mandatory hide-scrollbar gap-4 pb-4"></div>
         <div class="flex justify-center gap-2 mt-2" id="carouselDots"></div>
     </div>
 
-    <!-- ================= 4. 参与奖励 (Hero) ================= -->
+    <!-- 参与奖励 Hero -->
     <div id="earn" class="text-center space-y-5 py-4">
         <h1 class="text-3xl md:text-4xl font-extrabold text-[#0A3466] leading-tight" data-i18n="heroTitle">
             WEB3智能时代 Bitget Bitpie Trust Phantom Solflare Coin98 Uniswap Exodus <br>
@@ -95,7 +81,7 @@
         </div>
     </div>
 
-    <!-- ================= 5. 统计数据 ================= -->
+    <!-- 统计数据 -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
         <div class="bg-white p-5 rounded-2xl shadow-sm">
             <div class="text-2xl font-bold text-blue-600">$2.5M+</div>
@@ -115,7 +101,7 @@
         </div>
     </div>
 
-    <!-- ================= 6. 如何领取 ================= -->
+    <!-- 如何领取 -->
     <div id="withdraw" class="bg-white p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold text-center mb-2" data-i18n="howTitle">如何领取</h2>
         <p class="text-center text-gray-500 text-sm mb-8" data-i18n="howDesc">1. 注册账号 → 2. 认真填表 → 3. 领币到账</p>
@@ -138,19 +124,7 @@
         </div>
     </div>
 
-    <!-- ================= 7. 精选优惠 (保留并跳转) ================= -->
-    <div id="offers">
-        <div class="flex justify-between items-end mb-6">
-            <div>
-                <h2 class="text-2xl font-bold text-[#0A3466]" data-i18n="offersTitle">精选优惠</h2>
-                <p class="text-gray-500 text-sm mt-1" data-i18n="offersDesc">浏览每日更新高收益任务，做完即刻结算。</p>
-            </div>
-            <a href="javascript:void(0)" onclick="goToOffers()" class="text-blue-600 text-sm font-medium hover:underline" data-i18n="viewTasks">查看任务 →</a>
-        </div>
-        <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4" id="homeOfferGrid"></div>
-    </div>
-
-    <!-- ================= 8. 幸运用户 (排行榜前3) ================= -->
+    <!-- 幸运用户 (排行榜前3) -->
     <div id="leaderboard" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold" data-i18n="leaderboardTitle">幸运用户</h2>
@@ -159,7 +133,7 @@
         <div class="space-y-3" id="topUsersList"></div>
     </div>
 
-    <!-- ================= 9. 用户怎么说 ================= -->
+    <!-- 用户怎么说 -->
     <div>
         <h2 class="text-2xl font-bold text-center mb-6" data-i18n="reviewsTitle">用户怎么说</h2>
         <div class="grid md:grid-cols-2 gap-4">
@@ -176,7 +150,7 @@
         </div>
     </div>
 
-    <!-- ================= 10. 常见问题 ================= -->
+    <!-- 常见问题 -->
     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold mb-2" data-i18n="faqTitle">常见问题</h2>
         <p class="text-sm text-gray-500 mb-6" data-i18n="faqDesc">有问题？我们来帮你。如果这里没有答案，支持团队随时待命。</p>
@@ -213,7 +187,7 @@
         </div>
     </div>
 
-    <!-- ================= 11. 合作墙 ================= -->
+    <!-- 合作墙 -->
     <div>
         <h2 class="text-xl font-bold text-center mb-6" data-i18n="partnersTitle">陆续增加合作商家</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -229,12 +203,10 @@
     </div>
 </main>
 
-<!-- ================= 12. 底部 Footer ================= -->
 <footer class="bg-[#0A3466] text-white py-12 mt-12">
     <div class="max-w-4xl mx-auto px-4 flex flex-col items-center">
         <h2 class="text-xl md:text-2xl font-bold text-center mb-8 leading-relaxed" data-i18n="footerTitle">8 家顶级公司 联合打造 空投发送 333ETH 奖励</h2>
         
-        <!-- 仅保留语言 -->
         <div class="mb-8">
             <button onclick="toggleLangMenu()" class="flex items-center gap-2 border border-white/20 rounded-lg px-4 py-2 text-sm hover:bg-white/10 transition-colors">
                 <span>🌐</span> 简体中文
@@ -248,7 +220,7 @@
     </div>
 </footer>
 
-<!-- ================= 弹窗区 ================= -->
+<!-- 弹窗区 -->
 <div id="safariModal" class="modal">
     <div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-blue-900 relative">
         <button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
@@ -305,15 +277,19 @@
 </div>
 
 <script>
-    // 多语言字典 (部分展示，实际已包含 10 国语言，为节省篇幅这里只写中英及部分，如果你需要完整的可以再问我要)
-    // 为确保代码完整，我把基础翻译写全
+    // 多语言字典 (精简版，确保所有 key 都有对应翻译)
     const i18n = {
-        zh: { realtime: "实时", login: "登录", logout: "退出", registerTitle: "注册账号", registerBtn: "注册", heroTitle: "WEB3智能时代 8家顶级公司联合打造空投发送333ETH奖励", heroDesc: "使用我们8家产品的用户都能参加，无需任何操作，简单领取奖励，24小时内免费空投发放。", claimBtn: "免费领取", stat1: "累计发放", stat2: "注册用户", stat3: "每日打款", stat4: "Google Play 评分", howTitle: "如何领取", howDesc: "1. 注册账号 → 2. 认真填表 → 3. 领币到账", step1Title: "注册账号", step1Desc: "使用邮箱注册，并设置登录密码与支付密码。", step2Title: "认真填表", step2Desc: "认真完成问卷，提交后即具备奖励资格。", step3Title: "领币到账", step3Desc: "随时通过加密货币热门币链进行提现，门槛低，到账时间快。", offersTitle: "精选优惠", offersDesc: "浏览每日更新高收益任务，做完即刻结算。", viewTasks: "查看任务 →", leaderboardTitle: "幸运用户", viewLeaderboard: "查看完整排行榜 →", reviewsTitle: "用户怎么说", activeUser: "活跃用户", faqTitle: "常见问题", faqDesc: "有问题？我们来帮你。如果这里没有答案，支持团队随时待命。", faqQ1: "如何领取？", faqA1: "只要您有使用我们的8家产品，免费注册登录后，认真完成每一项表格，提交后就能免费领取。", faqQ2: "有哪些领取方式？", faqA2: "支持PayPal、比特币、莱特币、银行转账，以及Amazon、虚拟Visa卡等热门礼品卡。我们会定期增加新方式。", faqQ3: "领取有手续费吗？", faqA3: "大多数方式免手续费，包括莱特币、Solana、虚拟Visa卡和全部礼品卡。银行转账等会收取少量费用以覆盖转账成本。", faqQ4: "领取需要多久？", faqA4: "我们会尽快处理，通常在数小时内完成。", partnersTitle: "陆续增加合作商家", footerTitle: "8 家顶级公司 联合打造 空投发送 333ETH 奖励", footerWarning: "风险提示：加密货币价格波动剧烈，参与任何空投或奖励活动前请自行判断风险。", footerCopy: "© 2024 W-Airdrop. 保留所有权利。", navEarn: "赚钱", navOffers: "优惠", navSurveys: "问卷", navWithdraw: "提现", navRewards: "奖励", navLeaderboard: "排行榜", safariTitle: "请使用 Safari 浏览器打开", safariDesc: "请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。", copyBtn: "复制当前链接", copied: "已复制", hasAccount: "已有账号？", goLogin: "去登录", noAccount: "还没有账号？", goRegister: "立即注册", loginTitle: "登录账号", loginBtn: "登录", labelEmail: "电子邮箱", labelPass: "登录密码", labelConfirm: "确认密码", labelPayPass: "支付密码", surveyTitle: "用户习惯请您认真填写", surveyDesc: "预计耗时: 2 分钟 | 提交即具空投资格", submitSurvey: "提交问卷", readMore: "查看全文" },
-        en: { realtime: "Live", login: "Login", logout: "Logout", registerTitle: "Register", registerBtn: "Register", heroTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", heroDesc: "Users of our 8 products can participate, no action required, simply claim rewards, airdropped for free within 24 hours.", claimBtn: "Claim Free", stat1: "Distributed", stat2: "Users", stat3: "Daily Payouts", stat4: "Play Store Rating", howTitle: "How to Claim", howDesc: "1. Register → 2. Fill Form → 3. Receive Coins", step1Title: "Register", step1Desc: "Sign up with email and set passwords.", step2Title: "Fill Form", step2Desc: "Complete the survey to get qualified.", step3Title: "Receive Coins", step3Desc: "Withdraw via crypto anytime.", offersTitle: "Featured Offers", offersDesc: "Browse daily high-yield tasks.", viewTasks: "View Tasks →", leaderboardTitle: "Lucky Users", viewLeaderboard: "View Leaderboard →", reviewsTitle: "What Users Say", activeUser: "Active User", faqTitle: "FAQ", faqDesc: "Need help? Check here.", faqQ1: "How to claim?", faqA1: "Register and complete forms.", faqQ2: "Claim methods?", faqA2: "PayPal, BTC, LTC, Bank, Gift Cards.", faqQ3: "Any fees?", faqA3: "Most are free.", faqQ4: "How long?", faqA4: "Usually within hours.", partnersTitle: "More Partners Coming", footerTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", footerWarning: "Risk warning: Crypto is volatile.", footerCopy: "© 2024 W-Airdrop.", navEarn: "Earn", navOffers: "Offers", navSurveys: "Surveys", navWithdraw: "Withdraw", navRewards: "Rewards", navLeaderboard: "Leaderboard", safariTitle: "Please open in Safari", safariDesc: "Please use the native Safari browser on iPhone / iPad.", copyBtn: "Copy Link", copied: "Copied", hasAccount: "Have an account?", goLogin: "Login", noAccount: "No account?", goRegister: "Register", loginTitle: "Login", loginBtn: "Login", labelEmail: "Email", labelPass: "Password", labelConfirm: "Confirm Password", labelPayPass: "Pay Password", surveyTitle: "Please fill out the survey", surveyDesc: "Takes 2 mins", submitSurvey: "Submit", readMore: "Read More" }
+        zh: { 
+            realtime: "实时", login: "登录", logout: "退出", registerTitle: "注册账号", registerBtn: "注册", heroTitle: "WEB3智能时代 8家顶级公司联合打造空投发送333ETH奖励", heroDesc: "使用我们8家产品的用户都能参加，无需任何操作，简单领取奖励，24小时内免费空投发放。", claimBtn: "免费领取", stat1: "累计发放", stat2: "注册用户", stat3: "每日打款", stat4: "Google Play 评分", howTitle: "如何领取", howDesc: "1. 注册账号 → 2. 认真填表 → 3. 领币到账", step1Title: "注册账号", step1Desc: "使用邮箱注册，并设置登录密码与支付密码。", step2Title: "认真填表", step2Desc: "认真完成问卷，提交后即具备奖励资格。", step3Title: "领币到账", step3Desc: "随时通过加密货币热门币链进行提现，门槛低，到账时间快。", offersTitle: "精选优惠", offersDesc: "浏览每日更新高收益任务，做完即刻结算。", viewTasks: "查看任务 →", leaderboardTitle: "幸运用户", viewLeaderboard: "查看完整排行榜 →", reviewsTitle: "用户怎么说", activeUser: "活跃用户", faqTitle: "常见问题", faqDesc: "有问题？我们来帮你。如果这里没有答案，支持团队随时待命。", faqQ1: "如何领取？", faqA1: "只要您有使用我们的8家产品，免费注册登录后，认真完成每一项表格，提交后就能免费领取。", faqQ2: "有哪些领取方式？", faqA2: "支持PayPal、比特币、莱特币、银行转账，以及Amazon、虚拟Visa卡等热门礼品卡。我们会定期增加新方式。", faqQ3: "领取有手续费吗？", faqA3: "大多数方式免手续费，包括莱特币、Solana、虚拟Visa卡和全部礼品卡。银行转账等会收取少量费用以覆盖转账成本。", faqQ4: "领取需要多久？", faqA4: "我们会尽快处理，通常在数小时内完成。", partnersTitle: "陆续增加合作商家", footerTitle: "8 家顶级公司 联合打造 空投发送 333ETH 奖励", footerWarning: "风险提示：加密货币价格波动剧烈，参与任何空投或奖励活动前请自行判断风险。", footerCopy: "© 2024 W-Airdrop. 保留所有权利。", navEarn: "赚钱", navOffers: "优惠", navSurveys: "问卷", navWithdraw: "提现", navRewards: "奖励", navLeaderboard: "排行榜", safariTitle: "请使用 Safari 浏览器打开", safariDesc: "请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。", copyBtn: "复制当前链接", copied: "已复制", hasAccount: "已有账号？", goLogin: "去登录", noAccount: "还没有账号？", goRegister: "立即注册", loginTitle: "登录账号", loginBtn: "登录", labelEmail: "电子邮箱", labelPass: "登录密码", labelConfirm: "确认密码", labelPayPass: "支付密码", surveyTitle: "用户习惯请您认真填写", surveyDesc: "预计耗时: 2 分钟 | 提交即具空投资格", submitSurvey: "提交问卷", readMore: "查看全文" 
+        },
+        en: { 
+            realtime: "Live", login: "Login", logout: "Logout", registerTitle: "Register", registerBtn: "Register", heroTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", heroDesc: "Users of our 8 products can participate, no action required, simply claim rewards, airdropped for free within 24 hours.", claimBtn: "Claim Free", stat1: "Distributed", stat2: "Users", stat3: "Daily Payouts", stat4: "Play Store Rating", howTitle: "How to Claim", howDesc: "1. Register → 2. Fill Form → 3. Receive Coins", step1Title: "Register", step1Desc: "Sign up with email and set passwords.", step2Title: "Fill Form", step2Desc: "Complete the survey to get qualified.", step3Title: "Receive Coins", step3Desc: "Withdraw via crypto anytime.", offersTitle: "Featured Offers", offersDesc: "Browse daily high-yield tasks.", viewTasks: "View Tasks →", leaderboardTitle: "Lucky Users", viewLeaderboard: "View Leaderboard →", reviewsTitle: "What Users Say", activeUser: "Active User", faqTitle: "FAQ", faqDesc: "Need help? Check here.", faqQ1: "How to claim?", faqA1: "Register and complete forms.", faqQ2: "Claim methods?", faqA2: "PayPal, BTC, LTC, Bank, Gift Cards.", faqQ3: "Any fees?", faqA3: "Most are free.", faqQ4: "How long?", faqA4: "Usually within hours.", partnersTitle: "More Partners Coming", footerTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", footerWarning: "Risk warning: Crypto is volatile.", footerCopy: "© 2024 W-Airdrop.", navEarn: "Earn", navOffers: "Offers", navSurveys: "Surveys", navWithdraw: "Withdraw", navRewards: "Rewards", navLeaderboard: "Leaderboard", safariTitle: "Please open in Safari", safariDesc: "Please use the native Safari browser on iPhone / iPad.", copyBtn: "Copy Link", copied: "Copied", hasAccount: "Have an account?", goLogin: "Login", noAccount: "No account?", goRegister: "Register", loginTitle: "Login", loginBtn: "Login", labelEmail: "Email", labelPass: "Password", labelConfirm: "Confirm Password", labelPayPass: "Pay Password", surveyTitle: "Please fill out the survey", surveyDesc: "Takes 2 mins", submitSurvey: "Submit", readMore: "Read More" 
+        },
+        vi: { 
+            realtime: "Trực tiếp", login: "Đăng nhập", logout: "Đăng xuất", registerTitle: "Đăng ký", registerBtn: "Đăng ký", heroTitle: "8 công ty hàng đầu cùng ra mắt Airdrop 333 ETH", heroDesc: "Người dùng 8 sản phẩm có thể tham gia, nhận thưởng miễn phí trong 24h.", claimBtn: "Nhận miễn phí", stat1: "Đã phát", stat2: "Người dùng", stat3: "Thanh toán/Ngày", stat4: "Điểm Play Store", howTitle: "Cách nhận", howDesc: "1. Đăng ký → 2. Điền form → 3. Nhận coin", step1Title: "Đăng ký", step1Desc: "Đăng ký bằng email.", step2Title: "Điền form", step2Desc: "Hoàn thành khảo sát.", step3Title: "Nhận coin", step3Desc: "Rút tiền qua crypto.", offersTitle: "Ưu đãi nổi bật", offersDesc: "Nhiệm vụ sinh lời hàng ngày.", viewTasks: "Xem nhiệm vụ →", leaderboardTitle: "Người dùng may mắn", viewLeaderboard: "Xem BXH →", reviewsTitle: "Người dùng nói gì", activeUser: "Người dùng tích cực", faqTitle: "Câu hỏi thường gặp", faqDesc: "Cần giúp đỡ?", faqQ1: "Cách nhận?", faqA1: "Đăng ký và điền form.", faqQ2: "Phương thức?", faqA2: "PayPal, BTC, LTC, Ngân hàng.", faqQ3: "Có phí không?", faqA3: "Hầu hết miễn phí.", faqQ4: "Mất bao lâu?", faqA4: "Thường trong vài giờ.", partnersTitle: "Thêm đối tác", footerTitle: "8 công ty hàng đầu cùng ra mắt Airdrop 333 ETH", footerWarning: "Cảnh báo rủi ro.", footerCopy: "© 2024 W-Airdrop.", navEarn: "Kiếm tiền", navOffers: "Ưu đãi", navSurveys: "Khảo sát", navWithdraw: "Rút tiền", navRewards: "Phần thưởng", navLeaderboard: "Bảng xếp hạng", safariTitle: "Vui lòng mở bằng Safari", safariDesc: "Sử dụng trình duyệt Safari gốc.", copyBtn: "Sao chép liên kết", copied: "Đã sao chép", hasAccount: "Đã có tài khoản?", goLogin: "Đăng nhập", noAccount: "Chưa có tài khoản?", goRegister: "Đăng ký", loginTitle: "Đăng nhập", loginBtn: "Đăng nhập", labelEmail: "Email", labelPass: "Mật khẩu", labelConfirm: "Xác nhận mật khẩu", labelPayPass: "Mật khẩu thanh toán", surveyTitle: "Vui lòng điền khảo sát", surveyDesc: "Mất 2 phút", submitSurvey: "Gửi", readMore: "Đọc thêm" 
+        }
+        // 你可以根据需要在后台继续添加 de, ar, es 等其他语言
     };
-
-    // 因为篇幅限制，你之前给的 vi, de, ar 等语言的字典请保留在 i18n 对象中，这里为了代码完整我合并了中英，如果你需要其他语言可以自行放入对象中。
-    // 如果使用接口获取语言，这里可以动态加载。
 
     let currentLang = 'zh';
     let carouselIndex = 0;
@@ -341,9 +317,10 @@
         document.getElementById('currentLangText').innerText = name;
         applyLanguage();
         loadMarquee();
-        loadNewsCarousel();
+        loadNewsCarousel(); // 重新加载新闻以获取对应语言
     }
 
+    // 核心：应用多语言替换
     function applyLanguage() {
         const dict = i18n[currentLang] || i18n['en'];
         document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -385,28 +362,22 @@
         else { triggerSafariCheck('register'); }
     }
 
-    function goToOffers() {
-        const user = JSON.parse(localStorage.getItem('wad_user'));
-        if (user) { window.location.href = '/offers.html'; } 
-        else { triggerSafariCheck('login'); }
-    }
-
     async function loadMarquee() {
         const res = await fetch('/api/marquee');
         const data = await res.json();
-        
         let html = '';
-        // 这里只渲染纯数据，因为“实时”已经固定在左侧了
         [...data, ...data].forEach(item => { 
             html += `<span class="inline-flex items-center gap-2 px-4"><i class="w-2 h-2 rounded-full bg-green-500"></i>${item.name} <b class="text-green-400">+${item.amount}</b></span>`; 
         });
         document.getElementById('marqueeData').innerHTML = html;
     }
 
+    // ===== 文章轮播图逻辑 =====
     async function loadNewsCarousel() {
         const res = await fetch(`/api/articles/latest?lang=${currentLang}`); 
         let data = await res.json();
         
+        // 兜底逻辑
         if (!data || data.length === 0) {
             const fallbackRes = await fetch(`/api/articles/latest?lang=zh`);
             data = await fallbackRes.json();
@@ -421,9 +392,10 @@
         }
         
         carouselArticles = data;
+        carouselIndex = 0; // 重置索引
         
         container.innerHTML = data.map((item, index) => `
-            <div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer" onclick="window.location.href='/article.html?id=${item.id}'">
+            <div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer" onclick="triggerSafariCheck('article')">
                 <h2 class="text-xl font-bold mb-2 leading-snug">${item.title}</h2>
                 <p class="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-3">${item.summary}</p>
                 ${item.coverUrl ? `<img src="${item.coverUrl}" class="w-full h-48 object-cover rounded-xl mb-4">` : ''}
@@ -435,6 +407,8 @@
             <button onclick="scrollToArticle(${i})" class="w-2.5 h-2.5 rounded-full transition-all ${i === 0 ? 'bg-blue-600 w-6' : 'bg-gray-300'}"></button>
         `).join('');
 
+        applyLanguage(); // 关键：渲染完新节点后应用翻译
+        updateDots(0);
         startCarousel();
     }
 
@@ -442,8 +416,8 @@
         if (carouselInterval) clearInterval(carouselInterval);
         if (carouselArticles.length <= 1) return;
         carouselInterval = setInterval(() => {
-            carouselIndex = (carouselIndex + 1) % carouselArticles.length;
-            scrollToArticle(carouselIndex);
+            let nextIndex = (carouselIndex + 1) % carouselArticles.length;
+            scrollToArticle(nextIndex);
         }, 4000);
     }
 
@@ -451,6 +425,10 @@
         const container = document.getElementById('newsCarousel');
         const width = container.offsetWidth;
         container.scrollTo({ left: width * index, behavior: 'smooth' });
+        updateDots(index);
+    }
+
+    function updateDots(index) {
         carouselIndex = index;
         const dots = document.getElementById('carouselDots').children;
         for (let i = 0; i < dots.length; i++) {
@@ -458,6 +436,17 @@
             else dots[i].className = 'w-2.5 h-2.5 rounded-full transition-all bg-gray-300';
         }
     }
+
+    // 监听手动滑动，更新指示点
+    document.getElementById('newsCarousel').addEventListener('scroll', () => {
+        const container = document.getElementById('newsCarousel');
+        const scrollLeft = container.scrollLeft;
+        const width = container.offsetWidth;
+        const index = Math.round(scrollLeft / width);
+        if (index !== carouselIndex) {
+            updateDots(index);
+        }
+    });
 
     document.getElementById('newsCarousel').addEventListener('touchstart', () => { if (carouselInterval) clearInterval(carouselInterval); }, {passive: true});
     document.getElementById('newsCarousel').addEventListener('touchend', () => { startCarousel(); }, {passive: true});
@@ -529,24 +518,6 @@
         } else alert(data.error);
     }
 
-    async function loadHomeOffers() {
-        const res = await fetch('/api/offers');
-        const offers = (await res.json()).slice(0, 4); 
-        let html = '';
-        offers.forEach(o => {
-            html += `
-                <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer" onclick="goToOffers()">
-                    <div class="w-full h-16 rounded-lg mb-3" style="background-color: ${o.color}"></div>
-                    <h3 class="font-bold mb-1 truncate">${o.title}</h3>
-                    <div class="mt-2 flex justify-between items-center text-sm">
-                        <span class="text-green-600 font-bold bg-green-50 px-2 py-1 rounded">🪙 ${o.reward}</span>
-                        <span class="text-blue-500 text-xs font-bold">开始赚钱</span>
-                    </div>
-                </div>`;
-        });
-        document.getElementById('homeOfferGrid').innerHTML = html;
-    }
-
     async function loadTopLeaderboard() {
         const res = await fetch('/api/leaderboard?period=daily');
         const list = await res.json();
@@ -569,7 +540,6 @@
     updateAuthUI(); 
     loadMarquee(); 
     loadNewsCarousel(); 
-    loadHomeOffers(); 
     loadTopLeaderboard();
     checkUrlParams();
 </script>
