@@ -31,7 +31,7 @@
         </nav>
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-full">
-                <span class="font-bold text-gray-800 text-sm" id="navBalance">0 金币</span>
+                <span class="font-bold text-gray-800 text-sm" id="navBalance">0</span>
             </div>
             <span class="text-sm font-medium text-gray-600 hidden sm:block" id="navEmail">---</span>
             <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500 transition-colors">退出</button>
@@ -71,7 +71,7 @@
         <h3 class="text-xl font-bold mb-4 text-center">申请提现</h3>
         <div class="space-y-4 mb-6">
             <div><label class="block text-sm font-medium text-gray-700 mb-1">提现方式</label><select id="wMethod" class="w-full border p-3 rounded-xl outline-none"><option value="PayPal">PayPal</option><option value="BTC">比特币 (BTC)</option></select></div>
-            <div><label class="block text-sm font-medium text-gray-700 mb-1">金额 (最低 500 金币)</label><input type="number" id="wAmount" placeholder="请输入数量" class="w-full border p-3 rounded-xl outline-none"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">金额 (最低 500)</label><input type="number" id="wAmount" placeholder="请输入数量" class="w-full border p-3 rounded-xl outline-none"></div>
             <div><label class="block text-sm font-medium text-gray-700 mb-1">接收账号/地址</label><input type="text" id="wAccount" placeholder="请输入账号" class="w-full border p-3 rounded-xl outline-none"></div>
         </div>
         <button onclick="submitWithdraw()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">提交申请</button>
@@ -83,16 +83,18 @@
         <button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
         <h3 class="text-lg font-bold text-center mb-6">用户习惯问卷调查</h3>
         <div id="surveyQuestions" class="space-y-4 mb-6 max-h-[60vh] overflow-y-auto"></div>
-        <button onclick="submitSurvey()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700">提交问卷 (+180金币)</button>
+        <button onclick="submitSurvey()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700">提交问卷 (+180)</button>
     </div>
 </div>
 
 <script>
+    const coinSvg = `<svg class="w-4 h-4 inline-block align-middle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#FBBF24"/><circle cx="12" cy="12" r="8" fill="#FCD34D"/><path d="M12 6V18M15 9C15 7.89543 13.6569 7 12 7C10.3431 7 9 7.89543 9 9C9 10.1046 10.3431 11 12 11C13.6569 11 15 11.8954 15 13C15 14.1046 13.6569 15 12 15C10.3431 15 9 14.1046 9 13" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
     let currentUser = JSON.parse(localStorage.getItem('wad_user'));
     if (!currentUser) window.location.href = '/';
     
     document.getElementById('navEmail').innerText = currentUser.email;
-    document.getElementById('navBalance').innerText = `${currentUser.balance || 0} 金币`;
+    document.getElementById('navBalance').innerHTML = `${coinSvg} ${currentUser.balance || 0}`;
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
@@ -112,7 +114,7 @@
                 <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 border border-gray-100">${o.name[0]}</div>
                 <div><h4 class="font-bold text-sm text-gray-900">${o.name}</h4><p class="text-xs text-gray-500 mt-0.5">可做任务</p></div>
             </div>
-            <span class="${o.color} px-2 py-1 rounded text-xs font-bold">+${o.reward} 金币</span>
+            <span class="${o.color} px-2 py-1 rounded text-xs font-bold flex items-center gap-1">${coinSvg} +${o.reward}</span>
         </div>
     `).join('');
 
@@ -123,7 +125,7 @@
         });
         const data = await res.json();
         if(data.success) {
-            document.getElementById('navBalance').innerText = `${data.balance} 金币`;
+            document.getElementById('navBalance').innerHTML = `${coinSvg} ${data.balance}`;
             currentUser.balance = data.balance;
             localStorage.setItem('wad_user', JSON.stringify(currentUser));
             alert(`【${name}】任务完成！+${reward} 金币已到账。`);
@@ -133,7 +135,7 @@
     function openWithdraw() { openModal('withdrawModal'); }
     async function submitWithdraw() {
         const amount = Number(document.getElementById('wAmount').value);
-        if(amount < 500) return alert('最低提现 500 金币');
+        if(amount < 500) return alert('最低提现 500');
         if(amount > currentUser.balance) return alert('余额不足');
         alert('提现申请已提交，请等待审核！'); closeModal('withdrawModal');
     }
