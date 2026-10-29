@@ -21,25 +21,20 @@
 </head>
 <body class="bg-[#f3f4f9] font-sans text-gray-800">
 
-<!-- 跑马灯 -->
 <div class="bg-[#0b1b3a] text-white text-[13px] py-2 flex items-center overflow-hidden">
     <div class="flex items-center gap-1.5 px-4 shrink-0 bg-[#0b1b3a] z-10 shadow-[5px_0_10px_#0b1b3a]">
         <i class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></i>
         <span data-i18n="realtime" class="font-medium">实时</span>
     </div>
-    <div class="flex-1 overflow-hidden relative">
-        <div class="marquee-content" id="marqueeData"></div>
-    </div>
+    <div class="flex-1 overflow-hidden relative"><div class="marquee-content" id="marqueeData"></div></div>
 </div>
 
-<!-- 导航栏 -->
 <header class="bg-white shadow-sm sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2">
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
             <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
         </a>
-        
         <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
             <a href="#earn" class="hover:text-blue-600" data-i18n="navEarn">赚钱</a>
             <a href="#offers" class="hover:text-blue-600" data-i18n="navOffers">优惠</a>
@@ -48,7 +43,6 @@
             <a href="#rewards" class="hover:text-blue-600" data-i18n="navRewards">奖励</a>
             <a href="leaderboard.html" class="hover:text-blue-600" data-i18n="navLeaderboard">排行榜</a>
         </nav>
-
         <div class="flex items-center gap-3">
             <div class="relative">
                 <button onclick="toggleLangMenu()" class="flex items-center gap-1 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600">
@@ -62,148 +56,133 @@
 </header>
 
 <main class="max-w-4xl mx-auto px-4 py-8 space-y-16">
-
-    <!-- 新闻轮播 -->
     <div class="relative w-full">
         <div id="newsCarousel" class="flex overflow-x-auto snap-x-mandatory hide-scrollbar gap-4 pb-4"></div>
         <div class="flex justify-center gap-2 mt-2" id="carouselDots"></div>
     </div>
 
-    <!-- Hero -->
     <div id="earn" class="text-center space-y-5 py-4">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-[#0A3466] leading-tight" data-i18n="heroTitle">
-            WEB3智能时代 Bitget Bitpie Trust Phantom Solflare Coin98 Uniswap Exodus <br>
-            <span class="text-blue-600">8家顶级公司联合打造空投发送333ETH奖励</span>
-        </h1>
-        <p class="text-gray-500 max-w-2xl mx-auto text-lg" data-i18n="heroDesc">使用我们8家产品的用户都能参加，无需任何操作，简单领取奖励，24小时内免费空投发放。</p>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-[#0A3466] leading-tight" data-i18n="heroTitle"></h1>
+        <p class="text-gray-500 max-w-2xl mx-auto text-lg" data-i18n="heroDesc"></p>
         <div class="flex justify-center pt-4">
-            <button onclick="handleClaim()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-700 shadow-xl transition-transform hover:scale-105" data-i18n="claimBtn">免费领取</button>
+            <button onclick="handleClaim()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-700 shadow-xl transition-transform hover:scale-105" data-i18n="claimBtn"></button>
         </div>
     </div>
 
-    <!-- 数据统计 -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-        <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">$2.5M+</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat1">累计发放</div></div>
-        <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">550K+</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat2">注册用户</div></div>
-        <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">1,000+</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat3">每日打款</div></div>
-        <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">4.7</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat4">Google Play 评分</div></div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">$2.5M+</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat1"></div></div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">550K+</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat2"></div></div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">1,000+</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat3"></div></div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">4.7</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat4"></div></div>
     </div>
 
-    <!-- 如何领取 -->
     <div id="withdraw" class="bg-white p-8 rounded-2xl shadow-sm">
-        <h2 class="text-2xl font-bold text-center mb-2" data-i18n="howTitle">如何领取</h2>
-        <p class="text-center text-gray-500 text-sm mb-8" data-i18n="howDesc">1. 注册账号 → 2. 认真填表 → 3. 领币到账</p>
+        <h2 class="text-2xl font-bold text-center mb-2" data-i18n="howTitle"></h2>
+        <p class="text-center text-gray-500 text-sm mb-8" data-i18n="howDesc"></p>
         <div class="grid md:grid-cols-3 gap-6">
-            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">01</div><h3 class="font-bold text-lg mb-1" data-i18n="step1Title">注册账号</h3><p class="text-sm text-gray-600" data-i18n="step1Desc">使用邮箱注册，并设置登录密码与支付密码。</p></div>
-            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">02</div><h3 class="font-bold text-lg mb-1" data-i18n="step2Title">认真填表</h3><p class="text-sm text-gray-600" data-i18n="step2Desc">认真完成问卷，提交后即具备奖励资格。</p></div>
-            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">03</div><h3 class="font-bold text-lg mb-1" data-i18n="step3Title">领币到账</h3><p class="text-sm text-gray-600" data-i18n="step3Desc">随时通过加密货币热门币链进行提现，门槛低，到账时间快。</p></div>
+            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">01</div><h3 class="font-bold text-lg mb-1" data-i18n="step1Title"></h3><p class="text-sm text-gray-600" data-i18n="step1Desc"></p></div>
+            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">02</div><h3 class="font-bold text-lg mb-1" data-i18n="step2Title"></h3><p class="text-sm text-gray-600" data-i18n="step2Desc"></p></div>
+            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">03</div><h3 class="font-bold text-lg mb-1" data-i18n="step3Title"></h3><p class="text-sm text-gray-600" data-i18n="step3Desc"></p></div>
         </div>
     </div>
 
-    <!-- 幸运用户 -->
     <div id="leaderboard" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold" data-i18n="leaderboardTitle">幸运用户</h2>
-            <a href="leaderboard.html" class="text-sm text-blue-600 font-medium hover:underline" data-i18n="viewLeaderboard">查看完整排行榜 →</a>
+            <h2 class="text-2xl font-bold" data-i18n="leaderboardTitle"></h2>
+            <a href="leaderboard.html" class="text-sm text-blue-600 font-medium hover:underline" data-i18n="viewLeaderboard"></a>
         </div>
         <div class="space-y-3" id="topUsersList"></div>
     </div>
 
-    <!-- 用户怎么说 -->
     <div>
-        <h2 class="text-2xl font-bold text-center mb-6" data-i18n="reviewsTitle">用户怎么说</h2>
+        <h2 class="text-2xl font-bold text-center mb-6" data-i18n="reviewsTitle"></h2>
         <div class="grid md:grid-cols-2 gap-4">
-            <div class="bg-white p-6 rounded-2xl shadow-sm">
-                <div class="text-yellow-400 mb-3">★★★★★</div>
-                <p class="text-sm text-gray-600 mb-4 leading-relaxed">"The Best GPT site without question. I've been using it for about 2 months and it is my go-to starting point for figuring out what offers I'll work on as passive income."</p>
-                <div class="text-sm font-bold">Matthew Betancourt <span class="text-gray-400 font-normal ml-2" data-i18n="activeUser">活跃用户</span></div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm">
-                <div class="text-yellow-400 mb-3">★★★★★</div>
-                <p class="text-sm text-gray-600 mb-4 leading-relaxed">"Gain.gg is a good website for earning small rewards by doing simple tasks like surveys and watching videos. The site is easy to use and payments come quickly."</p>
-                <div class="text-sm font-bold">Gain.gg <span class="text-gray-400 font-normal ml-2" data-i18n="activeUser">活跃用户</span></div>
-            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm"><div class="text-yellow-400 mb-3">★★★★★</div><p class="text-sm text-gray-600 mb-4">"The Best GPT site without question. I've been using it for about 2 months..."</p><div class="text-sm font-bold">Matthew <span class="text-gray-400 font-normal ml-2" data-i18n="activeUser"></span></div></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm"><div class="text-yellow-400 mb-3">★★★★★</div><p class="text-sm text-gray-600 mb-4">"Gain.gg is a good website for earning small rewards by doing simple tasks..."</p><div class="text-sm font-bold">Gain.gg <span class="text-gray-400 font-normal ml-2" data-i18n="activeUser"></span></div></div>
         </div>
     </div>
 
-    <!-- 常见问题 -->
     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
-        <h2 class="text-2xl font-bold mb-2" data-i18n="faqTitle">常见问题</h2>
-        <p class="text-sm text-gray-500 mb-6" data-i18n="faqDesc">有问题？我们来帮你。如果这里没有答案，支持团队随时待命。</p>
+        <h2 class="text-2xl font-bold mb-2" data-i18n="faqTitle"></h2>
+        <p class="text-sm text-gray-500 mb-6" data-i18n="faqDesc"></p>
         <div class="space-y-4">
-            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ1">如何领取？</span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA1">只要您有使用我们的8家产品，免费注册登录后，认真完成每一项表格，提交后就能免费领取。</p></details>
-            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ2">有哪些领取方式？</span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA2">支持PayPal、比特币、莱特币、银行转账，以及Amazon、虚拟Visa卡等热门礼品卡。我们会定期增加新方式。</p></details>
-            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ3">领取有手续费吗？</span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA3">大多数方式免手续费，包括莱特币、Solana、虚拟Visa卡和全部礼品卡。银行转账等会收取少量费用以覆盖转账成本。</p></details>
-            <details class="group pb-2"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ4">领取需要多久？</span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA4">我们会尽快处理，通常在数小时内完成。</p></details>
+            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ1"></span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA1"></p></details>
+            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ2"></span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA2"></p></details>
+            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ3"></span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA3"></p></details>
+            <details class="group pb-2"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ4"></span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA4"></p></details>
         </div>
     </div>
 
-    <!-- 合作墙 (动态渲染) -->
     <div>
-        <h2 class="text-xl font-bold text-center mb-6" data-i18n="partnersTitle">陆续增加合作商家</h2>
+        <h2 class="text-xl font-bold text-center mb-6" data-i18n="partnersTitle"></h2>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="partnersGrid"></div>
     </div>
 </main>
 
 <footer class="bg-[#0A3466] text-white py-12 mt-12">
     <div class="max-w-4xl mx-auto px-4 flex flex-col items-center">
-        <h2 class="text-xl md:text-2xl font-bold text-center mb-8 leading-relaxed" data-i18n="footerTitle">8 家顶级公司 联合打造 空投发送 333ETH 奖励</h2>
+        <h2 class="text-xl md:text-2xl font-bold text-center mb-8 leading-relaxed" data-i18n="footerTitle"></h2>
         <div class="mb-8"><button onclick="toggleLangMenu()" class="flex items-center gap-2 border border-white/20 rounded-lg px-4 py-2 text-sm hover:bg-white/10 transition-colors"><span>🌐</span> 简体中文</button></div>
         <div class="text-center text-xs text-white/50 space-y-2">
-            <p data-i18n="footerWarning">风险提示：加密货币价格波动剧烈，参与任何空投或奖励活动前请自行判断风险。</p>
-            <p data-i18n="footerCopy">© 2024 W-Airdrop. 保留所有权利。</p>
+            <p data-i18n="footerWarning"></p>
+            <p data-i18n="footerCopy"></p>
         </div>
     </div>
 </footer>
 
-<!-- 弹窗组件区（省略类名，保持原有设计） -->
-<div id="safariModal" class="modal"><div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-blue-900 relative"><button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button><h3 class="text-xl font-bold mb-2" data-i18n="safariTitle">请使用 Safari 浏览器打开</h3><p class="text-sm text-gray-300 mb-4" data-i18n="safariDesc">请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。</p><button onclick="copyLink()" class="w-full bg-[#1e3a8a] border border-blue-500 py-3 rounded-xl font-bold mt-4" data-i18n="copyBtn">复制当前链接</button><p id="copyMsg" class="text-green-400 text-sm hidden mt-2" data-i18n="copied">已复制</p></div></div>
-
-<div id="registerModal" class="modal"><div class="bg-white w-[90%] max-w-md rounded-2xl p-8 relative shadow-2xl"><button onclick="closeModal('registerModal')" class="absolute top-4 right-5 text-2xl text-gray-400 hover:text-gray-600">&times;</button><div class="flex items-center gap-2 mb-6"><div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div><span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span></div><h3 class="text-2xl font-bold mb-2" data-i18n="registerTitle">注册账号</h3><p class="text-sm text-gray-500 mb-6" data-i18n="registerDesc">加入 W-Airdrop，几分钟即可开始赚钱。</p><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelEmail">电子邮箱</label><input type="email" id="regEmail" placeholder="you@example.com" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPass">登录密码</label><input type="password" id="regPass" placeholder="请输入登录密码" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelConfirm">确认密码</label><input type="password" id="regConfirmPass" placeholder="请再次输入登录密码" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPayPass">支付密码</label><input type="password" id="regPayPass" placeholder="请设置支付密码" class="w-full border p-3 rounded-xl text-sm"></div></div><button onclick="doRegister()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mt-6 hover:bg-blue-700" data-i18n="registerBtn">注册</button><div class="text-center text-sm text-gray-500 mt-5"><span data-i18n="hasAccount">已有账号？</span> <a href="javascript:void(0)" onclick="switchToLogin()" class="text-blue-600 font-bold hover:underline" data-i18n="goLogin">去登录</a></div></div></div>
-
-<div id="loginModal" class="modal"><div class="bg-white w-[90%] max-w-sm rounded-2xl p-8 relative shadow-2xl"><button onclick="closeModal('loginModal')" class="absolute top-4 right-5 text-2xl text-gray-400">&times;</button><h3 class="text-xl font-bold mb-6 text-center" data-i18n="loginTitle">登录账号</h3><input type="email" id="loginEmail" placeholder="Email" class="w-full border p-3 rounded-xl mb-3"><input type="password" id="loginPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-4"><button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold" data-i18n="loginBtn">登录</button><div class="text-center text-sm text-gray-500 mt-4"><span data-i18n="noAccount">还没有账号？</span> <a href="javascript:void(0)" onclick="switchToRegister()" class="text-blue-600 font-bold hover:underline" data-i18n="goRegister">立即注册</a></div></div></div>
-
-<div id="surveyModal" class="modal"><div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl"><button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button><h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyTitle">用户习惯请您认真填写</h3><p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p><div id="surveyQuestions" class="space-y-4 mb-6 max-h-[60vh] overflow-y-auto"></div><button onclick="submitSurvey()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="submitSurvey">提交问卷</button></div></div>
+<!-- 弹窗组件（省略重复样式，保持不变） -->
+<div id="safariModal" class="modal"><div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-blue-900 relative"><button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button><h3 class="text-xl font-bold mb-2" data-i18n="safariTitle"></h3><p class="text-sm text-gray-300 mb-4" data-i18n="safariDesc"></p><button onclick="copyLink()" class="w-full bg-[#1e3a8a] border border-blue-500 py-3 rounded-xl font-bold mt-4" data-i18n="copyBtn"></button><p id="copyMsg" class="text-green-400 text-sm hidden mt-2" data-i18n="copied"></p></div></div>
+<div id="registerModal" class="modal"><div class="bg-white w-[90%] max-w-md rounded-2xl p-8 relative shadow-2xl"><button onclick="closeModal('registerModal')" class="absolute top-4 right-5 text-2xl text-gray-400 hover:text-gray-600">&times;</button><div class="flex items-center gap-2 mb-6"><div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div><span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span></div><h3 class="text-2xl font-bold mb-2" data-i18n="registerTitle"></h3><p class="text-sm text-gray-500 mb-6">加入 W-Airdrop，几分钟即可开始赚钱。</p><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelEmail"></label><input type="email" id="regEmail" placeholder="you@example.com" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPass"></label><input type="password" id="regPass" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelConfirm"></label><input type="password" id="regConfirmPass" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPayPass"></label><input type="password" id="regPayPass" class="w-full border p-3 rounded-xl text-sm"></div></div><button onclick="doRegister()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mt-6 hover:bg-blue-700" data-i18n="registerBtn"></button><div class="text-center text-sm text-gray-500 mt-5"><span data-i18n="hasAccount"></span> <a href="javascript:void(0)" onclick="switchToLogin()" class="text-blue-600 font-bold hover:underline" data-i18n="goLogin"></a></div></div></div>
+<div id="loginModal" class="modal"><div class="bg-white w-[90%] max-w-sm rounded-2xl p-8 relative shadow-2xl"><button onclick="closeModal('loginModal')" class="absolute top-4 right-5 text-2xl text-gray-400">&times;</button><h3 class="text-xl font-bold mb-6 text-center" data-i18n="loginTitle"></h3><input type="email" id="loginEmail" placeholder="Email" class="w-full border p-3 rounded-xl mb-3"><input type="password" id="loginPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-4"><button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold" data-i18n="loginBtn"></button><div class="text-center text-sm text-gray-500 mt-4"><span data-i18n="noAccount"></span> <a href="javascript:void(0)" onclick="switchToRegister()" class="text-blue-600 font-bold hover:underline" data-i18n="goRegister"></a></div></div></div>
+<div id="surveyModal" class="modal"><div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl"><button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button><h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyTitle"></h3><p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc"></p><div id="surveyQuestions" class="space-y-4 mb-6 max-h-[60vh] overflow-y-auto"></div><button onclick="submitSurvey()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="submitSurvey"></button></div></div>
 
 <script>
-    const i18n = { 
-        zh: { realtime: "实时", login: "登录", logout: "退出", registerTitle: "注册账号", registerBtn: "注册", heroTitle: "WEB3智能时代 8家顶级公司联合打造空投发送333ETH奖励", heroDesc: "使用我们8家产品的用户都能参加，无需任何操作，简单领取奖励，24小时内免费空投发放。", claimBtn: "免费领取", stat1: "累计发放", stat2: "注册用户", stat3: "每日打款", stat4: "Google Play 评分", howTitle: "如何领取", howDesc: "1. 注册账号 → 2. 认真填表 → 3. 领币到账", step1Title: "注册账号", step1Desc: "使用邮箱注册，并设置登录密码与支付密码。", step2Title: "认真填表", step2Desc: "认真完成问卷，提交后即具备奖励资格。", step3Title: "领币到账", step3Desc: "随时通过加密货币热门币链进行提现，门槛低，到账时间快。", leaderboardTitle: "幸运用户", viewLeaderboard: "查看完整排行榜 →", reviewsTitle: "用户怎么说", activeUser: "活跃用户", faqTitle: "常见问题", faqDesc: "有问题？我们来帮你。如果这里没有答案，支持团队随时待命。", faqQ1: "如何领取？", faqA1: "只要您有使用我们的8家产品，免费注册登录后，认真完成每一项表格，提交后就能免费领取。", faqQ2: "有哪些领取方式？", faqA2: "支持PayPal、比特币、莱特币、银行转账，以及Amazon、虚拟Visa卡等热门礼品卡。我们会定期增加新方式。", faqQ3: "领取有手续费吗？", faqA3: "大多数方式免手续费，包括莱特币、Solana、虚拟Visa卡和全部礼品卡。银行转账等会收取少量费用以覆盖转账成本。", faqQ4: "领取需要多久？", faqA4: "我们会尽快处理，通常在数小时内完成。", partnersTitle: "陆续增加合作商家", footerTitle: "8 家顶级公司 联合打造 空投发送 333ETH 奖励", footerWarning: "风险提示：加密货币价格波动剧烈，参与任何空投或奖励活动前请自行判断风险。", footerCopy: "© 2024 W-Airdrop. 保留所有权利。", navEarn: "赚钱", navOffers: "优惠", navSurveys: "问卷", navWithdraw: "提现", navRewards: "奖励", navLeaderboard: "排行榜", safariTitle: "请使用 Safari 浏览器打开", safariDesc: "请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。", copyBtn: "复制当前链接", copied: "已复制", hasAccount: "已有账号？", goLogin: "去登录", noAccount: "还没有账号？", goRegister: "立即注册", loginTitle: "登录账号", loginBtn: "登录", labelEmail: "电子邮箱", labelPass: "登录密码", labelConfirm: "确认密码", labelPayPass: "支付密码", surveyTitle: "用户习惯请您认真填写", surveyDesc: "预计耗时: 2 分钟 | 提交即具空投资格", submitSurvey: "提交问卷", readMore: "查看全文" 
-        },
-        en: { realtime: "Live", login: "Login", logout: "Logout", registerTitle: "Register", registerBtn: "Register", heroTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", heroDesc: "Users of our 8 products can participate, no action required, simply claim rewards, airdropped for free within 24 hours.", claimBtn: "Claim Free", stat1: "Distributed", stat2: "Users", stat3: "Daily Payouts", stat4: "Play Store Rating", howTitle: "How to Claim", howDesc: "1. Register → 2. Fill Form → 3. Receive Coins", step1Title: "Register", step1Desc: "Sign up with email and set passwords.", step2Title: "Fill Form", step2Desc: "Complete the survey to get qualified.", step3Title: "Receive Coins", step3Desc: "Withdraw via crypto anytime.", leaderboardTitle: "Lucky Users", viewLeaderboard: "View Leaderboard →", reviewsTitle: "What Users Say", activeUser: "Active User", faqTitle: "FAQ", faqDesc: "Need help? Check here.", faqQ1: "How to claim?", faqA1: "Register and complete forms.", faqQ2: "Claim methods?", faqA2: "PayPal, BTC, LTC, Bank, Gift Cards.", faqQ3: "Any fees?", faqA3: "Most are free.", faqQ4: "How long?", faqA4: "Usually within hours.", partnersTitle: "More Partners Coming", footerTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", footerWarning: "Risk warning: Crypto is volatile.", footerCopy: "© 2024 W-Airdrop.", navEarn: "Earn", navOffers: "Offers", navSurveys: "Surveys", navWithdraw: "Withdraw", navRewards: "Rewards", navLeaderboard: "Leaderboard", safariTitle: "Please open in Safari", safariDesc: "Please use the native Safari browser on iPhone / iPad.", copyBtn: "Copy Link", copied: "Copied", hasAccount: "Have an account?", goLogin: "Login", noAccount: "No account?", goRegister: "Register", loginTitle: "Login", loginBtn: "Login", labelEmail: "Email", labelPass: "Password", labelConfirm: "Confirm Password", labelPayPass: "Pay Password", surveyTitle: "Please fill out the survey", surveyDesc: "Takes 2 mins", submitSurvey: "Submit", readMore: "Read More" 
-        } 
-    };
-
     let currentLang = 'zh';
+    let currentDict = {};
+    let availableLangs = [];
     let carouselIndex = 0;
     let carouselArticles = [];
     let carouselInterval;
 
+    // 核心：从后端加载语言配置
     async function initLanguages() {
         try {
             const res = await fetch('/api/languages');
-            const langs = await res.json();
+            availableLangs = await res.json();
             const menu = document.getElementById('langMenu');
-            menu.innerHTML = langs.map(l => `<a href="#" onclick="changeLang('${l.code}', '${l.name}')" class="block px-4 py-2 text-sm hover:bg-gray-100">${l.flag} ${l.name}</a>`).join('');
+            menu.innerHTML = availableLangs.map(l => `<a href="#" onclick="changeLang('${l.code}', '${l.name}')" class="block px-4 py-2 text-sm hover:bg-gray-100">${l.flag} ${l.name}</a>`).join('');
+            
+            // 默认选择第一个可用的语言
+            if (availableLangs.length > 0) {
+                currentLang = availableLangs[0].code;
+                currentDict = availableLangs[0].dict;
+                document.getElementById('currentLangText').innerText = availableLangs[0].name;
+            }
+            applyLanguage();
+            loadAllData();
         } catch (e) {
-            document.getElementById('langMenu').innerHTML = `<a href="#" onclick="changeLang('zh', '中文')" class="block px-4 py-2 text-sm hover:bg-gray-100">🇨🇳 中文</a>`;
+            console.error('语言加载失败', e);
         }
     }
 
     function toggleLangMenu() { document.getElementById('langMenu').classList.toggle('active'); }
+    
     function changeLang(code, name) {
+        const langObj = availableLangs.find(l => l.code === code);
+        if (!langObj) return;
         currentLang = code;
+        currentDict = langObj.dict;
         document.getElementById('langMenu').classList.remove('active');
         document.getElementById('currentLangText').innerText = name;
         applyLanguage();
-        loadMarquee();
-        loadNewsCarousel(); 
+        loadAllData(); // 切换语言重新加载动态内容（新闻等）
     }
 
+    // 动态替换 DOM 中的 data-i18n
     function applyLanguage() {
-        const dict = i18n[currentLang] || i18n['en'];
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
-            if (dict[key]) el.innerText = dict[key];
+            if (currentDict[key]) el.innerText = currentDict[key];
         });
     }
 
@@ -250,11 +229,15 @@
     async function loadNewsCarousel() {
         const res = await fetch(`/api/articles/latest?lang=${currentLang}`); 
         let data = await res.json();
-        if (!data || data.length === 0) { const fallbackRes = await fetch(`/api/articles/latest?lang=zh`); data = await fallbackRes.json(); }
+        if (!data || data.length === 0) { 
+            // 如果没有当前语言新闻，尝试兜底英文或中文
+            const fallbackRes = await fetch(`/api/articles/latest?lang=zh`); 
+            data = await fallbackRes.json(); 
+        }
         
         const container = document.getElementById('newsCarousel');
         const dotsContainer = document.getElementById('carouselDots');
-        if (!data || data.length === 0) { container.innerHTML = `<div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h2 class="text-xl font-bold mb-2">暂无新闻</h2></div>`; return; }
+        if (!data || data.length === 0) { container.innerHTML = `<div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h2 class="text-xl font-bold mb-2">No News</h2></div>`; return; }
         
         carouselArticles = data; carouselIndex = 0;
         container.innerHTML = data.map((item, index) => `
@@ -294,38 +277,31 @@
 
     document.getElementById('newsCarousel').addEventListener('scroll', () => {
         const container = document.getElementById('newsCarousel');
-        const scrollLeft = container.scrollLeft;
-        const width = container.offsetWidth;
-        const index = Math.round(scrollLeft / width);
+        const index = Math.round(container.scrollLeft / container.offsetWidth);
         if (index !== carouselIndex) updateDots(index);
     });
 
     document.getElementById('newsCarousel').addEventListener('touchstart', () => { if (carouselInterval) clearInterval(carouselInterval); }, {passive: true});
     document.getElementById('newsCarousel').addEventListener('touchend', () => { startCarousel(); }, {passive: true});
 
-    // 合作墙渲染
     async function loadPartners() {
         const res = await fetch('/api/partners');
         const partners = await res.json();
         const grid = document.getElementById('partnersGrid');
-        if (partners.length === 0) {
-            grid.innerHTML = '<div class="col-span-full text-center text-gray-400">暂无合作商家</div>';
-            return;
-        }
+        if (partners.length === 0) { grid.innerHTML = '<div class="col-span-full text-center text-gray-400">暂无合作商家</div>'; return; }
         grid.innerHTML = partners.map(p => `
             <div class="bg-white p-4 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-3 h-28 hover:shadow-md transition-shadow">
-                ${p.imageUrl 
-                    ? `<img src="${p.imageUrl}" alt="${p.name}" class="w-full h-12 object-contain">` 
-                    : `<div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl">${p.name[0]}</div>`}
+                ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" class="w-full h-12 object-contain">` : `<div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl">${p.name[0]}</div>`}
                 <span class="font-bold text-gray-600 text-sm truncate w-full text-center">${p.name}</span>
             </div>
         `).join('');
     }
 
     async function loadSurveyQuestions() {
+        // 这里可以改成从后台拉取，目前使用前端写死的逻辑，加了一点机翻兼容
         const defaultQuestions = [
-            { title: '您平时最经常使用的加密钱包是哪一款？', options: ['Bitget / Bitpie 钱包', 'Trust Wallet / Phantom钱包', 'Solflare / Coin98 钱包', 'Uniswap / Exodus钱包'] },
-            { title: '您使用加密钱包的主要用途是什么？', options: ['DApp交互与 DeFi理财', '代币 Swap(交换)闪兑交易', 'NFT收藏与交易', '资产长期存储与转账'] }
+            { title: '您平时最经常使用的加密钱包是哪一款？', options: ['Bitget / Bitpie', 'Trust Wallet / Phantom', 'Solflare / Coin98', 'Uniswap / Exodus'] },
+            { title: '您使用加密钱包的主要用途是什么？', options: ['DApp & DeFi', 'Swap', 'NFT', 'Store'] }
         ];
         let html = '';
         defaultQuestions.forEach((q, i) => {
@@ -338,12 +314,10 @@
 
     async function submitSurvey() {
         const checkedInputs = document.querySelectorAll('#surveyQuestions input[type="radio"]:checked');
-        if(checkedInputs.length === 0) return alert('请至少选择一项');
-        const answers = {};
-        checkedInputs.forEach(input => { answers[input.name] = input.value; });
+        if(checkedInputs.length === 0) return alert('请选择');
+        const answers = {}; checkedInputs.forEach(input => { answers[input.name] = input.value; });
         await fetch('/api/survey', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ answers }) });
-        alert('提交成功！请在24小时内关注奖励到账。');
-        closeModal('surveyModal');
+        alert('Success'); closeModal('surveyModal');
     }
 
     function updateAuthUI() {
@@ -365,15 +339,11 @@
         const password = document.getElementById('regPass').value;
         const confirmPass = document.getElementById('regConfirmPass').value;
         const payPassword = document.getElementById('regPayPass').value;
-        if(!email || !password || !confirmPass || !payPassword) return alert('请填写所有信息');
-        if(password !== confirmPass) return alert('两次输入的密码不一致');
+        if(!email || !password || !confirmPass || !payPassword) return alert('请填写完整');
+        if(password !== confirmPass) return alert('密码不一致');
         const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password, payPassword}) });
         const data = await res.json();
-        if (data.success) {
-            alert('注册成功！正在为您自动登录...');
-            localStorage.setItem('wad_user', JSON.stringify(data.user));
-            window.location.href = '/dashboard.html'; 
-        } else alert(data.error);
+        if (data.success) { alert('注册成功'); localStorage.setItem('wad_user', JSON.stringify(data.user)); window.location.href = '/dashboard.html'; } else alert(data.error);
     }
 
     async function doLogin() {
@@ -381,10 +351,7 @@
         const password = document.getElementById('loginPass').value;
         const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password}) });
         const data = await res.json();
-        if(data.success) {
-            localStorage.setItem('wad_user', JSON.stringify(data.user));
-            window.location.href = '/dashboard.html'; 
-        } else alert(data.error);
+        if(data.success) { localStorage.setItem('wad_user', JSON.stringify(data.user)); window.location.href = '/dashboard.html'; } else alert(data.error);
     }
 
     async function loadTopLeaderboard() {
@@ -404,7 +371,12 @@
         document.getElementById('topUsersList').innerHTML = html;
     }
 
-    initLanguages(); updateAuthUI(); loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners(); checkUrlParams();
+    function loadAllData() {
+        loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners();
+    }
+
+    // 初始化
+    initLanguages(); updateAuthUI(); checkUrlParams();
 </script>
 </body>
 </html>
