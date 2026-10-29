@@ -31,8 +31,7 @@
         </nav>
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-full">
-                <span class="text-yellow-500 font-bold text-lg">🪙</span>
-                <span class="font-bold text-gray-800" id="navBalance">0</span>
+                <span class="font-bold text-gray-800 text-sm" id="navBalance">0 金币</span>
             </div>
             <span class="text-sm font-medium text-gray-600 hidden sm:block" id="navEmail">---</span>
             <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500">退出</button>
@@ -65,7 +64,7 @@
     const currentUser = JSON.parse(localStorage.getItem('wad_user'));
     if (currentUser) {
         document.getElementById('navEmail').innerText = currentUser.email;
-        document.getElementById('navBalance').innerText = currentUser.balance || 0;
+        document.getElementById('navBalance').innerText = `${currentUser.balance || 0} 金币`;
     } else {
         window.location.href = '/'; 
     }
@@ -98,7 +97,7 @@
                 </div>
                 <div class="p-3 flex justify-between items-center bg-white border-t border-gray-100">
                     <span class="flex items-center gap-1 text-sm font-bold text-gray-700">
-                        <span class="text-yellow-500 text-lg">🪙</span> ${o.reward}
+                        ${o.reward} 金币
                     </span>
                     <span class="text-blue-500 text-xs font-bold hover:underline">开始赚钱</span>
                 </div>
@@ -119,7 +118,6 @@
     });
 
     function goToTask() {
-        // 直接跳转首页并带上参数，触发注册弹窗
         window.location.href = '/?register=true';
     }
 
