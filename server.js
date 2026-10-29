@@ -16,14 +16,21 @@ const DB_FILES = {
     users: path.join(DB_DIR, 'users.json'),
     articles: path.join(DB_DIR, 'articles.json'),
     surveys: path.join(DB_DIR, 'surveys.json'),
-    offers: path.join(DB_DIR, 'offers.json') // 新增优惠数据
+    offers: path.join(DB_DIR, 'offers.json')
 };
 
-// 初始化数据文件
+// 初始化数据
 Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
         if (key === 'surveys') initialData = { questions: [], submissions: [] };
+        if (key === 'articles') {
+            initialData = [
+                { id: uuidv4(), lang: 'zh', title: '比特币一度跌破8万美元：三星引发科技股震荡', summary: '受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温。', coverUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=800&auto=format&fit=crop', content: '<p>受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温，比特币跌破8万美元。</p>', time: new Date(Date.now() - 1000).toISOString() },
+                { id: uuidv4(), lang: 'zh', title: 'Web3 智能时代：8家顶级公司联合打造空投生态', summary: 'Bitget、Bitpie、Trust Wallet 等8家顶级加密产品公司强强联手，推出 333ETH 超大空投奖励池。', coverUrl: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?q=80&w=800&auto=format&fit=crop', content: '<p>WEB3智能时代已经到来，8家顶级公司联合打造空投发放333ETH奖励，用户只需完成简短的问卷调查即可获得资格。</p>', time: new Date(Date.now() - 2000).toISOString() },
+                { id: uuidv4(), lang: 'zh', title: '如何安全地参与加密问卷调查并保护隐私', summary: '在参与各类 Web3 问卷和空投时，请务必保护好您的私钥和助记词。', coverUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=800&auto=format&fit=crop', content: '<p>参与问卷调查前，请确认平台正规性。任何要求提供私钥或助记词的行为都是诈骗。</p>', time: new Date(Date.now() - 3000).toISOString() }
+            ];
+        }
         if (key === 'offers') initialData = [
             { id: 1, category: 'game', title: 'Raid: Shadow Legends', reward: '384,926', color: '#1e293b' },
             { id: 2, category: 'game', title: 'The Best Bet USA', reward: '58,017', color: '#166534' },
@@ -73,7 +80,6 @@ app.get('/api/marquee', (req, res) => {
     res.json(list);
 });
 
-// 获取优惠列表
 app.get('/api/offers', (req, res) => res.json(readDB('offers')));
 
 app.post('/api/register', (req, res) => {
@@ -99,10 +105,7 @@ app.get('/api/leaderboard', (req, res) => {
     const period = req.query.period || 'daily';
     const users = readDB('users');
     let list = users.map(u => ({
-        name: u.email.split('@')[0],
-        amount: period === 'daily' ? (u.balance || 0) : (u.totalEarned || 0),
-        avatar: u.email[0].toUpperCase(),
-        isReal: true
+        name: u.email.split('@')[0], amount: period === 'daily' ? (u.balance || 0) : (u.totalEarned || 0), avatar: u.email[0].toUpperCase(), isReal: true
     }));
     const fakeNames = ['Johnny Midan', 'Bebazz YT', 'Awatix', 'ItzGyNoRmOuS', 'Puppylover', 'Quang Nguyễn Minh', 'Khuong nguyen', 'Safa', 'Peter Hoffmann', 'Lutali', 'ChimmyChanga', 'Ove'];
     while (list.length < 100) {
@@ -135,7 +138,7 @@ app.post('/api/survey', (req, res) => {
 app.get('/api/articles/latest', (req, res) => {
     const { lang = 'zh' } = req.query;
     const articles = readDB('articles').filter(a => a.lang === lang).sort((a,b) => new Date(b.time) - new Date(a.time));
-    res.json(articles[0] || null);
+    res.json(articles.slice(0, 3) || []); // 返回最新3篇
 });
 app.get('/api/articles/:id', (req, res) => res.json(readDB('articles').find(a => a.id === req.params.id) || null));
 
@@ -173,6 +176,20 @@ app.post('/api/admin/article', auth, (req, res) => {
     articles.push({ id: uuidv4(), lang, title, summary, content, coverUrl, time: new Date().toISOString() });
     writeDB('articles', articles);
     res.json({ success: true });
+});
+
+// 新增：编辑文章 API
+app.put('/api/admin/article/:id', auth, (req, res) => {
+    const { lang, title, summary, content, coverUrl } = req.body;
+    const articles = readDB('articles');
+    const index = articles.findIndex(a => a.id === req.params.id);
+    if (index !== -1) {
+        articles[index] = { ...articles[index], lang, title, summary, content, coverUrl };
+        writeDB('articles', articles);
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: '文章不存在' });
+    }
 });
 
 app.delete('/api/admin/article/:id', auth, (req, res) => {
