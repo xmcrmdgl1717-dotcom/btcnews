@@ -12,6 +12,8 @@
     .content-section { display: none; }
     .content-section.active { display: block; }
     #editor-container { height: 300px; background: white; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
 </style>
 </head>
 <body class="bg-gray-100 h-screen flex overflow-hidden font-sans">
@@ -39,27 +41,35 @@
         </div>
         <div class="flex-1 overflow-y-auto p-6" id="mainContent">
             <div id="tab-home" class="content-section active"><div class="bg-white p-6 rounded-xl shadow-sm space-y-4"><h3 class="font-bold text-lg border-b pb-2">跑马灯与基础设置</h3><p class="text-sm text-gray-500">跑马灯会自动抽取真实注册用户并混合虚拟数据。</p></div></div>
-            <div id="tab-users" class="content-section"><div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left border-collapse"><thead class="bg-gray-50"><tr><th class="p-4 border-b">邮箱</th><th class="p-4 border-b">密码</th><th class="p-4 border-b">余额</th><th class="p-4 border-b">时间</th></tr></thead><tbody id="userList"></tbody></table></div></div>
+            
+            <div id="tab-users" class="content-section">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50"><tr><th class="p-4 border-b">邮箱</th><th class="p-4 border-b">密码</th><th class="p-4 border-b">余额 (可编辑)</th><th class="p-4 border-b">时间</th></tr></thead>
+                        <tbody id="userList"></tbody>
+                    </table>
+                </div>
+            </div>
             
             <div id="tab-articles" class="content-section">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h3 class="font-bold mb-4" id="articleFormTitle">发布新文章</h3>
+                        <h3 class="font-bold mb-4" id="articleFormTitle">发布新文章 (支持自动翻译)</h3>
                         <div class="space-y-3 mb-4">
                             <input type="hidden" id="editArticleId">
-                            <select id="artLang" class="w-full border p-2 rounded">
-                                <option value="zh">🇨🇳 中文</option>
-                                <option value="en">🇺🇸 English</option>
-                                <option value="vi">🇻🇳 Tiếng Việt</option>
-                                <option value="ko">🇰🇷 한국어</option>
-                            </select>
-                            <input type="text" id="artTitle" placeholder="文章标题" class="w-full border p-2 rounded">
-                            <textarea id="artSummary" placeholder="文章摘要 (前两行展示)" class="w-full border p-2 rounded" rows="2"></textarea>
+                            <!-- 勾选发布语言 -->
+                            <div class="border p-3 rounded bg-gray-50 mb-2">
+                                <p class="text-xs font-bold text-gray-600 mb-2">发布语言 (勾选后自动谷歌翻译)：</p>
+                                <div class="flex flex-wrap gap-3" id="articleLangCheckboxes"></div>
+                            </div>
+                            
+                            <input type="text" id="artTitle" placeholder="源标题 (中文)" class="w-full border p-2 rounded">
+                            <textarea id="artSummary" placeholder="源摘要 (中文)" class="w-full border p-2 rounded" rows="2"></textarea>
                             <div class="flex items-center gap-2"><input type="file" id="artCoverFile" accept="image/*" class="text-sm w-full"><input type="text" id="artCoverUrl" placeholder="封面图URL" class="flex-1 border p-2 rounded text-sm bg-gray-50" readonly></div>
                             <div class="bg-white"><div id="editor-container"></div></div>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="submitArticle()" id="articleSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">发布文章</button>
+                            <button onclick="submitArticle()" id="articleSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">智能翻译并发布</button>
                             <button onclick="resetArticleForm()" id="articleCancelBtn" class="bg-gray-200 text-gray-700 px-6 py-2 rounded font-bold hover:bg-gray-300 hidden">取消编辑</button>
                         </div>
                     </div>
@@ -82,7 +92,7 @@
                         <select id="oCategory" class="border p-2 rounded"><option value="game">游戏</option><option value="app">应用</option><option value="signup">注册</option></select>
                         <input type="text" id="oColor" placeholder="背景色(如 #1e293b)" class="border p-2 rounded" value="#1e293b">
                         <input type="text" id="oTitle" placeholder="优惠名称" class="border p-2 rounded col-span-2">
-                        <input type="text" id="oReward" placeholder="奖励数量 (如 384,926)" class="border p-2 rounded col-span-2">
+                        <input type="text" id="oReward" placeholder="奖励数量" class="border p-2 rounded col-span-2">
                     </div>
                     <button onclick="addOffer()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">添加</button>
                 </div>
@@ -91,14 +101,14 @@
                 </div>
             </div>
 
-            <!-- 合作墙管理 -->
             <div id="tab-partners" class="content-section">
                 <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
-                    <h3 class="font-bold mb-4">添加合作商家</h3>
+                    <h3 class="font-bold mb-4" id="partnerFormTitle">添加合作商家</h3>
+                    <input type="hidden" id="editPartnerId">
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">商家名称</label>
-                            <input type="text" id="pName" placeholder="例如: Binance" class="w-full border p-2 rounded">
+                            <input type="text" id="pName" class="w-full border p-2 rounded">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">商家 LOGO</label>
@@ -106,7 +116,8 @@
                             <input type="hidden" id="pImageUrl">
                         </div>
                     </div>
-                    <button onclick="addPartner()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">添加商家</button>
+                    <button onclick="savePartner()" id="partnerSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">添加</button>
+                    <button onclick="resetPartnerForm()" id="partnerCancelBtn" class="bg-gray-200 text-gray-700 px-6 py-2 rounded font-bold hover:bg-gray-300 hidden">取消编辑</button>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                     <table class="w-full text-left text-sm">
@@ -116,85 +127,117 @@
                 </div>
             </div>
 
-            <!-- 多语言管理 -->
             <div id="tab-languages" class="content-section">
-                <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
-                    <h3 class="font-bold mb-4">添加/修改语言</h3>
-                    <div class="grid grid-cols-4 gap-3 mb-3">
-                        <input type="text" id="lCode" placeholder="代码 (如 fr)" class="border p-2 rounded">
-                        <input type="text" id="lName" placeholder="语言名称 (如 Français)" class="border p-2 rounded">
-                        <input type="text" id="lFlag" placeholder="旗帜 (如 🇫🇷)" class="border p-2 rounded">
-                        <select id="lActive" class="border p-2 rounded"><option value="true">启用</option><option value="false">禁用</option></select>
-                    </div>
-                    <button onclick="saveLanguage()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">保存语言</button>
-                </div>
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                     <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-50"><tr><th class="p-4 border-b">代码</th><th class="p-4 border-b">名称</th><th class="p-4 border-b">旗帜</th><th class="p-4 border-b">状态</th><th class="p-4 border-b">操作</th></tr></thead>
+                        <thead class="bg-gray-50"><tr><th class="p-4 border-b">代码</th><th class="p-4 border-b">名称</th><th class="p-4 border-b">状态</th><th class="p-4 border-b">操作</th></tr></thead>
                         <tbody id="languageList"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- 修改用户余额弹窗 -->
+    <div id="editUserModal" class="modal">
+        <div class="bg-white p-6 rounded-xl shadow-xl w-96">
+            <h3 class="font-bold text-lg mb-4">修改用户余额</h3>
+            <input type="hidden" id="editUserId">
+            <p class="text-sm text-gray-500 mb-2" id="editUserEmail"></p>
+            <input type="number" id="editUserBalance" class="w-full border p-2 rounded mb-4">
+            <div class="flex gap-2">
+                <button onclick="saveUserBalance()" class="flex-1 bg-blue-600 text-white py-2 rounded font-bold">保存</button>
+                <button onclick="document.getElementById('editUserModal').classList.remove('active')" class="flex-1 bg-gray-200 py-2 rounded font-bold">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改多语言字典弹窗 -->
+    <div id="editLangModal" class="modal">
+        <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <h3 class="font-bold text-lg mb-4">编辑语言字典 JSON</h3>
+            <input type="hidden" id="editLangCode">
+            <textarea id="editLangDict" class="w-full flex-1 border p-3 rounded font-mono text-sm mb-4" rows="15"></textarea>
+            <div class="flex gap-2 justify-end">
+                <button onclick="saveLangDict()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold">保存字典</button>
+                <button onclick="document.getElementById('editLangModal').classList.remove('active')" class="bg-gray-200 px-6 py-2 rounded font-bold">取消</button>
+            </div>
+        </div>
+    </div>
+
 <script>
     let adminPwd = ''; let quill = null;
     if (document.getElementById('editor-container')) { quill = new Quill('#editor-container', { theme: 'snow', modules: { toolbar: [ [{ header: [1, 2, false] }], ['bold', 'italic', 'underline'], ['image'], ['clean'] ] } }); }
+    
     function doLogin() { adminPwd = document.getElementById('adminPwd').value; fetchData(); }
     function logout() { location.reload(); }
     function switchTab(tabId, el) { document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active')); document.querySelectorAll('.content-section').forEach(e => e.classList.remove('active')); el.classList.add('active'); document.getElementById('tab-' + tabId).classList.add('active'); document.getElementById('pageTitle').innerText = el.innerText.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, ''); }
     
-    // 图片上传通用方法
     async function uploadImage(file) {
-        const formData = new FormData();
-        formData.append('image', file);
+        const formData = new FormData(); formData.append('image', file);
         const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'x-admin-pwd': adminPwd }, body: formData });
-        const data = await res.json();
-        return data.url;
+        const data = await res.json(); return data.url;
     }
 
     document.getElementById('artCoverFile').addEventListener('change', async (e) => { 
         const file = e.target.files[0]; if(!file) return; 
         document.getElementById('artCoverUrl').value = await uploadImage(file); 
     });
-    
     quill.getModule('toolbar').addHandler('image', () => { 
         const input = document.createElement('input'); input.setAttribute('type', 'file'); input.setAttribute('accept', 'image/*'); input.click(); 
-        input.onchange = async () => { 
-            const file = input.files[0]; 
-            const url = await uploadImage(file);
-            if(url) { const range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', url); } 
-        }; 
+        input.onchange = async () => { const file = input.files[0]; const url = await uploadImage(file); if(url) { const range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', url); } }; 
     });
-
     document.getElementById('pFile').addEventListener('change', async (e) => {
         const file = e.target.files[0]; if(!file) return; 
         document.getElementById('pImageUrl').value = await uploadImage(file);
     });
 
+    // ====== 文章自动翻译发布 ======
     async function submitArticle() {
         const id = document.getElementById('editArticleId').value;
-        const payload = { lang: document.getElementById('artLang').value, title: document.getElementById('artTitle').value, summary: document.getElementById('artSummary').value, coverUrl: document.getElementById('artCoverUrl').value, content: quill.root.innerHTML };
-        if(!payload.title) return alert('请输入标题');
-        let url = '/api/admin/article'; let method = 'POST';
-        if (id) { url = `/api/admin/article/${id}`; method = 'PUT'; }
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
-        const data = await res.json();
-        if(data.success) { alert(id ? '修改成功' : '发布成功'); resetArticleForm(); fetchData(); } else alert(data.error);
+        const title = document.getElementById('artTitle').value;
+        const summary = document.getElementById('artSummary').value;
+        const coverUrl = document.getElementById('artCoverUrl').value;
+        const content = quill.root.innerHTML;
+        if(!title) return alert('请输入标题');
+
+        if (id) {
+            // 编辑模式只修改单篇
+            const payload = { lang: 'zh', title, summary, content, coverUrl };
+            const res = await fetch(`/api/admin/article/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
+            const data = await res.json();
+            if(data.success) { alert('修改成功'); resetArticleForm(); fetchData(); } else alert(data.error);
+        } else {
+            // 新建模式，获取勾选的语言
+            const checkedLangs = Array.from(document.querySelectorAll('#articleLangCheckboxes input:checked')).map(cb => cb.value);
+            if (checkedLangs.length === 0) return alert('请至少勾选一个发布语言');
+            
+            document.getElementById('articleSubmitBtn').innerText = '正在调用谷歌翻译...';
+            document.getElementById('articleSubmitBtn').disabled = true;
+
+            const payload = { title, summary, content, coverUrl, targetLangs: checkedLangs };
+            const res = await fetch('/api/admin/article/translate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
+            const data = await res.json();
+            
+            document.getElementById('articleSubmitBtn').innerText = '智能翻译并发布';
+            document.getElementById('articleSubmitBtn').disabled = false;
+
+            if(data.success) { alert('多语言发布成功！'); resetArticleForm(); fetchData(); } else alert(data.error);
+        }
     }
 
     function editArticle(id) {
-        const articles = window.allArticles || [];
-        const art = articles.find(a => a.id === id); if (!art) return;
+        const art = (window.allArticles || []).find(a => a.id === id); if (!art) return;
         document.getElementById('editArticleId').value = art.id;
-        document.getElementById('artLang').value = art.lang;
         document.getElementById('artTitle').value = art.title;
         document.getElementById('artSummary').value = art.summary;
         document.getElementById('artCoverUrl').value = art.coverUrl || '';
         quill.root.innerHTML = art.content || '';
-        document.getElementById('articleFormTitle').innerText = '编辑文章';
+        document.getElementById('articleFormTitle').innerText = '编辑文章 (单语言)';
         document.getElementById('articleSubmitBtn').innerText = '保存修改';
+        document.getElementById('articleSubmitBtn').onclick = submitArticle; // 确保绑定
         document.getElementById('articleCancelBtn').classList.remove('hidden');
+        document.getElementById('articleLangCheckboxes').parentElement.style.display = 'none'; // 编辑时隐藏多语言勾选
         document.querySelector('#tab-articles').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -202,9 +245,75 @@
         document.getElementById('editArticleId').value = '';
         document.getElementById('artTitle').value = ''; document.getElementById('artSummary').value = ''; document.getElementById('artCoverUrl').value = '';
         quill.setContents([]);
-        document.getElementById('articleFormTitle').innerText = '发布新文章';
-        document.getElementById('articleSubmitBtn').innerText = '发布文章';
+        document.getElementById('articleFormTitle').innerText = '发布新文章 (支持自动翻译)';
+        document.getElementById('articleSubmitBtn').innerText = '智能翻译并发布';
         document.getElementById('articleCancelBtn').classList.add('hidden');
+        document.getElementById('articleLangCheckboxes').parentElement.style.display = 'block';
+    }
+
+    // ====== 合作墙编辑 ======
+    async function savePartner() {
+        const id = document.getElementById('editPartnerId').value;
+        const name = document.getElementById('pName').value;
+        const imageUrl = document.getElementById('pImageUrl').value;
+        if(!name) return alert('请填写商家名称');
+
+        let url = '/api/admin/partners'; let method = 'POST';
+        if (id) { url = `/api/admin/partners/${id}`; method = 'PUT'; }
+
+        await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ name, imageUrl }) });
+        resetPartnerForm();
+        fetchData();
+    }
+    function editPartner(id) {
+        const p = (window.allPartners || []).find(item => item.id === id); if(!p) return;
+        document.getElementById('editPartnerId').value = p.id;
+        document.getElementById('pName').value = p.name;
+        document.getElementById('pImageUrl').value = p.imageUrl || '';
+        document.getElementById('partnerFormTitle').innerText = '编辑合作商家';
+        document.getElementById('partnerSubmitBtn').innerText = '保存修改';
+        document.getElementById('partnerCancelBtn').classList.remove('hidden');
+    }
+    function resetPartnerForm() {
+        document.getElementById('editPartnerId').value = '';
+        document.getElementById('pName').value = ''; document.getElementById('pFile').value = ''; document.getElementById('pImageUrl').value = '';
+        document.getElementById('partnerFormTitle').innerText = '添加合作商家';
+        document.getElementById('partnerSubmitBtn').innerText = '添加';
+        document.getElementById('partnerCancelBtn').classList.add('hidden');
+    }
+    async function deletePartner(id) { if(!confirm('确认删除？')) return; await fetch('/api/admin/partners/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
+
+    // ====== 用户余额编辑 ======
+    function openEditUser(id) {
+        const u = (window.allUsers || []).find(item => item.id === id); if(!u) return;
+        document.getElementById('editUserId').value = u.id;
+        document.getElementById('editUserEmail').innerText = u.email;
+        document.getElementById('editUserBalance').value = u.balance || 0;
+        document.getElementById('editUserModal').classList.add('active');
+    }
+    async function saveUserBalance() {
+        const id = document.getElementById('editUserId').value;
+        const balance = document.getElementById('editUserBalance').value;
+        await fetch(`/api/admin/users/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ balance }) });
+        document.getElementById('editUserModal').classList.remove('active');
+        fetchData();
+    }
+
+    // ====== 多语言字典编辑 ======
+    function openEditLang(code) {
+        const l = (window.allLangs || []).find(item => item.code === code); if(!l) return;
+        document.getElementById('editLangCode').value = l.code;
+        document.getElementById('editLangDict').value = JSON.stringify(l.dict, null, 2);
+        document.getElementById('editLangModal').classList.add('active');
+    }
+    async function saveLangDict() {
+        const code = document.getElementById('editLangCode').value;
+        try {
+            const dict = JSON.parse(document.getElementById('editLangDict').value);
+            await fetch(`/api/admin/languages/${code}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ dict }) });
+            document.getElementById('editLangModal').classList.remove('active');
+            fetchData();
+        } catch(e) { alert('JSON 格式错误'); }
     }
 
     async function addOffer() {
@@ -214,55 +323,68 @@
         fetchData();
     }
     async function deleteOffer(id) { if(!confirm('确认删除？')) return; await fetch('/api/admin/offers/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
-    
-    async function addPartner() {
-        const name = document.getElementById('pName').value;
-        const imageUrl = document.getElementById('pImageUrl').value;
-        if(!name) return alert('请填写商家名称');
-        await fetch('/api/admin/partners', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ name, imageUrl }) });
-        document.getElementById('pName').value = ''; document.getElementById('pFile').value = ''; document.getElementById('pImageUrl').value = '';
-        fetchData();
-    }
-    async function deletePartner(id) { if(!confirm('确认删除？')) return; await fetch('/api/admin/partners/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
-
-    async function saveSurvey() { try { const questions = JSON.parse(document.getElementById('surveyConfig').value); await fetch('/api/admin/survey/questions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ questions }) }); alert('问卷题目已更新'); } catch (e) { alert('JSON 格式错误'); } }
-    
-    async function saveLanguage() {
-        const payload = { code: document.getElementById('lCode').value, name: document.getElementById('lName').value, flag: document.getElementById('lFlag').value, active: document.getElementById('lActive').value === 'true' };
-        if(!payload.code || !payload.name) return alert('请填写代码和名称');
-        await fetch('/api/admin/languages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
-        document.getElementById('lCode').value = ''; document.getElementById('lName').value = ''; document.getElementById('lFlag').value = '';
-        fetchData();
-    }
-    async function deleteLanguage(code) { if(!confirm('确认删除？')) return; await fetch('/api/admin/languages/' + code, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
+    async function saveSurvey() { try { const questions = JSON.parse(document.getElementById('surveyConfig').value); await fetch('/api/admin/survey/questions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ questions }) }); alert('已更新'); } catch (e) { alert('JSON 格式错误'); } }
+    async function deleteArticle(id) { if(!confirm('确认删除吗？')) return; await fetch('/api/admin/article/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
 
     async function fetchData() {
         const res = await fetch('/api/admin/data', { headers: { 'x-admin-pwd': adminPwd } });
         if(res.status === 403) return alert('密码错误');
         const data = await res.json(); 
         window.allArticles = data.articles;
+        window.allPartners = data.partners;
+        window.allUsers = data.users;
+        window.allLangs = data.languages;
+
         document.getElementById('loginOverlay').classList.add('hidden');
+
+        // 渲染文章语言多选框
+        document.getElementById('articleLangCheckboxes').innerHTML = data.languages.filter(l => l.active).map(l => 
+            `<label class="flex items-center gap-1 text-sm cursor-pointer"><input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}> ${l.flag} ${l.name}</label>`
+        ).join('');
+
+        document.getElementById('userList').innerHTML = data.users.map(u => `
+            <tr class="border-b">
+                <td class="p-4">${u.email}</td>
+                <td class="p-4 text-gray-400">${u.password}</td>
+                <td class="p-4 font-bold text-blue-600">${u.balance || 0} <button onclick="openEditUser('${u.id}')" class="ml-2 text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">编辑</button></td>
+                <td class="p-4 text-gray-500">${new Date(u.time).toLocaleString()}</td>
+            </tr>
+        `).join('');
         
-        document.getElementById('userList').innerHTML = data.users.map(u => `<tr class="border-b"><td class="p-4">${u.email}</td><td class="p-4 text-gray-400">${u.password}</td><td class="p-4 font-bold text-blue-600">${u.balance || 0}</td><td class="p-4 text-gray-500">${new Date(u.time).toLocaleString()}</td></tr>`).join('');
-        
-        document.getElementById('articleList').innerHTML = data.articles.map(a => `<div class="border p-3 rounded mb-2 flex justify-between items-center"><div><span class="text-xs bg-gray-200 px-2 py-1 rounded">${a.lang}</span><h4 class="font-bold text-sm mt-1">${a.title}</h4></div><div class="flex gap-2"><button onclick="editArticle('${a.id}')" class="text-blue-500 text-sm hover:underline">编辑</button><button onclick="deleteArticle('${a.id}')" class="text-red-500 text-sm hover:underline">删除</button></div></div>`).join('');
+        document.getElementById('articleList').innerHTML = data.articles.map(a => `
+            <div class="border p-3 rounded mb-2 flex justify-between items-center">
+                <div><span class="text-xs bg-gray-200 px-2 py-1 rounded">${a.lang}</span><h4 class="font-bold text-sm mt-1">${a.title}</h4></div>
+                <div class="flex gap-2">
+                    <button onclick="editArticle('${a.id}')" class="text-blue-500 text-sm hover:underline">编辑</button>
+                    <button onclick="deleteArticle('${a.id}')" class="text-red-500 text-sm hover:underline">删除</button>
+                </div>
+            </div>
+        `).join('');
         
         document.getElementById('surveyConfig').value = JSON.stringify(data.surveys.questions, null, 2);
         document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `<tr class="border-b"><td class="p-4 text-gray-500">${new Date(s.time).toLocaleString()}</td><td class="p-4">${JSON.stringify(s.answers)}</td></tr>`).join('');
-        
         document.getElementById('offerList').innerHTML = data.offers.map(o => `<tr class="border-b"><td class="p-4"><div class="w-6 h-6 rounded" style="background-color: ${o.color}"></div></td><td class="p-4">${o.category}</td><td class="p-4 font-bold">${o.title}</td><td class="p-4 text-yellow-600">🪙 ${o.reward}</td><td class="p-4"><button onclick="deleteOffer('${o.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
 
         document.getElementById('partnerList').innerHTML = data.partners.map(p => `
             <tr class="border-b">
                 <td class="p-4">${p.imageUrl ? `<img src="${p.imageUrl}" class="h-8 w-auto object-contain">` : '<span class="text-gray-400">无图</span>'}</td>
                 <td class="p-4 font-bold">${p.name}</td>
-                <td class="p-4"><button onclick="deletePartner('${p.id}')" class="text-red-500 hover:underline">删除</button></td>
+                <td class="p-4">
+                    <button onclick="editPartner('${p.id}')" class="text-blue-500 hover:underline mr-2">编辑</button>
+                    <button onclick="deletePartner('${p.id}')" class="text-red-500 hover:underline">删除</button>
+                </td>
             </tr>
         `).join('');
 
-        document.getElementById('languageList').innerHTML = data.languages.map(l => `<tr class="border-b"><td class="p-4 font-bold">${l.code}</td><td class="p-4">${l.name}</td><td class="p-4 text-xl">${l.flag}</td><td class="p-4"><span class="${l.active ? 'text-green-600' : 'text-gray-400'}">${l.active ? '启用中' : '已禁用'}</span></td><td class="p-4"><button onclick="deleteLanguage('${l.code}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
+        document.getElementById('languageList').innerHTML = data.languages.map(l => `
+            <tr class="border-b">
+                <td class="p-4 font-bold">${l.code}</td>
+                <td class="p-4">${l.name}</td>
+                <td class="p-4"><span class="${l.active ? 'text-green-600' : 'text-gray-400'}">${l.active ? '启用中' : '已禁用'}</span></td>
+                <td class="p-4"><button onclick="openEditLang('${l.code}')" class="text-blue-500 hover:underline">编辑字典</button></td>
+            </tr>
+        `).join('');
     }
-    async function deleteArticle(id) { if(!confirm('确认删除吗？')) return; await fetch('/api/admin/article/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
 </script>
 </body>
 </html>
