@@ -1,7 +1,6 @@
 {
   "name": "wad33-clone",
   "version": "1.0.0",
-  "description": "Airdrop landing page with CMS backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,7 +9,7 @@
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
     "uuid": "^9.0.1",
-    "free-google-translate-geanpn": "^1.0.2",
+    "@vitalets/google-translate-api": "^9.2.0",
     "hpagent": "^1.2.0"
   }
 }
