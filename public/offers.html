@@ -42,7 +42,6 @@
 </header>
 
 <main class="max-w-5xl mx-auto px-4 py-10">
-    <!-- 标题与搜索 -->
     <div class="mb-8">
         <h1 class="text-3xl font-extrabold text-gray-900 mb-2">优惠</h1>
         <p class="text-gray-500 text-sm mb-6">高收益游戏、应用和注册任务每日更新。</p>
@@ -60,10 +59,7 @@
         </div>
     </div>
 
-    <!-- 网格列表 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="offerGrid">
-        <!-- JS 渲染 -->
-    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="offerGrid"></div>
 </main>
 
 <script>
@@ -72,31 +68,24 @@
         document.getElementById('navEmail').innerText = currentUser.email;
         document.getElementById('navBalance').innerText = currentUser.balance || 0;
     } else {
-        window.location.href = '/'; // 强制登录
+        window.location.href = '/'; 
     }
 
     let allOffers = [];
     let currentCategory = 'all';
     let searchKeyword = '';
 
-    // 获取数据
     async function fetchOffers() {
         const res = await fetch('/api/offers');
         allOffers = await res.json();
         renderGrid();
     }
 
-    // 渲染网格
     function renderGrid() {
         const grid = document.getElementById('offerGrid');
         let filtered = allOffers;
-        
-        if (currentCategory !== 'all') {
-            filtered = filtered.filter(o => o.category === currentCategory);
-        }
-        if (searchKeyword) {
-            filtered = filtered.filter(o => o.title.toLowerCase().includes(searchKeyword.toLowerCase()));
-        }
+        if (currentCategory !== 'all') filtered = filtered.filter(o => o.category === currentCategory);
+        if (searchKeyword) filtered = filtered.filter(o => o.title.toLowerCase().includes(searchKeyword.toLowerCase()));
 
         if (filtered.length === 0) {
             grid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-10">没有找到相关优惠</div>';
@@ -105,11 +94,9 @@
 
         grid.innerHTML = filtered.map(o => `
             <div class="offer-card bg-white flex flex-col" onclick="goToTask()">
-                <!-- 色块区域 (模拟背景图) -->
                 <div style="background-color: ${o.color}" class="h-32 w-full flex items-end p-4 relative overflow-hidden">
                     <h3 class="text-white font-bold text-lg leading-tight z-10">${o.title}</h3>
                 </div>
-                <!-- 底部信息 -->
                 <div class="p-3 flex justify-between items-center bg-white border-t border-gray-100">
                     <span class="flex items-center gap-1 text-sm font-bold text-gray-700">
                         <span class="text-yellow-500 text-lg">🪙</span> ${o.reward}
@@ -120,7 +107,6 @@
         `).join('');
     }
 
-    // 分类切换
     function filterOffers(category, btn) {
         currentCategory = category;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -128,16 +114,13 @@
         renderGrid();
     }
 
-    // 搜索
     document.getElementById('searchInput').addEventListener('input', (e) => {
         searchKeyword = e.target.value;
         renderGrid();
     });
 
-    // 跳转注册/任务
     function goToTask() {
-        // 按照需求，跳回首页注册页
-        alert('请先前往首页完成注册流程，或前往个人中心做任务！');
+        alert('请返回首页点击“免费领取”完成注册流程，或前往个人中心做任务！');
         window.location.href = '/index.html#register';
     }
 
