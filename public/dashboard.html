@@ -115,6 +115,9 @@
             const key = el.getAttribute('data-i18n');
             if (currentDict[key]) el.innerText = currentDict[key];
         });
+        if (document.getElementById('surveyModal').classList.contains('active')) {
+            loadSurveyQuestions();
+        }
     }
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
