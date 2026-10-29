@@ -11,6 +11,10 @@
     .marquee-content:hover { animation-play-state: paused; }
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; align-items: center; justify-content: center; padding: 1rem; }
     .modal.active { display: flex; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .snap-x-mandatory { scroll-snap-type: x mandatory; }
+    .snap-center { scroll-snap-align: center; }
 </style>
 </head>
 <body class="bg-[#f3f4f9] font-sans text-gray-800">
@@ -38,11 +42,14 @@
 </header>
 
 <main class="max-w-4xl mx-auto px-4 py-8 space-y-16">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer" onclick="triggerSafariCheck('article')">
-        <h2 class="text-xl font-bold mb-2 leading-snug" id="newsTitle">加载中...</h2>
-        <p class="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2" id="newsSummary"></p>
-        <img id="newsCover" src="" class="w-full h-48 object-cover rounded-xl mb-4 hidden">
-        <div class="text-blue-600 font-medium text-sm text-center">查看全文</div>
+    
+    <!-- 新闻轮播图 Banner 模块 -->
+    <div class="relative w-full">
+        <div id="newsCarousel" class="flex overflow-x-auto snap-x-mandatory hide-scrollbar gap-4 pb-4">
+            <!-- JS 动态渲染，每篇占满宽度 -->
+        </div>
+        <!-- 轮播指示点 -->
+        <div class="flex justify-center gap-2 mt-2" id="carouselDots"></div>
     </div>
 
     <div id="earn" class="text-center space-y-5 py-4">
@@ -73,14 +80,12 @@
         </div>
     </div>
 
-    <!-- 精选优惠区块修改 -->
     <div id="offers">
         <div class="flex justify-between items-end mb-6">
             <div>
                 <h2 class="text-2xl font-bold text-[#0A3466]">精选优惠</h2>
                 <p class="text-gray-500 text-sm mt-1">浏览每日更新高收益任务，做完即刻结算。</p>
             </div>
-            <!-- 登录后显示“查看任务” -->
             <a href="javascript:void(0)" onclick="goToOffers()" class="text-blue-600 text-sm font-medium hover:underline">查看任务 →</a>
         </div>
         <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4" id="homeOfferGrid">
@@ -156,8 +161,10 @@
 </div>
 
 <script>
-    let latestArticleId = null;
-    
+    let carouselIndex = 0;
+    let carouselArticles = [];
+    let carouselInterval;
+
     function isSafari() {
         const ua = navigator.userAgent;
         return /iPad|iPhone|iPod/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|MQQBrowser|MicroMessenger|Android/.test(ua);
@@ -166,17 +173,25 @@
         if (isSafari()) {
             if (action === 'login') openModal('loginModal');
             else if (action === 'register') openModal('registerModal');
-            else if (action === 'article' && latestArticleId) window.location.href = `/article.html?id=${latestArticleId}`;
         } else {
             openModal('safariModal');
         }
     }
-    
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     function copyLink() { navigator.clipboard.writeText(window.location.href); document.getElementById('copyMsg').classList.remove('hidden'); }
     function switchToLogin() { closeModal('registerModal'); openModal('loginModal'); }
     function switchToRegister() { closeModal('loginModal'); openModal('registerModal'); }
+
+    // 检查 URL 参数自动弹窗
+    function checkUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('register') === 'true') {
+            openModal('registerModal');
+            // 清除 URL 参数避免刷新重复弹出
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
 
     function handleClaim() {
         const user = JSON.parse(localStorage.getItem('wad_user'));
@@ -189,6 +204,73 @@
         if (user) { window.location.href = '/offers.html'; } 
         else { triggerSafariCheck('login'); }
     }
+
+    // ===== 文章轮播图逻辑 =====
+    async function loadNewsCarousel() {
+        const res = await fetch(`/api/articles/latest?lang=zh`);
+        const data = await res.json();
+        const container = document.getElementById('newsCarousel');
+        const dotsContainer = document.getElementById('carouselDots');
+        
+        if (!data || data.length === 0) {
+            // 兜底逻辑，如果没数据
+            container.innerHTML = `<div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h2 class="text-xl font-bold mb-2">暂无新闻</h2></div>`;
+            return;
+        }
+        
+        carouselArticles = data;
+        
+        // 渲染卡片
+        container.innerHTML = data.map((item, index) => `
+            <div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer" onclick="window.location.href='/article.html?id=${item.id}'">
+                <h2 class="text-xl font-bold mb-2 leading-snug">${item.title}</h2>
+                <p class="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-3">${item.summary}</p>
+                ${item.coverUrl ? `<img src="${item.coverUrl}" class="w-full h-48 object-cover rounded-xl mb-4">` : ''}
+                <div class="text-blue-600 font-medium text-sm text-center">查看全文</div>
+            </div>
+        `).join('');
+
+        // 渲染指示点
+        dotsContainer.innerHTML = data.map((_, i) => `
+            <button onclick="scrollToArticle(${i})" class="w-2.5 h-2.5 rounded-full transition-all ${i === 0 ? 'bg-blue-600 w-6' : 'bg-gray-300'}"></button>
+        `).join('');
+
+        // 启动自动轮播
+        startCarousel();
+    }
+
+    function startCarousel() {
+        if (carouselInterval) clearInterval(carouselInterval);
+        if (carouselArticles.length <= 1) return;
+        
+        carouselInterval = setInterval(() => {
+            carouselIndex = (carouselIndex + 1) % carouselArticles.length;
+            scrollToArticle(carouselIndex);
+        }, 4000);
+    }
+
+    function scrollToArticle(index) {
+        const container = document.getElementById('newsCarousel');
+        const width = container.offsetWidth;
+        container.scrollTo({ left: width * index, behavior: 'smooth' });
+        carouselIndex = index;
+        
+        // 更新指示点样式
+        const dots = document.getElementById('carouselDots').children;
+        for (let i = 0; i < dots.length; i++) {
+            if (i === index) dots[i].className = 'w-2.5 h-2.5 rounded-full transition-all bg-blue-600 w-6';
+            else dots[i].className = 'w-2.5 h-2.5 rounded-full transition-all bg-gray-300';
+        }
+    }
+
+    // 监听手动滑动重置定时器
+    document.getElementById('newsCarousel').addEventListener('touchstart', () => {
+        if (carouselInterval) clearInterval(carouselInterval);
+    }, {passive: true});
+    document.getElementById('newsCarousel').addEventListener('touchend', () => {
+        startCarousel();
+    }, {passive: true});
+    // ============================
 
     async function loadSurveyQuestions() {
         const defaultQuestions = [
@@ -264,25 +346,9 @@
         document.getElementById('marqueeData').innerHTML = html;
     }
 
-    async function loadNews() {
-        const res = await fetch(`/api/articles/latest?lang=zh`);
-        const data = await res.json();
-        if (data && data.title) {
-            latestArticleId = data.id;
-            document.getElementById('newsTitle').innerText = data.title;
-            document.getElementById('newsSummary').innerText = data.summary;
-            if (data.coverUrl) { const img = document.getElementById('newsCover'); img.src = data.coverUrl; img.classList.remove('hidden'); }
-        } else {
-            latestArticleId = 'default';
-            document.getElementById('newsTitle').innerText = "比特币一度跌破8万美元：三星引发科技股震荡，美联储鹰派立场施压";
-            document.getElementById('newsSummary').innerText = "受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温，比特币跌破8万美元...";
-            const img = document.getElementById('newsCover'); img.src = "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=800&auto=format&fit=crop"; img.classList.remove('hidden');
-        }
-    }
-
     async function loadHomeOffers() {
         const res = await fetch('/api/offers');
-        const offers = (await res.json()).slice(0, 4); // 只取前4个
+        const offers = (await res.json()).slice(0, 4); 
         let html = '';
         offers.forEach(o => {
             html += `
@@ -315,7 +381,12 @@
         document.getElementById('topUsersList').innerHTML = html;
     }
 
-    updateAuthUI(); loadMarquee(); loadNews(); loadHomeOffers(); loadTopLeaderboard();
+    updateAuthUI(); 
+    loadMarquee(); 
+    loadNewsCarousel(); 
+    loadHomeOffers(); 
+    loadTopLeaderboard();
+    checkUrlParams(); // 检查是否需要自动打开注册
 </script>
 </body>
 </html>
