@@ -9,11 +9,9 @@ const PORT = process.env.PORT || 3000;
 const DB_DIR = path.join(__dirname, 'db');
 const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
 
-// 初始化目录
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR);
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-// 初始化 JSON 数据库文件
 const DB_FILES = {
     users: path.join(DB_DIR, 'users.json'),
     articles: path.join(DB_DIR, 'articles.json'),
@@ -28,9 +26,7 @@ Object.keys(DB_FILES).forEach(key => {
         if (key === 'tasks') initialData = [
             { id: 1, type: 'survey', title: 'DeFi 认知问卷', reward: 180, time: '2 分钟', desc: '8 道选择题' },
             { id: 2, type: 'offer', title: '注册并验证钱包', reward: 420, time: '5 分钟', desc: '完成钱包注册与邮箱验证' },
-            { id: 3, type: 'video', title: '观看产品短片', reward: 60, time: '3 分钟', desc: '观看短片并回答 1 个问题' },
-            { id: 4, type: 'invite', title: '邀请好友加入', reward: 250, time: '长期', desc: '好友完成首份问卷，双方得奖励' },
-            { id: 5, type: 'offer', title: '下载并体验 App', reward: 350, time: '10 分钟', desc: '安装指定应用并注册' },
+            { id: 3, type: 'video', title: '观看产品短片', reward: 60, time: '3 分钟', desc: '观看短片并回答 1 个问题' }
         ];
         fs.writeFileSync(DB_FILES[key], JSON.stringify(initialData, null, 2));
     }
@@ -43,16 +39,14 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/uploads', express.static(UPLOAD_DIR));
 
-// 图片上传配置
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOAD_DIR),
     filename: (req, file, cb) => cb(null, `${uuidv4()}${path.extname(file.originalname)}`)
 });
 const upload = multer({ storage });
 
-// ================= 前台及用户中心 API =================
+// ================= 前台 & 用户 API =================
 
-// 跑马灯数据
 app.get('/api/marquee', (req, res) => {
     const users = readDB('users').slice(-10).reverse();
     let list = users.map(u => ({ name: u.email.split('@')[0], amount: (Math.random() * 500).toFixed(0) }));
@@ -63,27 +57,20 @@ app.get('/api/marquee', (req, res) => {
     res.json(list);
 });
 
-// 注册 (支持接收支付密码)
 app.post('/api/register', (req, res) => {
     const { email, password, payPassword } = req.body;
     const users = readDB('users');
     if (users.find(u => u.email === email)) return res.status(400).json({ error: '邮箱已注册' });
     
     const newUser = { 
-        id: uuidv4(), 
-        email, 
-        password, 
-        payPassword: payPassword || '',
-        balance: 0, 
-        totalEarned: 0, 
-        time: new Date().toISOString() 
+        id: uuidv4(), email, password, payPassword: payPassword || '',
+        balance: 0, totalEarned: 0, time: new Date().toISOString() 
     };
     users.push(newUser);
     writeDB('users', users);
     res.json({ success: true, user: newUser });
 });
 
-// 登录
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
     const users = readDB('users');
@@ -95,32 +82,33 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// 获取当前用户详细信息
-app.get('/api/user/profile', (req, res) => {
-    const { email } = req.query;
+// 排行榜接口 (前 100 名，含真实+假数据)
+app.get('/api/leaderboard', (req, res) => {
+    const period = req.query.period || 'daily';
     const users = readDB('users');
-    const user = users.find(u => u.email === email);
-    if (user) {
-        res.json({ 
-            success: true, 
-            user: { 
-                email: user.email, 
-                balance: user.balance || 0, 
-                totalEarned: user.totalEarned || 0,
-                inviteCode: user.inviteCode || 'WAD' + Math.random().toString(36).substr(2, 6).toUpperCase()
-            } 
+    
+    let list = users.map(u => ({
+        name: u.email.split('@')[0],
+        amount: period === 'daily' ? (u.balance || 0) : (u.totalEarned || 0),
+        avatar: u.email[0].toUpperCase(),
+        isReal: true
+    }));
+
+    const fakeNames = ['Johnny Midan', 'Bebazz YT', 'Awatix', 'ItzGyNoRmOuS', 'Puppylover', 'Quang Nguyễn Minh', 'Khuong nguyen', 'Safa', 'Peter Hoffmann', 'Lutali', 'ChimmyChanga', 'Ove'];
+    while (list.length < 100) {
+        list.push({
+            name: fakeNames[Math.floor(Math.random() * fakeNames.length)] + Math.floor(Math.random() * 99),
+            amount: Math.floor(Math.random() * 50000) + 1000,
+            avatar: 'U',
+            isReal: false
         });
-    } else {
-        res.status(404).json({ error: '用户不存在' });
     }
+
+    list.sort((a, b) => b.amount - a.amount);
+    res.json(list.slice(0, 100));
 });
 
-// 获取任务列表
-app.get('/api/user/tasks', (req, res) => {
-    res.json(readDB('tasks'));
-});
-
-// 完成任务增加余额
+// 完成任务加余额
 app.post('/api/user/tasks/complete', (req, res) => {
     const { email, taskId, reward } = req.body;
     const users = readDB('users');
@@ -135,25 +123,8 @@ app.post('/api/user/tasks/complete', (req, res) => {
     }
 });
 
-// 提现申请
-app.post('/api/user/withdraw', (req, res) => {
-    const { email, amount, method } = req.body;
-    res.json({ success: true, message: `提现申请已提交（${method}），金额 ${amount} 金币` });
-});
-
-// 获取最新文章
-app.get('/api/articles/latest', (req, res) => {
-    const { lang = 'zh' } = req.query;
-    const articles = readDB('articles').filter(a => a.lang === lang).sort((a,b) => new Date(b.time) - new Date(a.time));
-    res.json(articles[0] || null);
-});
-
-// 获取指定文章
-app.get('/api/articles/:id', (req, res) => {
-    res.json(readDB('articles').find(a => a.id === req.params.id) || null);
-});
-
-// 提交问卷
+// 问卷提交与获取
+app.get('/api/survey/questions', (req, res) => res.json(readDB('surveys').questions));
 app.post('/api/survey', (req, res) => {
     const surveyData = readDB('surveys');
     surveyData.submissions.push({ id: uuidv4(), answers: req.body.answers, time: new Date().toISOString() });
@@ -161,9 +132,14 @@ app.post('/api/survey', (req, res) => {
     res.json({ success: true });
 });
 
-// 获取问卷题目
-app.get('/api/survey/questions', (req, res) => {
-    res.json(readDB('surveys').questions);
+// 新闻获取
+app.get('/api/articles/latest', (req, res) => {
+    const { lang = 'zh' } = req.query;
+    const articles = readDB('articles').filter(a => a.lang === lang).sort((a,b) => new Date(b.time) - new Date(a.time));
+    res.json(articles[0] || null);
+});
+app.get('/api/articles/:id', (req, res) => {
+    res.json(readDB('articles').find(a => a.id === req.params.id) || null);
 });
 
 // ================= 后台 API =================
