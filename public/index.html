@@ -136,6 +136,8 @@
 <div id="surveyModal" class="modal"><div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl"><button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button><h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyTitle"></h3><p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc"></p><div id="surveyQuestions" class="space-y-4 mb-6 max-h-[60vh] overflow-y-auto"></div><button onclick="submitSurvey()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="submitSurvey"></button></div></div>
 
 <script>
+    const coinSvg = `<svg class="w-4 h-4 inline-block align-middle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#FBBF24"/><circle cx="12" cy="12" r="8" fill="#FCD34D"/><path d="M12 6V18M15 9C15 7.89543 13.6569 7 12 7C10.3431 7 9 7.89543 9 9C9 10.1046 10.3431 11 12 11C13.6569 11 15 11.8954 15 13C15 14.1046 13.6569 15 12 15C10.3431 15 9 14.1046 9 13" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
     let currentLang = 'zh';
     let currentDict = {};
     let availableLangs = [];
@@ -322,7 +324,7 @@
         const user = JSON.parse(localStorage.getItem('wad_user'));
         if (user) {
             area.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='/dashboard.html'">
-                    <span class="text-sm font-bold text-blue-600">${user.balance || 0} 金币</span>
+                    <span class="text-sm font-bold text-blue-600 flex items-center gap-1">${coinSvg} ${user.balance || 0}</span>
                     <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">${user.email[0].toUpperCase()}</div>
                 </div>`;
         } else {
@@ -363,7 +365,7 @@
                     <div class="flex items-center gap-3"><span class="text-gray-400 font-bold w-4">#${i+1}</span>
                     <div class="w-10 h-10 ${bgClass} ${textClass} rounded-full flex items-center justify-center text-sm font-bold">${u.avatar}</div>
                     <span class="font-medium text-sm">${u.name}</span></div>
-                    <span class="font-bold text-yellow-500 text-sm">${u.amount.toLocaleString()} 金币</span></div>`;
+                    <span class="font-bold text-yellow-500 text-sm flex items-center gap-1">${coinSvg} ${u.amount.toLocaleString()}</span></div>`;
         });
         document.getElementById('topUsersList').innerHTML = html;
     }
