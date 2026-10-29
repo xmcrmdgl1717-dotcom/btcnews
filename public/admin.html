@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后台管理</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto space-y-6">
+        
+        <!-- 验证区 -->
+        <div class="bg-white p-6 rounded-xl shadow-sm">
+            <h1 class="text-xl font-bold mb-4">管理员登录</h1>
+            <div class="flex gap-4">
+                <input type="password" id="adminPass" placeholder="输入密码 (admin888)" class="border p-2 rounded w-64">
+                <button onclick="loginAdmin()" class="bg-black text-white px-6 py-2 rounded">进入</button>
+            </div>
+        </div>
+
+        <div id="adminPanel" class="hidden space-y-6">
+            <!-- 发新闻 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+                <h2 class="text-lg font-bold mb-4 border-b pb-2">发布今日新闻</h2>
+                <input type="text" id="newsTitle" placeholder="新闻标题 (两行显示)" class="w-full border p-2 rounded mb-3">
+                <textarea id="newsSummary" placeholder="新闻摘要 (三行显示)" class="w-full border p-2 rounded mb-3" rows="3"></textarea>
+                <textarea id="newsContent" placeholder="新闻全文内容" class="w-full border p-2 rounded mb-3" rows="6"></textarea>
+                <button onclick="publishNews()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold">发布新闻</button>
+            </div>
+
+            <!-- 注册用户 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm overflow-x-auto">
+                <h2 class="text-lg font-bold mb-4 border-b pb-2">注册用户列表</h2>
+                <table class="w-full text-left text-sm">
+                    <thead><tr class="bg-gray-50"><th class="p-2">邮箱</th><th class="p-2">密码</th><th class="p-2">注册时间</th></tr></thead>
+                    <tbody id="userList"></tbody>
+                </table>
+            </div>
+
+            <!-- 问卷提交 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm overflow-x-auto">
+                <h2 class="text-lg font-bold mb-4 border-b pb-2">问卷提交记录</h2>
+                <table class="w-full text-left text-sm">
+                    <thead><tr class="bg-gray-50"><th class="p-2">用户</th><th class="p-2">答案</th><th class="p-2">时间</th></tr></thead>
+                    <tbody id="surveyList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPassword = '';
+
+        function loginAdmin() {
+            currentPassword = document.getElementById('adminPass').value;
+            fetchData();
+            document.getElementById('adminPanel').classList.remove('hidden');
+        }
+
+        async function publishNews() {
+            const title = document.getElementById('newsTitle').value;
+            const summary = document.getElementById('newsSummary').value;
+            const content = document.getElementById('newsContent').value;
+
+            const res = await fetch('/api/admin/news', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, summary, content, password: currentPassword })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('发布成功！');
+                document.getElementById('newsTitle').value = '';
+                document.getElementById('newsSummary').value = '';
+                document.getElementById('newsContent').value = '';
+            } else {
+                alert(data.error);
+            }
+        }
+
+        async function fetchData() {
+            const res = await fetch(`/api/admin/data?password=${currentPassword}`);
+            if (res.status === 403) return alert('密码错误');
+            
+            const data = await res.json();
+            
+            // 渲染用户
+            const userHtml = data.users.map(u => `<tr class="border-b"><td class="p-2">${u.email}</td><td class="p-2 text-gray-400">${u.password}</td><td class="p-2 text-gray-500">${new Date(u.time).toLocaleString()}</td></tr>`).join('');
+            document.getElementById('userList').innerHTML = userHtml || '<tr><td colspan="3" class="p-2 text-center text-gray-400">暂无数据</td></tr>';
+
+            // 渲染问卷
+            const surveyHtml = data.surveys.map(s => `<tr class="border-b"><td class="p-2">${s.email}</td><td class="p-2">${JSON.stringify(s.answers)}</td><td class="p-2 text-gray-500">${new Date(s.time).toLocaleString()}</td></tr>`).join('');
+            document.getElementById('surveyList').innerHTML = surveyHtml || '<tr><td colspan="3" class="p-2 text-center text-gray-400">暂无数据</td></tr>';
+        }
+    </script>
+</body>
+</html>

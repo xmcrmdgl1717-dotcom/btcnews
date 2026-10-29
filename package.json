@@ -1,0 +1,12 @@
+{
+  "name": "wad33-clone",
+  "version": "1.0.0",
+  "description": "Airdrop landing page with backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
