@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { translate } = require('@vitalets/google-translate-api');
+// 使用伪装浏览器指纹的库，绕过 Render IP 限制
+const { translate } = require('free-google-translate-geanpn'); 
 const { HttpsProxyAgent } = require('hpagent');
 
 const app = express();
@@ -23,6 +24,7 @@ const DB_FILES = {
     partners: path.join(DB_DIR, 'partners.json')
 };
 
+// 字典基础结构
 const defaultZhDict = { realtime: "实时", login: "登录", logout: "退出", registerTitle: "注册账号", registerBtn: "注册", heroTitle: "WEB3智能时代 8家顶级公司联合打造空投发送333ETH奖励", heroDesc: "使用我们8家产品的用户都能参加，无需任何操作，简单领取奖励，24小时内免费空投发放。", claimBtn: "免费领取", stat1: "累计发放", stat2: "注册用户", stat3: "每日打款", stat4: "Google Play 评分", howTitle: "如何领取", howDesc: "1. 注册账号 → 2. 认真填表 → 3. 领币到账", step1Title: "注册账号", step1Desc: "使用邮箱注册，并设置登录密码与支付密码。", step2Title: "认真填表", step2Desc: "认真完成问卷，提交后即具备奖励资格。", step3Title: "领币到账", step3Desc: "随时通过加密货币热门币链进行提现，门槛低，到账时间快。", leaderboardTitle: "幸运用户", viewLeaderboard: "查看完整排行榜 →", reviewsTitle: "用户怎么说", activeUser: "活跃用户", faqTitle: "常见问题", faqDesc: "有问题？我们来帮你。如果这里没有答案，支持团队随时待命。", faqQ1: "如何领取？", faqA1: "只要您有使用我们的8家产品，免费注册登录后，认真完成每一项表格，提交后就能免费领取。", faqQ2: "有哪些领取方式？", faqA2: "支持PayPal、比特币、莱特币、银行转账，以及Amazon、虚拟Visa卡等热门礼品卡。我们会定期增加新方式。", faqQ3: "领取有手续费吗？", faqA3: "大多数方式免手续费，包括莱特币、Solana、虚拟Visa卡和全部礼品卡。银行转账等会收取少量费用以覆盖转账成本。", faqQ4: "领取需要多久？", faqA4: "我们会尽快处理，通常在数小时内完成。", partnersTitle: "陆续增加合作商家", footerTitle: "8 家顶级公司 联合打造 空投发送 333ETH 奖励", footerWarning: "风险提示：加密货币价格波动剧烈，参与任何空投或奖励活动前请自行判断风险。", footerCopy: "© 2024 W-Airdrop. 保留所有权利。", navEarn: "赚钱", navOffers: "优惠", navSurveys: "问卷", navWithdraw: "提现", navRewards: "奖励", navLeaderboard: "排行榜", safariTitle: "请使用 Safari 浏览器打开", safariDesc: "请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。", copyBtn: "复制当前链接", copied: "已复制", hasAccount: "已有账号？", goLogin: "去登录", noAccount: "还没有账号？", goRegister: "立即注册", loginTitle: "登录账号", loginBtn: "登录", labelEmail: "电子邮箱", labelPass: "登录密码", labelConfirm: "确认密码", labelPayPass: "支付密码", surveyTitle: "用户习惯请您认真填写", surveyDesc: "预计耗时: 2 分钟 | 提交即具空投资格", submitSurvey: "提交问卷", readMore: "查看全文" };
 
 const defaultEnDict = { realtime: "Live", login: "Login", logout: "Logout", registerTitle: "Register", registerBtn: "Register", heroTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", heroDesc: "Users of our 8 products can participate, no action required, simply claim rewards, airdropped for free within 24 hours.", claimBtn: "Claim Free", stat1: "Distributed", stat2: "Users", stat3: "Daily Payouts", stat4: "Play Store Rating", howTitle: "How to Claim", howDesc: "1. Register → 2. Fill Form → 3. Receive Coins", step1Title: "Register", step1Desc: "Sign up with email and set passwords.", step2Title: "Fill Form", step2Desc: "Complete the survey to get qualified.", step3Title: "Receive Coins", step3Desc: "Withdraw via crypto anytime.", leaderboardTitle: "Lucky Users", viewLeaderboard: "View Leaderboard →", reviewsTitle: "What Users Say", activeUser: "Active User", faqTitle: "FAQ", faqDesc: "Need help? Check here.", faqQ1: "How to claim?", faqA1: "Register and complete forms.", faqQ2: "Claim methods?", faqA2: "PayPal, BTC, LTC, Bank, Gift Cards.", faqQ3: "Any fees?", faqA3: "Most are free.", faqQ4: "How long?", faqA4: "Usually within hours.", partnersTitle: "More Partners Coming", footerTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", footerWarning: "Risk warning: Crypto is volatile.", footerCopy: "© 2024 W-Airdrop.", navEarn: "Earn", navOffers: "Offers", navSurveys: "Surveys", navWithdraw: "Withdraw", navRewards: "Rewards", navLeaderboard: "Leaderboard", safariTitle: "Please open in Safari", safariDesc: "Please use the native Safari browser on iPhone / iPad.", copyBtn: "Copy Link", copied: "Copied", hasAccount: "Have an account?", goLogin: "Login", noAccount: "No account?", goRegister: "Register", loginTitle: "Login", loginBtn: "Login", labelEmail: "Email", labelPass: "Password", labelConfirm: "Confirm Password", labelPayPass: "Pay Password", surveyTitle: "Please fill out the survey", surveyDesc: "Takes 2 mins", submitSurvey: "Submit", readMore: "Read More" };
@@ -31,6 +33,8 @@ Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
         if (key === 'surveys') initialData = { questions: [], submissions: [] };
+        
+        // 10 个国家/地区语言直接内置
         if (key === 'languages') initialData = [
             { code: 'zh', name: '简体中文', flag: '🇨🇳', active: true, dict: defaultZhDict },
             { code: 'en-US', name: 'English (US)', flag: '🇺🇸', active: true, dict: defaultEnDict },
@@ -134,10 +138,12 @@ app.get('/api/admin/data', auth, (req, res) => {
     res.json({ users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'), offers: readDB('offers'), languages: readDB('languages'), partners: readDB('partners') });
 });
 
-// 文章自动机翻发布接口
+// 文章自动机翻发布 (替换为免费伪装库)
 app.post('/api/admin/article/translate', auth, async (req, res) => {
     const { title, summary, content, coverUrl, targetLangs } = req.body;
     const articles = readDB('articles');
+    
+    // 如果服务器有配置代理，依然走代理
     const proxyUrl = process.env.PROXY_URL; 
     const agent = proxyUrl ? new HttpsProxyAgent({ proxy: proxyUrl }) : undefined;
 
@@ -146,11 +152,16 @@ app.post('/api/admin/article/translate', auth, async (req, res) => {
             if (lang === 'zh') {
                 articles.push({ id: uuidv4(), lang: 'zh', title, summary, content, coverUrl, time: new Date().toISOString() });
             } else {
-                const googleLang = lang.split('-')[0];
+                const googleLang = lang.split('-')[0]; // en-US -> en
+                
                 const tTitle = (await translate(title, { to: googleLang, agent })).text;
                 const tSummary = (await translate(summary, { to: googleLang, agent })).text;
                 const tContent = (await translate(content, { to: googleLang, agent })).text;
+                
                 articles.push({ id: uuidv4(), lang: lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });
+                
+                // 延迟 200ms 防频控
+                await new Promise(r => setTimeout(r, 200));
             }
         }
         writeDB('articles', articles);
