@@ -17,31 +17,26 @@ const DB_FILES = {
     articles: path.join(DB_DIR, 'articles.json'),
     surveys: path.join(DB_DIR, 'surveys.json'),
     offers: path.join(DB_DIR, 'offers.json'),
-    languages: path.join(DB_DIR, 'languages.json') // 新增多语言配置
+    languages: path.join(DB_DIR, 'languages.json'),
+    partners: path.join(DB_DIR, 'partners.json') // 新增合作墙文件
 };
 
-// 初始化数据
 Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
         if (key === 'surveys') initialData = { questions: [], submissions: [] };
-        
-        // 内置 10 个国家语言数据
-        if (key === 'languages') {
-            initialData = [
-                { code: 'zh', name: '简体中文', flag: '🇨🇳', active: true },
-                { code: 'en', name: 'English', flag: '🇺🇸', active: true },
-                { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳', active: true },
-                { code: 'de', name: 'Deutsch', flag: '🇩🇪', active: true },
-                { code: 'ar', name: 'العربية', flag: '🇦🇪', active: true },
-                { code: 'es', name: 'Español', flag: '🇦🇷', active: true },
-                { code: 'pt', name: 'Português', flag: '🇧🇷', active: true },
-                { code: 'ko', name: '한국어', flag: '🇰🇷', active: true },
-                { code: 'uk', name: 'Українська', flag: '🇺🇦', active: true },
-                { code: 'tr', name: 'Türkçe', flag: '🇹🇷', active: true }
-            ];
-        }
-
+        if (key === 'languages') initialData = [
+            { code: 'zh', name: '简体中文', flag: '🇨🇳', active: true },
+            { code: 'en', name: 'English', flag: '🇺🇸', active: true },
+            { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳', active: true },
+            { code: 'de', name: 'Deutsch', flag: '🇩🇪', active: true },
+            { code: 'ar', name: 'العربية', flag: '🇦🇪', active: true },
+            { code: 'es', name: 'Español', flag: '🇦🇷', active: true },
+            { code: 'pt', name: 'Português', flag: '🇧🇷', active: true },
+            { code: 'ko', name: '한국어', flag: '🇰🇷', active: true },
+            { code: 'uk', name: 'Українська', flag: '🇺🇦', active: true },
+            { code: 'tr', name: 'Türkçe', flag: '🇹🇷', active: true }
+        ];
         if (key === 'articles') {
             initialData = [
                 { id: uuidv4(), lang: 'zh', title: '比特币一度跌破8万美元：三星引发科技股震荡', summary: '受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温。', coverUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=800&auto=format&fit=crop', content: '<p>受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温，比特币跌破8万美元。</p>', time: new Date(Date.now() - 1000).toISOString() },
@@ -69,6 +64,17 @@ Object.keys(DB_FILES).forEach(key => {
             { id: 17, category: 'signup', title: 'Betterment Invest & Save Money', reward: '25,846', color: '#0f766e' },
             { id: 18, category: 'app', title: 'Can You Spot It - 5 Differences', reward: '86,865', color: '#be185d' }
         ];
+        // 初始化合作墙默认数据
+        if (key === 'partners') initialData = [
+            { id: uuidv4(), name: 'Bitget', imageUrl: '' },
+            { id: uuidv4(), name: 'Bitpie', imageUrl: '' },
+            { id: uuidv4(), name: 'Trust Wallet', imageUrl: '' },
+            { id: uuidv4(), name: 'Phantom', imageUrl: '' },
+            { id: uuidv4(), name: 'Solflare', imageUrl: '' },
+            { id: uuidv4(), name: 'Coin98', imageUrl: '' },
+            { id: uuidv4(), name: 'Uniswap', imageUrl: '' },
+            { id: uuidv4(), name: 'Exodus', imageUrl: '' }
+        ];
         fs.writeFileSync(DB_FILES[key], JSON.stringify(initialData, null, 2));
     }
 });
@@ -87,7 +93,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ================= 前台 API =================
-
+app.get('/api/partners', (req, res) => res.json(readDB('partners')));
 app.get('/api/marquee', (req, res) => {
     const users = readDB('users').slice(-10).reverse();
     let list = users.map(u => ({ name: u.email.split('@')[0], amount: (Math.random() * 500).toFixed(0) }));
@@ -99,18 +105,12 @@ app.get('/api/marquee', (req, res) => {
 });
 
 app.get('/api/offers', (req, res) => res.json(readDB('offers')));
-
-// 获取启用的语言列表（供前端渲染）
-app.get('/api/languages', (req, res) => {
-    const langs = readDB('languages').filter(l => l.active);
-    res.json(langs);
-});
+app.get('/api/languages', (req, res) => res.json(readDB('languages').filter(l => l.active)));
 
 app.post('/api/register', (req, res) => {
     const { email, password, payPassword } = req.body;
     const users = readDB('users');
     if (users.find(u => u.email === email)) return res.status(400).json({ error: '邮箱已注册' });
-    
     const newUser = { id: uuidv4(), email, password, payPassword: payPassword || '', balance: 0, totalEarned: 0, time: new Date().toISOString() };
     users.push(newUser);
     writeDB('users', users);
@@ -128,9 +128,7 @@ app.post('/api/login', (req, res) => {
 app.get('/api/leaderboard', (req, res) => {
     const period = req.query.period || 'daily';
     const users = readDB('users');
-    let list = users.map(u => ({
-        name: u.email.split('@')[0], amount: period === 'daily' ? (u.balance || 0) : (u.totalEarned || 0), avatar: u.email[0].toUpperCase(), isReal: true
-    }));
+    let list = users.map(u => ({ name: u.email.split('@')[0], amount: period === 'daily' ? (u.balance || 0) : (u.totalEarned || 0), avatar: u.email[0].toUpperCase(), isReal: true }));
     const fakeNames = ['Johnny Midan', 'Bebazz YT', 'Awatix', 'ItzGyNoRmOuS', 'Puppylover', 'Quang Nguyễn Minh', 'Khuong nguyen', 'Safa', 'Peter Hoffmann', 'Lutali', 'ChimmyChanga', 'Ove'];
     while (list.length < 100) {
         list.push({ name: fakeNames[Math.floor(Math.random() * fakeNames.length)] + Math.floor(Math.random() * 99), amount: Math.floor(Math.random() * 50000) + 1000, avatar: 'U', isReal: false });
@@ -182,31 +180,43 @@ app.get('/api/admin/data', auth, (req, res) => {
         articles: readDB('articles'), 
         surveys: readDB('surveys'), 
         offers: readDB('offers'),
-        languages: readDB('languages') // 返回全部语言配置
+        languages: readDB('languages'),
+        partners: readDB('partners') // 返回合作墙数据
     });
 });
 
-// 添加/修改语言
+// 合作墙管理
+app.post('/api/admin/partners', auth, (req, res) => {
+    const { name, imageUrl } = req.body;
+    const partners = readDB('partners');
+    partners.push({ id: uuidv4(), name, imageUrl });
+    writeDB('partners', partners);
+    res.json({ success: true });
+});
+
+app.delete('/api/admin/partners/:id', auth, (req, res) => {
+    let partners = readDB('partners').filter(p => p.id !== req.params.id);
+    writeDB('partners', partners);
+    res.json({ success: true });
+});
+
+// 语言管理
 app.post('/api/admin/languages', auth, (req, res) => {
     const { code, name, flag, active } = req.body;
     const languages = readDB('languages');
     const index = languages.findIndex(l => l.code === code);
-    if (index !== -1) {
-        languages[index] = { ...languages[index], name, flag, active };
-    } else {
-        languages.push({ code, name, flag, active });
-    }
+    if (index !== -1) languages[index] = { ...languages[index], name, flag, active };
+    else languages.push({ code, name, flag, active });
     writeDB('languages', languages);
     res.json({ success: true });
 });
-
-// 删除语言
 app.delete('/api/admin/languages/:code', auth, (req, res) => {
     let languages = readDB('languages').filter(l => l.code !== req.params.code);
     writeDB('languages', languages);
     res.json({ success: true });
 });
 
+// 优惠管理
 app.post('/api/admin/offers', auth, (req, res) => {
     const { category, title, reward, color } = req.body;
     const offers = readDB('offers');
@@ -214,13 +224,13 @@ app.post('/api/admin/offers', auth, (req, res) => {
     writeDB('offers', offers);
     res.json({ success: true });
 });
-
 app.delete('/api/admin/offers/:id', auth, (req, res) => {
     let offers = readDB('offers').filter(o => o.id !== req.params.id);
     writeDB('offers', offers);
     res.json({ success: true });
 });
 
+// 文章管理
 app.post('/api/admin/article', auth, (req, res) => {
     const { lang, title, summary, content, coverUrl } = req.body;
     const articles = readDB('articles');
@@ -228,7 +238,6 @@ app.post('/api/admin/article', auth, (req, res) => {
     writeDB('articles', articles);
     res.json({ success: true });
 });
-
 app.put('/api/admin/article/:id', auth, (req, res) => {
     const { lang, title, summary, content, coverUrl } = req.body;
     const articles = readDB('articles');
@@ -237,11 +246,8 @@ app.put('/api/admin/article/:id', auth, (req, res) => {
         articles[index] = { ...articles[index], lang, title, summary, content, coverUrl };
         writeDB('articles', articles);
         res.json({ success: true });
-    } else {
-        res.status(404).json({ error: '文章不存在' });
-    }
+    } else res.status(404).json({ error: '文章不存在' });
 });
-
 app.delete('/api/admin/article/:id', auth, (req, res) => {
     let articles = readDB('articles').filter(a => a.id !== req.params.id);
     writeDB('articles', articles);
