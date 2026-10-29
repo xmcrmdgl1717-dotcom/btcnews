@@ -24,7 +24,7 @@
         </a>
         <nav class="hidden md:flex items-center gap-8 text-sm">
             <a href="#" class="nav-link active">赚钱</a>
-            <a href="#" class="nav-link" onclick="alert('功能开发中')">优惠</a>
+            <a href="offers.html" class="nav-link">优惠</a>
             <a href="#" class="nav-link" onclick="openSurvey()">问卷</a>
             <a href="#" class="nav-link" onclick="openWithdraw()">提现</a>
             <a href="leaderboard.html" class="nav-link">排行榜</a>
@@ -66,6 +66,7 @@
     </div>
 </main>
 
+<!-- 提现弹窗 -->
 <div id="withdrawModal" class="modal">
     <div class="bg-white w-[90%] max-w-sm rounded-2xl p-6 relative">
         <button onclick="closeModal('withdrawModal')" class="absolute top-3 right-4 text-2xl text-gray-400">&times;</button>
@@ -79,6 +80,7 @@
     </div>
 </div>
 
+<!-- 问卷弹窗 -->
 <div id="surveyModal" class="modal">
     <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
         <button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
@@ -118,7 +120,7 @@
     async function doTask(reward, name) {
         const res = await fetch('/api/user/tasks/complete', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ email: currentUser.email, taskId: 0, reward: reward })
+            body: JSON.stringify({ email: currentUser.email, reward: reward })
         });
         const data = await res.json();
         if(data.success) {
