@@ -15,7 +15,6 @@
 </style>
 </head>
 <body class="bg-gray-100 h-screen flex overflow-hidden font-sans">
-
     <aside class="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
         <div class="h-16 flex items-center px-6 font-bold text-xl text-blue-600 border-b">W-Airdrop CMS</div>
         <nav class="flex-1 overflow-y-auto py-4">
@@ -24,16 +23,10 @@
             <div class="menu-item px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-50" onclick="switchTab('articles', this)">📝 文章管理</div>
             <div class="menu-item px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-50" onclick="switchTab('surveys', this)">📋 问卷管理</div>
         </nav>
-        <div class="p-4 border-t">
-            <button onclick="logout()" class="w-full bg-red-50 text-red-600 py-2 rounded-lg font-medium hover:bg-red-100">退出登录</button>
-        </div>
+        <div class="p-4 border-t"><button onclick="logout()" class="w-full bg-red-50 text-red-600 py-2 rounded-lg font-medium hover:bg-red-100">退出登录</button></div>
     </aside>
-
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header class="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0">
-            <h2 class="text-lg font-bold text-gray-800" id="pageTitle">首页管理</h2>
-        </header>
-
+        <header class="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0"><h2 class="text-lg font-bold text-gray-800" id="pageTitle">首页管理</h2></header>
         <div id="loginOverlay" class="absolute inset-0 bg-gray-100 z-50 flex items-center justify-center">
             <div class="bg-white p-8 rounded-xl shadow-lg w-96">
                 <h2 class="text-2xl font-bold text-center mb-6">后台登录</h2>
@@ -41,194 +34,57 @@
                 <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700">登录</button>
             </div>
         </div>
-
         <div class="flex-1 overflow-y-auto p-6" id="mainContent">
-            <!-- 首页管理 -->
-            <div id="tab-home" class="content-section active">
-                <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
-                    <h3 class="font-bold text-lg border-b pb-2">跑马灯与基础设置</h3>
-                    <p class="text-sm text-gray-500">跑马灯会自动抽取真实注册用户并混合虚拟数据。新闻如果前台未配置，默认展示兜底图文。</p>
-                </div>
-            </div>
-
-            <!-- 用户管理 -->
-            <div id="tab-users" class="content-section">
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-50"><tr><th class="p-4 border-b">邮箱</th><th class="p-4 border-b">密码</th><th class="p-4 border-b">余额</th><th class="p-4 border-b">时间</th></tr></thead>
-                        <tbody id="userList"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- 文章管理 -->
+            <div id="tab-home" class="content-section active"><div class="bg-white p-6 rounded-xl shadow-sm space-y-4"><h3 class="font-bold text-lg border-b pb-2">跑马灯与基础设置</h3><p class="text-sm text-gray-500">跑马灯会自动抽取真实注册用户并混合虚拟数据。新闻如果前台未配置，默认展示兜底图文。</p></div></div>
+            <div id="tab-users" class="content-section"><div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left border-collapse"><thead class="bg-gray-50"><tr><th class="p-4 border-b">邮箱</th><th class="p-4 border-b">密码</th><th class="p-4 border-b">余额</th><th class="p-4 border-b">时间</th></tr></thead><tbody id="userList"></tbody></table></div></div>
             <div id="tab-articles" class="content-section">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm">
                         <h3 class="font-bold mb-4">发布新文章</h3>
                         <div class="space-y-3 mb-4">
-                            <select id="artLang" class="w-full border p-2 rounded">
-                                <option value="zh">🇨🇳 中文</option>
-                                <option value="en">🇺🇸 English</option>
-                                <option value="vi">🇻🇳 Tiếng Việt</option>
-                                <option value="ko">🇰🇷 한국어</option>
-                            </select>
+                            <select id="artLang" class="w-full border p-2 rounded"><option value="zh">🇨🇳 中文</option><option value="en">🇺🇸 English</option></select>
                             <input type="text" id="artTitle" placeholder="文章标题" class="w-full border p-2 rounded">
                             <textarea id="artSummary" placeholder="文章摘要 (前两行展示)" class="w-full border p-2 rounded" rows="2"></textarea>
-                            
-                            <div class="flex items-center gap-2">
-                                <input type="file" id="artCoverFile" accept="image/*" class="text-sm w-full">
-                                <input type="text" id="artCoverUrl" placeholder="封面图URL" class="flex-1 border p-2 rounded text-sm bg-gray-50" readonly>
-                            </div>
-                            
+                            <div class="flex items-center gap-2"><input type="file" id="artCoverFile" accept="image/*" class="text-sm w-full"><input type="text" id="artCoverUrl" placeholder="封面图URL" class="flex-1 border p-2 rounded text-sm bg-gray-50" readonly></div>
                             <div class="bg-white"><div id="editor-container"></div></div>
                         </div>
                         <button onclick="publishArticle()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">发布文章</button>
                     </div>
-
-                    <div class="bg-white p-6 rounded-xl shadow-sm overflow-y-auto" style="max-height: 700px;">
-                        <h3 class="font-bold mb-4">已发布文章</h3>
-                        <div id="articleList" class="space-y-3"></div>
-                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm overflow-y-auto" style="max-height: 700px;"><h3 class="font-bold mb-4">已发布文章</h3><div id="articleList" class="space-y-3"></div></div>
                 </div>
             </div>
-
-            <!-- 问卷管理 -->
             <div id="tab-surveys" class="content-section">
-                <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
-                    <h3 class="font-bold mb-2">问卷题目配置 (JSON格式)</h3>
-                    <textarea id="surveyConfig" class="w-full border p-3 rounded font-mono text-sm" rows="10"></textarea>
-                    <button onclick="saveSurvey()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-blue-700">保存题目</button>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-50"><tr><th class="p-4 border-b">提交时间</th><th class="p-4 border-b">答案数据</th></tr></thead>
-                        <tbody id="surveyList"></tbody>
-                    </table>
-                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm mb-6"><h3 class="font-bold mb-2">问卷题目配置 (JSON格式)</h3><textarea id="surveyConfig" class="w-full border p-3 rounded font-mono text-sm" rows="10"></textarea><button onclick="saveSurvey()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-blue-700">保存题目</button></div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="p-4 border-b">提交时间</th><th class="p-4 border-b">答案数据</th></tr></thead><tbody id="surveyList"></tbody></table></div>
             </div>
         </div>
     </main>
-
 <script>
-    let adminPwd = '';
-    let quill = null;
-
-    // 初始化富文本
-    if (document.getElementById('editor-container')) {
-        quill = new Quill('#editor-container', {
-            theme: 'snow',
-            modules: { toolbar: [ [{ header: [1, 2, false] }], ['bold', 'italic', 'underline'], ['image'], ['clean'] ] }
-        });
-    }
-
-    function doLogin() {
-        adminPwd = document.getElementById('adminPwd').value;
-        fetchData();
-    }
+    let adminPwd = ''; let quill = null;
+    if (document.getElementById('editor-container')) { quill = new Quill('#editor-container', { theme: 'snow', modules: { toolbar: [ [{ header: [1, 2, false] }], ['bold', 'italic', 'underline'], ['image'], ['clean'] ] } }); }
+    function doLogin() { adminPwd = document.getElementById('adminPwd').value; fetchData(); }
     function logout() { location.reload(); }
-
-    function switchTab(tabId, el) {
-        document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active'));
-        document.querySelectorAll('.content-section').forEach(e => e.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('tab-' + tabId).classList.add('active');
-        document.getElementById('pageTitle').innerText = el.innerText.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
-    }
-
-    // 上传图片
-    document.getElementById('artCoverFile').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if(!file) return;
-        const formData = new FormData();
-        formData.append('image', file);
-        const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'x-admin-pwd': adminPwd }, body: formData });
-        const data = await res.json();
-        if(data.url) document.getElementById('artCoverUrl').value = data.url;
-    });
-
-    // 富文本插图
-    quill.getModule('toolbar').addHandler('image', () => {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        input.click();
-        input.onchange = async () => {
-            const file = input.files[0];
-            const formData = new FormData();
-            formData.append('image', file);
-            const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'x-admin-pwd': adminPwd }, body: formData });
-            const data = await res.json();
-            if(data.url) {
-                const range = quill.getSelection(true);
-                quill.insertEmbed(range.index, 'image', data.url);
-            }
-        };
-    });
-
+    function switchTab(tabId, el) { document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active')); document.querySelectorAll('.content-section').forEach(e => e.classList.remove('active')); el.classList.add('active'); document.getElementById('tab-' + tabId).classList.add('active'); document.getElementById('pageTitle').innerText = el.innerText.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, ''); }
+    document.getElementById('artCoverFile').addEventListener('change', async (e) => { const file = e.target.files[0]; if(!file) return; const formData = new FormData(); formData.append('image', file); const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'x-admin-pwd': adminPwd }, body: formData }); const data = await res.json(); if(data.url) document.getElementById('artCoverUrl').value = data.url; });
+    quill.getModule('toolbar').addHandler('image', () => { const input = document.createElement('input'); input.setAttribute('type', 'file'); input.setAttribute('accept', 'image/*'); input.click(); input.onchange = async () => { const file = input.files[0]; const formData = new FormData(); formData.append('image', file); const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'x-admin-pwd': adminPwd }, body: formData }); const data = await res.json(); if(data.url) { const range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', data.url); } }; });
     async function publishArticle() {
-        const payload = {
-            lang: document.getElementById('artLang').value,
-            title: document.getElementById('artTitle').value,
-            summary: document.getElementById('artSummary').value,
-            coverUrl: document.getElementById('artCoverUrl').value,
-            content: quill.root.innerHTML
-        };
+        const payload = { lang: document.getElementById('artLang').value, title: document.getElementById('artTitle').value, summary: document.getElementById('artSummary').value, coverUrl: document.getElementById('artCoverUrl').value, content: quill.root.innerHTML };
         if(!payload.title) return alert('请输入标题');
-        const res = await fetch('/api/admin/article', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
-            body: JSON.stringify(payload)
-        });
+        const res = await fetch('/api/admin/article', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
         const data = await res.json();
-        if(data.success) {
-            alert('发布成功');
-            quill.setContents([]);
-            document.getElementById('artTitle').value = '';
-            document.getElementById('artSummary').value = '';
-            document.getElementById('artCoverUrl').value = '';
-            fetchData();
-        } else alert(data.error);
+        if(data.success) { alert('发布成功'); quill.setContents([]); document.getElementById('artTitle').value = ''; document.getElementById('artSummary').value = ''; document.getElementById('artCoverUrl').value = ''; fetchData(); } else alert(data.error);
     }
-
-    async function saveSurvey() {
-        try {
-            const questions = JSON.parse(document.getElementById('surveyConfig').value);
-            await fetch('/api/admin/survey/questions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
-                body: JSON.stringify({ questions })
-            });
-            alert('问卷题目已更新');
-        } catch (e) { alert('JSON 格式错误'); }
-    }
-
+    async function saveSurvey() { try { const questions = JSON.parse(document.getElementById('surveyConfig').value); await fetch('/api/admin/survey/questions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ questions }) }); alert('问卷题目已更新'); } catch (e) { alert('JSON 格式错误'); } }
     async function fetchData() {
         const res = await fetch('/api/admin/data', { headers: { 'x-admin-pwd': adminPwd } });
         if(res.status === 403) return alert('密码错误');
-        
-        const data = await res.json();
-        document.getElementById('loginOverlay').classList.add('hidden');
-
+        const data = await res.json(); document.getElementById('loginOverlay').classList.add('hidden');
         document.getElementById('userList').innerHTML = data.users.map(u => `<tr class="border-b"><td class="p-4">${u.email}</td><td class="p-4 text-gray-400">${u.password}</td><td class="p-4 font-bold text-blue-600">${u.balance || 0}</td><td class="p-4 text-gray-500">${new Date(u.time).toLocaleString()}</td></tr>`).join('');
-
-        document.getElementById('articleList').innerHTML = data.articles.map(a => `
-            <div class="border p-3 rounded mb-2 flex justify-between items-center">
-                <div><span class="text-xs bg-gray-200 px-2 py-1 rounded">${a.lang}</span><h4 class="font-bold text-sm mt-1">${a.title}</h4></div>
-                <button onclick="deleteArticle('${a.id}')" class="text-red-500 text-sm hover:underline">删除</button>
-            </div>
-        `).join('');
-
+        document.getElementById('articleList').innerHTML = data.articles.map(a => `<div class="border p-3 rounded mb-2 flex justify-between items-center"><div><span class="text-xs bg-gray-200 px-2 py-1 rounded">${a.lang}</span><h4 class="font-bold text-sm mt-1">${a.title}</h4></div><button onclick="deleteArticle('${a.id}')" class="text-red-500 text-sm hover:underline">删除</button></div>`).join('');
         document.getElementById('surveyConfig').value = JSON.stringify(data.surveys.questions, null, 2);
-
         document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `<tr class="border-b"><td class="p-4 text-gray-500">${new Date(s.time).toLocaleString()}</td><td class="p-4">${JSON.stringify(s.answers)}</td></tr>`).join('');
     }
-
-    async function deleteArticle(id) {
-        if(!confirm('确认删除吗？')) return;
-        await fetch('/api/admin/article/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } });
-        fetchData();
-    }
+    async function deleteArticle(id) { if(!confirm('确认删除吗？')) return; await fetch('/api/admin/article/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
 </script>
 </body>
 </html>
