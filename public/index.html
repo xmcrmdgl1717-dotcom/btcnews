@@ -46,9 +46,8 @@
     <!-- 新闻轮播图 Banner 模块 -->
     <div class="relative w-full">
         <div id="newsCarousel" class="flex overflow-x-auto snap-x-mandatory hide-scrollbar gap-4 pb-4">
-            <!-- JS 动态渲染，每篇占满宽度 -->
+            <!-- JS 动态渲染 -->
         </div>
-        <!-- 轮播指示点 -->
         <div class="flex justify-center gap-2 mt-2" id="carouselDots"></div>
     </div>
 
@@ -88,9 +87,7 @@
             </div>
             <a href="javascript:void(0)" onclick="goToOffers()" class="text-blue-600 text-sm font-medium hover:underline">查看任务 →</a>
         </div>
-        <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4" id="homeOfferGrid">
-            <!-- JS 动态渲染 -->
-        </div>
+        <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4" id="homeOfferGrid"></div>
     </div>
 
     <div id="leaderboard" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
@@ -183,12 +180,11 @@
     function switchToLogin() { closeModal('registerModal'); openModal('loginModal'); }
     function switchToRegister() { closeModal('loginModal'); openModal('registerModal'); }
 
-    // 检查 URL 参数自动弹窗
+    // URL 参数自动弹窗逻辑
     function checkUrlParams() {
         const params = new URLSearchParams(window.location.search);
         if (params.get('register') === 'true') {
             openModal('registerModal');
-            // 清除 URL 参数避免刷新重复弹出
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
@@ -205,7 +201,7 @@
         else { triggerSafariCheck('login'); }
     }
 
-    // ===== 文章轮播图逻辑 =====
+    // 轮播图逻辑
     async function loadNewsCarousel() {
         const res = await fetch(`/api/articles/latest?lang=zh`);
         const data = await res.json();
@@ -213,14 +209,12 @@
         const dotsContainer = document.getElementById('carouselDots');
         
         if (!data || data.length === 0) {
-            // 兜底逻辑，如果没数据
             container.innerHTML = `<div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h2 class="text-xl font-bold mb-2">暂无新闻</h2></div>`;
             return;
         }
         
         carouselArticles = data;
         
-        // 渲染卡片
         container.innerHTML = data.map((item, index) => `
             <div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer" onclick="window.location.href='/article.html?id=${item.id}'">
                 <h2 class="text-xl font-bold mb-2 leading-snug">${item.title}</h2>
@@ -230,19 +224,16 @@
             </div>
         `).join('');
 
-        // 渲染指示点
         dotsContainer.innerHTML = data.map((_, i) => `
             <button onclick="scrollToArticle(${i})" class="w-2.5 h-2.5 rounded-full transition-all ${i === 0 ? 'bg-blue-600 w-6' : 'bg-gray-300'}"></button>
         `).join('');
 
-        // 启动自动轮播
         startCarousel();
     }
 
     function startCarousel() {
         if (carouselInterval) clearInterval(carouselInterval);
         if (carouselArticles.length <= 1) return;
-        
         carouselInterval = setInterval(() => {
             carouselIndex = (carouselIndex + 1) % carouselArticles.length;
             scrollToArticle(carouselIndex);
@@ -254,8 +245,6 @@
         const width = container.offsetWidth;
         container.scrollTo({ left: width * index, behavior: 'smooth' });
         carouselIndex = index;
-        
-        // 更新指示点样式
         const dots = document.getElementById('carouselDots').children;
         for (let i = 0; i < dots.length; i++) {
             if (i === index) dots[i].className = 'w-2.5 h-2.5 rounded-full transition-all bg-blue-600 w-6';
@@ -263,14 +252,8 @@
         }
     }
 
-    // 监听手动滑动重置定时器
-    document.getElementById('newsCarousel').addEventListener('touchstart', () => {
-        if (carouselInterval) clearInterval(carouselInterval);
-    }, {passive: true});
-    document.getElementById('newsCarousel').addEventListener('touchend', () => {
-        startCarousel();
-    }, {passive: true});
-    // ============================
+    document.getElementById('newsCarousel').addEventListener('touchstart', () => { if (carouselInterval) clearInterval(carouselInterval); }, {passive: true});
+    document.getElementById('newsCarousel').addEventListener('touchend', () => { startCarousel(); }, {passive: true});
 
     async function loadSurveyQuestions() {
         const defaultQuestions = [
@@ -386,7 +369,7 @@
     loadNewsCarousel(); 
     loadHomeOffers(); 
     loadTopLeaderboard();
-    checkUrlParams(); // 检查是否需要自动打开注册
+    checkUrlParams();
 </script>
 </body>
 </html>
