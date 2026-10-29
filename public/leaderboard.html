@@ -18,25 +18,25 @@
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
             <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
         </a>
-        <a href="dashboard.html" class="text-sm font-medium text-gray-600 hover:text-blue-600">返回个人中心</a>
+        <a href="dashboard.html" class="text-sm font-medium text-gray-600 hover:text-blue-600" data-i18n="backHome">返回个人中心</a>
     </div>
 </header>
 
 <main class="max-w-4xl mx-auto px-4 py-8">
     <div class="text-center mb-8">
-        <h1 class="text-3xl font-extrabold text-gray-900 mb-2">顶级赚手排行榜</h1>
-        <p class="text-gray-500 text-sm">与其他用户竞争，登上每日和每月排行榜赢取额外金币。</p>
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2" data-i18n="lbTitle">顶级赚手排行榜</h1>
+        <p class="text-gray-500 text-sm" data-i18n="lbDesc">与其他用户竞争，登上每日和每月排行榜赢取额外金币。</p>
     </div>
 
     <div class="flex justify-center gap-4 mb-8">
-        <button onclick="loadLeaderboard('daily')" id="btn-daily" class="tab-btn active">每日</button>
-        <button onclick="loadLeaderboard('monthly')" id="btn-monthly" class="tab-btn">每月</button>
+        <button onclick="loadLeaderboard('daily')" id="btn-daily" class="tab-btn active" data-i18n="daily">每日</button>
+        <button onclick="loadLeaderboard('monthly')" id="btn-monthly" class="tab-btn" data-i18n="monthly">每月</button>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div class="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            <span>排名 / 用户</span>
-            <span>收益</span>
+            <span data-i18n="rankUser">排名 / 用户</span>
+            <span data-i18n="earnings">收益</span>
         </div>
         <div id="leaderboardList" class="divide-y divide-gray-50"></div>
     </div>
@@ -45,18 +45,36 @@
 <script>
     const coinSvg = `<svg class="w-4 h-4 inline-block align-middle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#FBBF24"/><circle cx="12" cy="12" r="8" fill="#FCD34D"/><path d="M12 6V18M15 9C15 7.89543 13.6569 7 12 7C10.3431 7 9 7.89543 9 9C9 10.1046 10.3431 11 12 11C13.6569 11 15 11.8954 15 13C15 14.1046 13.6569 15 12 15C10.3431 15 9 14.1046 9 13" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
+    let currentDict = {};
+
+    async function initLang() {
+        try {
+            const res = await fetch('/api/languages');
+            const langs = await res.json();
+            if(langs.length > 0) {
+                const savedLang = localStorage.getItem('wad_lang') || langs[0].code;
+                currentDict = (langs.find(l => l.code === savedLang) || langs[0]).dict;
+                
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (currentDict[key]) el.innerText = currentDict[key];
+                });
+            }
+        } catch(e) {}
+    }
+
     async function loadLeaderboard(period) {
         document.getElementById('btn-daily').classList.remove('active');
         document.getElementById('btn-monthly').classList.remove('active');
         document.getElementById(`btn-${period}`).classList.add('active');
 
         const listContainer = document.getElementById('leaderboardList');
-        listContainer.innerHTML = '<div class="p-8 text-center text-gray-400">加载中...</div>';
+        listContainer.innerHTML = '<div class="p-8 text-center text-gray-400">Loading...</div>';
 
         try {
             const res = await fetch(`/api/leaderboard?period=${period}`);
             const data = await res.json();
-            if (data.length === 0) return listContainer.innerHTML = '<div class="p-8 text-center text-gray-400">暂无数据</div>';
+            if (data.length === 0) return listContainer.innerHTML = '<div class="p-8 text-center text-gray-400">No data</div>';
 
             let html = '';
             data.forEach((user, index) => {
@@ -71,15 +89,16 @@
                             <span class="w-6 text-center ${rankClass}">#${index + 1}</span>
                             <div class="w-10 h-10 rounded-full ${avatarClass} flex items-center justify-center font-bold text-sm">${user.avatar}</div>
                             <div><span class="font-medium text-sm text-gray-900">${user.name}</span>
-                            ${user.isReal ? '<span class="ml-2 text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">你</span>' : ''}</div>
+                            ${user.isReal ? `<span class="ml-2 text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded" data-i18n="you">${currentDict.you || '你'}</span>` : ''}</div>
                         </div>
                         <span class="font-bold text-yellow-500 text-sm flex items-center gap-1">${coinSvg} ${user.amount.toLocaleString()}</span>
                     </div>`;
             });
             listContainer.innerHTML = html;
-        } catch(e) { listContainer.innerHTML = '<div class="p-8 text-center text-red-400">加载失败</div>'; }
+        } catch(e) { listContainer.innerHTML = '<div class="p-8 text-center text-red-400">Failed to load</div>'; }
     }
-    loadLeaderboard('daily');
+
+    initLang().then(() => loadLeaderboard('daily'));
 </script>
 </body>
 </html>
