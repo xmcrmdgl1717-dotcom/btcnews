@@ -16,10 +16,10 @@ const DB_FILES = {
     users: path.join(DB_DIR, 'users.json'),
     articles: path.join(DB_DIR, 'articles.json'),
     surveys: path.join(DB_DIR, 'surveys.json'),
-    offers: path.join(DB_DIR, 'offers.json') // 新增优惠数据文件
+    offers: path.join(DB_DIR, 'offers.json') // 新增优惠数据
 };
 
-// 初始化数据
+// 初始化数据文件
 Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
@@ -74,9 +74,7 @@ app.get('/api/marquee', (req, res) => {
 });
 
 // 获取优惠列表
-app.get('/api/offers', (req, res) => {
-    res.json(readDB('offers'));
-});
+app.get('/api/offers', (req, res) => res.json(readDB('offers')));
 
 app.post('/api/register', (req, res) => {
     const { email, password, payPassword } = req.body;
@@ -155,7 +153,6 @@ app.get('/api/admin/data', auth, (req, res) => {
     res.json({ users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'), offers: readDB('offers') });
 });
 
-// 新增或更新优惠
 app.post('/api/admin/offers', auth, (req, res) => {
     const { category, title, reward, color } = req.body;
     const offers = readDB('offers');
