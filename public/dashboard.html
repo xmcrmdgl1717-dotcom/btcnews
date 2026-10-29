@@ -10,66 +10,47 @@
     .nav-link:hover, .nav-link.active { color: #2563eb; }
     .offer-card { transition: transform 0.2s, box-shadow 0.2s; }
     .offer-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border-color: #e5e7eb; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; align-items: center; justify-content: center; padding: 1rem; }
+    .modal.active { display: flex; }
 </style>
 </head>
 <body class="bg-white font-sans text-gray-800">
 
-<!-- 顶部导航 -->
 <header class="border-b border-gray-100 sticky top-0 bg-white z-40">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <!-- Logo -->
         <a href="/" class="flex items-center gap-2">
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
             <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
         </a>
-        
-        <!-- 导航 -->
         <nav class="hidden md:flex items-center gap-8 text-sm">
             <a href="#" class="nav-link active">赚钱</a>
-            <a href="#" class="nav-link">优惠</a>
-            <a href="#" class="nav-link">问卷</a>
-            <a href="#" class="nav-link">提现</a>
-            <div class="relative group cursor-pointer flex items-center gap-1 nav-link">
-                奖励
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </div>
+            <a href="#" class="nav-link" onclick="alert('功能开发中')">优惠</a>
+            <a href="#" class="nav-link" onclick="openSurvey()">问卷</a>
+            <a href="#" class="nav-link" onclick="openWithdraw()">提现</a>
+            <a href="leaderboard.html" class="nav-link">排行榜</a>
         </nav>
-
-        <!-- 右侧用户区 -->
         <div class="flex items-center gap-4">
-            <!-- 金币余额 -->
             <div class="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-full">
                 <span class="text-yellow-500 font-bold text-lg">🪙</span>
                 <span class="font-bold text-gray-800" id="navBalance">0</span>
             </div>
-            <!-- 用户邮箱 -->
             <span class="text-sm font-medium text-gray-600 hidden sm:block" id="navEmail">---</span>
-            <!-- 退出 -->
             <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500 transition-colors">退出</button>
-            <!-- 消息图标 -->
-            <button class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-            </button>
         </div>
     </div>
 </header>
 
 <main class="max-w-6xl mx-auto px-4 py-10">
-    <!-- 页面标题 -->
     <div class="mb-10">
         <h1 class="text-3xl font-extrabold text-gray-900 mb-2">赚钱</h1>
         <p class="text-gray-500 text-sm">完成优惠、问卷和游戏，立即获得金币。</p>
     </div>
 
-    <!-- 1. 优惠墙 -->
     <div class="mb-12">
         <h2 class="text-xl font-bold text-gray-800 mb-4">优惠墙</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="offerWall">
-            <!-- JS 动态渲染卡片 -->
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="offerWall"></div>
     </div>
 
-    <!-- 2. 看视频 -->
     <div class="mb-12">
         <h2 class="text-xl font-bold text-gray-800 mb-4">看视频</h2>
         <div class="bg-gray-50 rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border border-gray-100">
@@ -80,78 +61,99 @@
                     <p class="text-sm text-gray-500">完成优惠、问卷和游戏，立即获得金币。</p>
                 </div>
             </div>
-            <button onclick="startTask()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 w-full md:w-auto">登录后开始</button>
+            <button onclick="doTask(60, '看视频')" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 w-full md:w-auto">开始任务</button>
         </div>
     </div>
-
-    <!-- 3. 游戏时长 -->
-    <div class="mb-12">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">游戏时长</h2>
-        <div class="bg-white rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border border-gray-200">
-            <div class="flex items-center gap-4 mb-4 md:mb-0">
-                <div class="w-14 h-14 bg-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm">P</div>
-                <div>
-                    <h3 class="font-bold text-lg text-gray-900">Playtime Rewards</h3>
-                    <p class="text-sm text-gray-500">认真完成问卷，提交后即具备奖励资格。</p>
-                </div>
-            </div>
-            <button onclick="startTask()" class="bg-gray-100 text-gray-700 px-8 py-2.5 rounded-lg font-medium hover:bg-gray-200 w-full md:w-auto">优惠</button>
-        </div>
-    </div>
-
 </main>
 
+<div id="withdrawModal" class="modal">
+    <div class="bg-white w-[90%] max-w-sm rounded-2xl p-6 relative">
+        <button onclick="closeModal('withdrawModal')" class="absolute top-3 right-4 text-2xl text-gray-400">&times;</button>
+        <h3 class="text-xl font-bold mb-4 text-center">申请提现</h3>
+        <div class="space-y-4 mb-6">
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">提现方式</label><select id="wMethod" class="w-full border p-3 rounded-xl outline-none"><option value="PayPal">PayPal</option><option value="BTC">比特币 (BTC)</option></select></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">金额 (最低 500 金币)</label><input type="number" id="wAmount" placeholder="请输入数量" class="w-full border p-3 rounded-xl outline-none"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">接收账号/地址</label><input type="text" id="wAccount" placeholder="请输入账号" class="w-full border p-3 rounded-xl outline-none"></div>
+        </div>
+        <button onclick="submitWithdraw()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">提交申请</button>
+    </div>
+</div>
+
+<div id="surveyModal" class="modal">
+    <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
+        <button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
+        <h3 class="text-lg font-bold text-center mb-6">用户习惯问卷调查</h3>
+        <div id="surveyQuestions" class="space-y-4 mb-6 max-h-[60vh] overflow-y-auto"></div>
+        <button onclick="submitSurvey()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700">提交问卷 (+180金币)</button>
+    </div>
+</div>
+
 <script>
-    // 获取用户信息
     const currentUser = JSON.parse(localStorage.getItem('wad_user'));
-    if (!currentUser) {
-        window.location.href = '/';
-    }
-    
+    if (!currentUser) window.location.href = '/';
     document.getElementById('navEmail').innerText = currentUser.email;
     document.getElementById('navBalance').innerText = currentUser.balance || 0;
 
-    // 优惠墙假数据（根据截图还原）
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
     const offers = [
-        { name: 'Torox', reward: '+85%', color: 'text-purple-600 bg-purple-50' },
-        { name: 'BitLabs', reward: '+20%', color: 'text-blue-600 bg-blue-50' },
-        { name: 'AdGate Media', reward: '+15%', color: 'text-cyan-600 bg-cyan-50' },
-        { name: 'OfferToro', reward: '+25%', color: 'text-orange-600 bg-orange-50' },
-        { name: 'Prime Surveys', reward: '', color: 'text-gray-600 bg-gray-100' },
-        { name: 'CPX Research', reward: '', color: 'text-gray-600 bg-gray-100' },
-        { name: 'Adscend Media', reward: '+10%', color: 'text-green-600 bg-green-50' },
-        { name: 'MyChips', reward: '', color: 'text-gray-600 bg-gray-100' },
-        { name: 'TimeWall', reward: '', color: 'text-gray-600 bg-gray-100' },
-        { name: 'Lootably', reward: '', color: 'text-gray-600 bg-gray-100' },
-        { name: 'Polltastic', reward: '', color: 'text-gray-600 bg-gray-100' },
-        { name: 'TheoremReach', reward: '', color: 'text-gray-600 bg-gray-100' }
+        { id: 1, name: 'Torox', reward: 85, color: 'text-purple-600 bg-purple-50' },
+        { id: 2, name: 'BitLabs', reward: 20, color: 'text-blue-600 bg-blue-50' },
+        { id: 3, name: 'AdGate Media', reward: 15, color: 'text-cyan-600 bg-cyan-50' },
+        { id: 4, name: 'OfferToro', reward: 25, color: 'text-orange-600 bg-orange-50' },
+        { id: 5, name: 'Prime Surveys', reward: 50, color: 'text-gray-600 bg-gray-100' },
+        { id: 6, name: 'CPX Research', reward: 80, color: 'text-gray-600 bg-gray-100' }
     ];
 
-    // 渲染优惠墙
-    const wall = document.getElementById('offerWall');
-    wall.innerHTML = offers.map(o => `
-        <div class="offer-card bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between cursor-pointer" onclick="startTask()">
+    document.getElementById('offerWall').innerHTML = offers.map(o => `
+        <div class="offer-card bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between cursor-pointer" onclick="doTask(${o.reward}, '${o.name}')">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 border border-gray-100">${o.name[0]}</div>
-                <div>
-                    <h4 class="font-bold text-sm text-gray-900">${o.name}</h4>
-                    <p class="text-xs text-gray-500 mt-0.5">可做任务</p>
-                </div>
+                <div><h4 class="font-bold text-sm text-gray-900">${o.name}</h4><p class="text-xs text-gray-500 mt-0.5">可做任务</p></div>
             </div>
-            ${o.reward ? `<span class="${o.color} px-2 py-1 rounded text-xs font-bold">${o.reward}</span>` : `<span class="text-gray-400 text-xs">→</span>`}
-        </div>
-    `).join('');
+            <span class="${o.color} px-2 py-1 rounded text-xs font-bold">+${o.reward} 金币</span>
+        </div>`).join('');
 
-    // 模拟点击任务
-    function startTask() {
-        alert('任务功能开发中，即将跳转到任务页面！');
+    async function doTask(reward, name) {
+        const res = await fetch('/api/user/tasks/complete', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: currentUser.email, taskId: 0, reward: reward })
+        });
+        const data = await res.json();
+        if(data.success) {
+            document.getElementById('navBalance').innerText = data.balance;
+            currentUser.balance = data.balance;
+            localStorage.setItem('wad_user', JSON.stringify(currentUser));
+            alert(`【${name}】任务完成！+${reward} 金币已到账。`);
+        }
     }
 
-    // 退出登录
-    function logout() {
-        localStorage.removeItem('wad_user');
-        window.location.href = '/';
+    function openWithdraw() { openModal('withdrawModal'); }
+    async function submitWithdraw() {
+        const amount = Number(document.getElementById('wAmount').value);
+        if(amount < 500) return alert('最低提现 500 金币');
+        if(amount > currentUser.balance) return alert('余额不足');
+        alert('提现申请已提交，请等待审核！'); closeModal('withdrawModal');
     }
+
+    function openSurvey() { loadSurveyQuestions(); openModal('surveyModal'); }
+    async function loadSurveyQuestions() {
+        const defaultQuestions = [
+            { title: '您平时最经常使用的加密钱包是哪一款？', options: ['Bitget / Bitpie 钱包', 'Trust Wallet / Phantom钱包', 'Solflare / Coin98 钱包'] },
+            { title: '您使用加密钱包的主要用途是什么？', options: ['DApp交互与 DeFi理财', '代币 Swap(交易)', 'NFT收藏与交易'] }
+        ];
+        let html = '';
+        defaultQuestions.forEach((q, i) => {
+            html += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
+            q.options.forEach(opt => { html += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="q${i}" value="${opt}" class="accent-blue-500"> ${opt}</label>`; });
+            html += `</div>`;
+        });
+        document.getElementById('surveyQuestions').innerHTML = html;
+    }
+    async function submitSurvey() { closeModal('surveyModal'); doTask(180, '问卷调查'); }
+
+    function logout() { localStorage.removeItem('wad_user'); window.location.href = '/'; }
 </script>
 </body>
 </html>
