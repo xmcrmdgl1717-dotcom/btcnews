@@ -72,7 +72,7 @@
                             <button onclick="resetArticleForm()" id="articleCancelBtn" class="bg-gray-200 text-gray-700 px-6 py-2 rounded font-bold hover:bg-gray-300 hidden">取消编辑</button>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm overflow-y-auto" style="max-height: 700px;">
+                    <div class="bg-white p-6 rounded-xl shadow-sm overflow-y-auto" style="max-height: 800px;">
                         <h3 class="font-bold mb-4">已发布文章</h3>
                         <div id="articleList" class="space-y-3"></div>
                     </div>
@@ -320,6 +320,7 @@
     async function deleteOffer(id) { if(!confirm('确认删除？')) return; await fetch('/api/admin/offers/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
     async function saveSurvey() { try { const questions = JSON.parse(document.getElementById('surveyConfig').value); await fetch('/api/admin/survey/questions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ questions }) }); alert('已更新'); } catch (e) { alert('JSON 格式错误'); } }
     async function deleteArticle(id) { if(!confirm('确认删除吗？')) return; await fetch('/api/admin/article/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
+    async function deleteArticleGroup(groupId) { if(!confirm('确认删除该组下所有语言的文章吗？')) return; await fetch('/api/admin/article-group/' + groupId, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
 
     async function fetchData() {
         const res = await fetch('/api/admin/data', { headers: { 'x-admin-pwd': adminPwd } });
@@ -345,20 +346,58 @@
             </tr>
         `).join('');
         
-        document.getElementById('articleList').innerHTML = data.articles.map(a => `
-            <div class="border p-3 rounded mb-2 flex justify-between items-center">
-                <div><span class="text-xs bg-gray-200 px-2 py-1 rounded">${a.lang}</span><h4 class="font-bold text-sm mt-1">${a.title}</h4></div>
-                <div class="flex gap-2">
-                    <button onclick="editArticle('${a.id}')" class="text-blue-500 text-sm hover:underline">编辑</button>
-                    <button onclick="deleteArticle('${a.id}')" class="text-red-500 text-sm hover:underline">删除</button>
+        // ===== 核心：文章按 groupId 分组渲染 =====
+        const groups = {};
+        data.articles.forEach(a => {
+            const gid = a.groupId || a.id; 
+            if (!groups[gid]) groups[gid] = [];
+            groups[gid].push(a);
+        });
+
+        let articleHtml = '';
+        Object.values(groups).forEach(group => {
+            const mainArt = group.find(a => a.lang === 'zh') || group[0];
+            const otherLangs = group.filter(a => a.id !== mainArt.id);
+            const groupId = mainArt.groupId || mainArt.id;
+
+            articleHtml += `
+                <div class="border border-gray-200 p-3 rounded-lg mb-3 bg-white hover:shadow-sm transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold uppercase">${mainArt.lang}</span>
+                            <h4 class="font-bold text-sm mt-1 text-gray-800">${mainArt.title}</h4>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editArticle('${mainArt.id}')" class="text-blue-500 text-xs font-medium hover:underline">编辑主版本</button>
+                            <button onclick="deleteArticleGroup('${groupId}')" class="text-red-500 text-xs font-medium hover:underline">删除整组</button>
+                        </div>
+                    </div>
+                    
+                    ${otherLangs.length > 0 ? `
+                    <details class="mt-2">
+                        <summary class="text-xs text-gray-500 cursor-pointer hover:text-blue-500 select-none">查看其他语言版本 (${otherLangs.length}) ▼</summary>
+                        <div class="mt-2 space-y-1 pl-2 border-l-2 border-gray-100">
+                            ${otherLangs.map(a => `
+                                <div class="flex justify-between items-center bg-gray-50 p-2 rounded">
+                                    <div><span class="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded uppercase">${a.lang}</span> <span class="text-sm text-gray-700">${a.title}</span></div>
+                                    <div class="flex gap-2">
+                                        <button onclick="editArticle('${a.id}')" class="text-blue-500 text-xs hover:underline">编辑</button>
+                                        <button onclick="deleteArticle('${a.id}')" class="text-red-500 text-xs hover:underline">删除</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </details>
+                    ` : ''}
                 </div>
-            </div>
-        `).join('');
-        
+            `;
+        });
+        document.getElementById('articleList').innerHTML = articleHtml || '<div class="text-center text-gray-400 py-4">暂无文章</div>';
+
         document.getElementById('surveyConfig').value = JSON.stringify(data.surveys.questions, null, 2);
         document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `<tr class="border-b"><td class="p-4 text-gray-500">${new Date(s.time).toLocaleString()}</td><td class="p-4">${JSON.stringify(s.answers)}</td></tr>`).join('');
-        document.getElementById('offerList').innerHTML = data.offers.map(o => `<tr class="border-b"><td class="p-4"><div class="w-6 h-6 rounded" style="background-color: ${o.color}"></div></td><td class="p-4">${o.category}</td><td class="p-4 font-bold">${o.title}</td><td class="p-4 text-yellow-600">🪙 ${o.reward}</td><td class="p-4"><button onclick="deleteOffer('${o.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
-
+        document.getElementById('offerList').innerHTML = data.offers.map(o => `<tr class="border-b"><td class="p-4"><div class="w-6 h-6 rounded" style="background-color: ${o.color}"></div></td><td class="p-4">${o.category}</td><td class="p-4 font-bold">${o.title}</td><td class="p-4 text-yellow-600">${o.reward}</td><td class="p-4"><button onclick="deleteOffer('${o.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
+        
         document.getElementById('partnerList').innerHTML = data.partners.map(p => `
             <tr class="border-b">
                 <td class="p-4">${p.imageUrl ? `<img src="${p.imageUrl}" class="h-8 w-auto object-contain">` : '<span class="text-gray-400">无图</span>'}</td>
