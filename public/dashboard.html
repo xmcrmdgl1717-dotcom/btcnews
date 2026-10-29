@@ -96,6 +96,16 @@
     document.getElementById('navEmail').innerText = currentUser.email;
     document.getElementById('navBalance').innerHTML = `${coinSvg} ${currentUser.balance || 0}`;
 
+    let userLangDict = {}; // 保存字典
+
+    async function initLang() {
+        try {
+            const res = await fetch('/api/languages');
+            const langs = await res.json();
+            if(langs.length > 0) userLangDict = langs[0].dict;
+        } catch(e) {}
+    }
+
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -142,12 +152,14 @@
 
     function openSurvey() { loadSurveyQuestions(); openModal('surveyModal'); }
     async function loadSurveyQuestions() {
-        const defaultQuestions = [
-            { title: '您平时最经常使用的加密钱包是哪一款？', options: ['Bitget / Bitpie 钱包', 'Trust Wallet / Phantom钱包', 'Solflare / Coin98 钱包'] },
-            { title: '您使用加密钱包的主要用途是什么？', options: ['DApp交互与 DeFi理财', '代币 Swap(交易)', 'NFT收藏与交易'] }
+        const dict = userLangDict;
+        const questions = [
+            { title: dict.surveyQ1 || '您平时最经常使用的加密钱包是哪一款？', options: [dict.surveyOpt1_1 || 'Bitget / Bitpie', dict.surveyOpt1_2 || 'Trust Wallet / Phantom', dict.surveyOpt1_3 || 'Solflare / Coin98', dict.surveyOpt1_4 || 'Uniswap / Exodus'] },
+            { title: dict.surveyQ2 || '您使用加密钱包的主要用途是什么？', options: [dict.surveyOpt2_1 || 'DApp & DeFi', dict.surveyOpt2_2 || 'Swap', dict.surveyOpt2_3 || 'NFT', dict.surveyOpt2_4 || 'Store'] }
         ];
+        
         let html = '';
-        defaultQuestions.forEach((q, i) => {
+        questions.forEach((q, i) => {
             html += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
             q.options.forEach(opt => { html += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="q${i}" value="${opt}" class="accent-blue-500"> ${opt}</label>`; });
             html += `</div>`;
@@ -157,6 +169,8 @@
     async function submitSurvey() { closeModal('surveyModal'); doTask(180, '问卷调查'); }
 
     function logout() { localStorage.removeItem('wad_user'); window.location.href = '/'; }
+
+    initLang();
 </script>
 </body>
 </html>
