@@ -31,7 +31,7 @@
         </nav>
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-full">
-                <span class="font-bold text-gray-800 text-sm" id="navBalance">0 金币</span>
+                <span class="font-bold text-gray-800 text-sm" id="navBalance">0</span>
             </div>
             <span class="text-sm font-medium text-gray-600 hidden sm:block" id="navEmail">---</span>
             <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500">退出</button>
@@ -61,10 +61,12 @@
 </main>
 
 <script>
+    const coinSvg = `<svg class="w-4 h-4 inline-block align-middle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#FBBF24"/><circle cx="12" cy="12" r="8" fill="#FCD34D"/><path d="M12 6V18M15 9C15 7.89543 13.6569 7 12 7C10.3431 7 9 7.89543 9 9C9 10.1046 10.3431 11 12 11C13.6569 11 15 11.8954 15 13C15 14.1046 13.6569 15 12 15C10.3431 15 9 14.1046 9 13" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
     const currentUser = JSON.parse(localStorage.getItem('wad_user'));
     if (currentUser) {
         document.getElementById('navEmail').innerText = currentUser.email;
-        document.getElementById('navBalance').innerText = `${currentUser.balance || 0} 金币`;
+        document.getElementById('navBalance').innerHTML = `${coinSvg} ${currentUser.balance || 0}`;
     } else {
         window.location.href = '/'; 
     }
@@ -93,40 +95,4 @@
         grid.innerHTML = filtered.map(o => `
             <div class="offer-card bg-white flex flex-col" onclick="goToTask()">
                 <div style="background-color: ${o.color}" class="h-32 w-full flex items-end p-4 relative overflow-hidden">
-                    <h3 class="text-white font-bold text-lg leading-tight z-10">${o.title}</h3>
-                </div>
-                <div class="p-3 flex justify-between items-center bg-white border-t border-gray-100">
-                    <span class="flex items-center gap-1 text-sm font-bold text-gray-700">
-                        ${o.reward} 金币
-                    </span>
-                    <span class="text-blue-500 text-xs font-bold hover:underline">开始赚钱</span>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function filterOffers(category, btn) {
-        currentCategory = category;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderGrid();
-    }
-
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-        searchKeyword = e.target.value;
-        renderGrid();
-    });
-
-    function goToTask() {
-        window.location.href = '/?register=true';
-    }
-
-    function logout() {
-        localStorage.removeItem('wad_user');
-        window.location.href = '/';
-    }
-
-    fetchOffers();
-</script>
-</body>
-</html>
+                    <h3 class="text-white font-bold text-lg leading-tight z-10
