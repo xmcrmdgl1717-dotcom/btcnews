@@ -189,7 +189,6 @@
         document.getElementById('pImageUrl').value = await uploadImage(file);
     });
 
-    // ====== 文章自动翻译发布 ======
     async function submitArticle() {
         const id = document.getElementById('editArticleId').value;
         const title = document.getElementById('artTitle').value;
@@ -250,7 +249,6 @@
         document.getElementById('articleLangCheckboxes').parentElement.style.display = 'block';
     }
 
-    // ====== 合作墙编辑 ======
     async function savePartner() {
         const id = document.getElementById('editPartnerId').value;
         const name = document.getElementById('pName').value;
@@ -282,7 +280,6 @@
     }
     async function deletePartner(id) { if(!confirm('确认删除？')) return; await fetch('/api/admin/partners/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
 
-    // ====== 用户余额编辑 ======
     function openEditUser(id) {
         const u = (window.allUsers || []).find(item => item.id === id); if(!u) return;
         document.getElementById('editUserId').value = u.id;
@@ -298,7 +295,6 @@
         fetchData();
     }
 
-    // ====== 多语言字典编辑 ======
     function openEditLang(code) {
         const l = (window.allLangs || []).find(item => item.code === code); if(!l) return;
         document.getElementById('editLangCode').value = l.code;
