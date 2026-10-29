@@ -16,7 +16,8 @@ const DB_FILES = {
     users: path.join(DB_DIR, 'users.json'),
     articles: path.join(DB_DIR, 'articles.json'),
     surveys: path.join(DB_DIR, 'surveys.json'),
-    offers: path.join(DB_DIR, 'offers.json')
+    offers: path.join(DB_DIR, 'offers.json'),
+    languages: path.join(DB_DIR, 'languages.json') // 新增多语言配置
 };
 
 // 初始化数据
@@ -24,6 +25,23 @@ Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
         if (key === 'surveys') initialData = { questions: [], submissions: [] };
+        
+        // 内置 10 个国家语言数据
+        if (key === 'languages') {
+            initialData = [
+                { code: 'zh', name: '简体中文', flag: '🇨🇳', active: true },
+                { code: 'en', name: 'English', flag: '🇺🇸', active: true },
+                { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳', active: true },
+                { code: 'de', name: 'Deutsch', flag: '🇩🇪', active: true },
+                { code: 'ar', name: 'العربية', flag: '🇦🇪', active: true },
+                { code: 'es', name: 'Español', flag: '🇦🇷', active: true },
+                { code: 'pt', name: 'Português', flag: '🇧🇷', active: true },
+                { code: 'ko', name: '한국어', flag: '🇰🇷', active: true },
+                { code: 'uk', name: 'Українська', flag: '🇺🇦', active: true },
+                { code: 'tr', name: 'Türkçe', flag: '🇹🇷', active: true }
+            ];
+        }
+
         if (key === 'articles') {
             initialData = [
                 { id: uuidv4(), lang: 'zh', title: '比特币一度跌破8万美元：三星引发科技股震荡', summary: '受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温。', coverUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=800&auto=format&fit=crop', content: '<p>受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温，比特币跌破8万美元。</p>', time: new Date(Date.now() - 1000).toISOString() },
@@ -81,6 +99,12 @@ app.get('/api/marquee', (req, res) => {
 });
 
 app.get('/api/offers', (req, res) => res.json(readDB('offers')));
+
+// 获取启用的语言列表（供前端渲染）
+app.get('/api/languages', (req, res) => {
+    const langs = readDB('languages').filter(l => l.active);
+    res.json(langs);
+});
 
 app.post('/api/register', (req, res) => {
     const { email, password, payPassword } = req.body;
@@ -153,7 +177,34 @@ const auth = (req, res, next) => {
 app.post('/api/admin/upload', auth, upload.single('image'), (req, res) => res.json({ url: `/uploads/${req.file.filename}` }));
 
 app.get('/api/admin/data', auth, (req, res) => {
-    res.json({ users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'), offers: readDB('offers') });
+    res.json({ 
+        users: readDB('users'), 
+        articles: readDB('articles'), 
+        surveys: readDB('surveys'), 
+        offers: readDB('offers'),
+        languages: readDB('languages') // 返回全部语言配置
+    });
+});
+
+// 添加/修改语言
+app.post('/api/admin/languages', auth, (req, res) => {
+    const { code, name, flag, active } = req.body;
+    const languages = readDB('languages');
+    const index = languages.findIndex(l => l.code === code);
+    if (index !== -1) {
+        languages[index] = { ...languages[index], name, flag, active };
+    } else {
+        languages.push({ code, name, flag, active });
+    }
+    writeDB('languages', languages);
+    res.json({ success: true });
+});
+
+// 删除语言
+app.delete('/api/admin/languages/:code', auth, (req, res) => {
+    let languages = readDB('languages').filter(l => l.code !== req.params.code);
+    writeDB('languages', languages);
+    res.json({ success: true });
 });
 
 app.post('/api/admin/offers', auth, (req, res) => {
