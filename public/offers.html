@@ -95,4 +95,40 @@
         grid.innerHTML = filtered.map(o => `
             <div class="offer-card bg-white flex flex-col" onclick="goToTask()">
                 <div style="background-color: ${o.color}" class="h-32 w-full flex items-end p-4 relative overflow-hidden">
-                    <h3 class="text-white font-bold text-lg leading-tight z-10
+                    <h3 class="text-white font-bold text-lg leading-tight z-10">${o.title}</h3>
+                </div>
+                <div class="p-3 flex justify-between items-center bg-white border-t border-gray-100">
+                    <span class="flex items-center gap-1 text-sm font-bold text-gray-700">
+                        ${coinSvg} ${o.reward}
+                    </span>
+                    <span class="text-blue-500 text-xs font-bold hover:underline">开始赚钱</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterOffers(category, btn) {
+        currentCategory = category;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderGrid();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        searchKeyword = e.target.value;
+        renderGrid();
+    });
+
+    function goToTask() {
+        window.location.href = '/?register=true';
+    }
+
+    function logout() {
+        localStorage.removeItem('wad_user');
+        window.location.href = '/';
+    }
+
+    fetchOffers();
+</script>
+</body>
+</html>
