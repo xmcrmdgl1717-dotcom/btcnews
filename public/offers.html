@@ -16,7 +16,6 @@
 </head>
 <body class="bg-[#f3f4f9] font-sans text-gray-800">
 
-<!-- 顶部导航 -->
 <header class="bg-white shadow-sm sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2">
@@ -120,8 +119,8 @@
     });
 
     function goToTask() {
-        alert('请返回首页点击“免费领取”完成注册流程，或前往个人中心做任务！');
-        window.location.href = '/index.html#register';
+        // 直接跳转首页并带上参数，触发注册弹窗
+        window.location.href = '/?register=true';
     }
 
     function logout() {
