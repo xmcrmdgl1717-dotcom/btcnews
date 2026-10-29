@@ -57,7 +57,6 @@
                         <h3 class="font-bold mb-4" id="articleFormTitle">发布新文章 (支持自动翻译)</h3>
                         <div class="space-y-3 mb-4">
                             <input type="hidden" id="editArticleId">
-                            <!-- 勾选发布语言 -->
                             <div class="border p-3 rounded bg-gray-50 mb-2">
                                 <p class="text-xs font-bold text-gray-600 mb-2">发布语言 (勾选后自动谷歌翻译)：</p>
                                 <div class="flex flex-wrap gap-3" id="articleLangCheckboxes"></div>
@@ -138,7 +137,6 @@
         </div>
     </main>
 
-    <!-- 修改用户余额弹窗 -->
     <div id="editUserModal" class="modal">
         <div class="bg-white p-6 rounded-xl shadow-xl w-96">
             <h3 class="font-bold text-lg mb-4">修改用户余额</h3>
@@ -152,7 +150,6 @@
         </div>
     </div>
 
-    <!-- 修改多语言字典弹窗 -->
     <div id="editLangModal" class="modal">
         <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             <h3 class="font-bold text-lg mb-4">编辑语言字典 JSON</h3>
@@ -201,28 +198,31 @@
         const content = quill.root.innerHTML;
         if(!title) return alert('请输入标题');
 
+        const btn = document.getElementById('articleSubmitBtn');
+        const originalText = btn.innerText;
+
         if (id) {
-            // 编辑模式只修改单篇
             const payload = { lang: 'zh', title, summary, content, coverUrl };
             const res = await fetch(`/api/admin/article/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
             const data = await res.json();
             if(data.success) { alert('修改成功'); resetArticleForm(); fetchData(); } else alert(data.error);
         } else {
-            // 新建模式，获取勾选的语言
             const checkedLangs = Array.from(document.querySelectorAll('#articleLangCheckboxes input:checked')).map(cb => cb.value);
             if (checkedLangs.length === 0) return alert('请至少勾选一个发布语言');
             
-            document.getElementById('articleSubmitBtn').innerText = '正在调用谷歌翻译...';
-            document.getElementById('articleSubmitBtn').disabled = true;
+            btn.innerText = '正在调用谷歌翻译...';
+            btn.disabled = true;
 
-            const payload = { title, summary, content, coverUrl, targetLangs: checkedLangs };
-            const res = await fetch('/api/admin/article/translate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
-            const data = await res.json();
-            
-            document.getElementById('articleSubmitBtn').innerText = '智能翻译并发布';
-            document.getElementById('articleSubmitBtn').disabled = false;
-
-            if(data.success) { alert('多语言发布成功！'); resetArticleForm(); fetchData(); } else alert(data.error);
+            try {
+                const res = await fetch('/api/admin/article/translate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ title, summary, content, coverUrl, targetLangs: checkedLangs }) });
+                const data = await res.json();
+                if(data.success) { alert('多语言发布成功！'); resetArticleForm(); fetchData(); } else alert(data.error);
+            } catch (e) {
+                alert('网络错误或翻译失败');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
     }
 
@@ -235,9 +235,8 @@
         quill.root.innerHTML = art.content || '';
         document.getElementById('articleFormTitle').innerText = '编辑文章 (单语言)';
         document.getElementById('articleSubmitBtn').innerText = '保存修改';
-        document.getElementById('articleSubmitBtn').onclick = submitArticle; // 确保绑定
         document.getElementById('articleCancelBtn').classList.remove('hidden');
-        document.getElementById('articleLangCheckboxes').parentElement.style.display = 'none'; // 编辑时隐藏多语言勾选
+        document.getElementById('articleLangCheckboxes').parentElement.style.display = 'none';
         document.querySelector('#tab-articles').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -337,7 +336,6 @@
 
         document.getElementById('loginOverlay').classList.add('hidden');
 
-        // 渲染文章语言多选框
         document.getElementById('articleLangCheckboxes').innerHTML = data.languages.filter(l => l.active).map(l => 
             `<label class="flex items-center gap-1 text-sm cursor-pointer"><input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}> ${l.flag} ${l.name}</label>`
         ).join('');
