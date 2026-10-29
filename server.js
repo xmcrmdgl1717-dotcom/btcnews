@@ -138,7 +138,7 @@ app.post('/api/survey', (req, res) => {
 app.get('/api/articles/latest', (req, res) => {
     const { lang = 'zh' } = req.query;
     const articles = readDB('articles').filter(a => a.lang === lang).sort((a,b) => new Date(b.time) - new Date(a.time));
-    res.json(articles.slice(0, 3) || []); // 返回最新3篇
+    res.json(articles.slice(0, 3) || []);
 });
 app.get('/api/articles/:id', (req, res) => res.json(readDB('articles').find(a => a.id === req.params.id) || null));
 
@@ -178,7 +178,6 @@ app.post('/api/admin/article', auth, (req, res) => {
     res.json({ success: true });
 });
 
-// 新增：编辑文章 API
 app.put('/api/admin/article/:id', auth, (req, res) => {
     const { lang, title, summary, content, coverUrl } = req.body;
     const articles = readDB('articles');
