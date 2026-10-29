@@ -38,27 +38,35 @@
         <div class="flex-1 overflow-y-auto p-6" id="mainContent">
             <div id="tab-home" class="content-section active"><div class="bg-white p-6 rounded-xl shadow-sm space-y-4"><h3 class="font-bold text-lg border-b pb-2">跑马灯与基础设置</h3><p class="text-sm text-gray-500">跑马灯会自动抽取真实注册用户并混合虚拟数据。</p></div></div>
             <div id="tab-users" class="content-section"><div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left border-collapse"><thead class="bg-gray-50"><tr><th class="p-4 border-b">邮箱</th><th class="p-4 border-b">密码</th><th class="p-4 border-b">余额</th><th class="p-4 border-b">时间</th></tr></thead><tbody id="userList"></tbody></table></div></div>
+            
             <div id="tab-articles" class="content-section">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h3 class="font-bold mb-4">发布新文章</h3>
+                        <h3 class="font-bold mb-4" id="articleFormTitle">发布新文章</h3>
                         <div class="space-y-3 mb-4">
+                            <input type="hidden" id="editArticleId">
                             <select id="artLang" class="w-full border p-2 rounded"><option value="zh">🇨🇳 中文</option><option value="en">🇺🇸 English</option></select>
                             <input type="text" id="artTitle" placeholder="文章标题" class="w-full border p-2 rounded">
                             <textarea id="artSummary" placeholder="文章摘要 (前两行展示)" class="w-full border p-2 rounded" rows="2"></textarea>
                             <div class="flex items-center gap-2"><input type="file" id="artCoverFile" accept="image/*" class="text-sm w-full"><input type="text" id="artCoverUrl" placeholder="封面图URL" class="flex-1 border p-2 rounded text-sm bg-gray-50" readonly></div>
                             <div class="bg-white"><div id="editor-container"></div></div>
                         </div>
-                        <button onclick="publishArticle()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">发布文章</button>
+                        <div class="flex gap-2">
+                            <button onclick="submitArticle()" id="articleSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">发布文章</button>
+                            <button onclick="resetArticleForm()" id="articleCancelBtn" class="bg-gray-200 text-gray-700 px-6 py-2 rounded font-bold hover:bg-gray-300 hidden">取消编辑</button>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm overflow-y-auto" style="max-height: 700px;"><h3 class="font-bold mb-4">已发布文章</h3><div id="articleList" class="space-y-3"></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm overflow-y-auto" style="max-height: 700px;">
+                        <h3 class="font-bold mb-4">已发布文章</h3>
+                        <div id="articleList" class="space-y-3"></div>
+                    </div>
                 </div>
             </div>
+
             <div id="tab-surveys" class="content-section">
                 <div class="bg-white p-6 rounded-xl shadow-sm mb-6"><h3 class="font-bold mb-2">问卷题目配置 (JSON格式)</h3><textarea id="surveyConfig" class="w-full border p-3 rounded font-mono text-sm" rows="10"></textarea><button onclick="saveSurvey()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-blue-700">保存题目</button></div>
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="p-4 border-b">提交时间</th><th class="p-4 border-b">答案数据</th></tr></thead><tbody id="surveyList"></tbody></table></div>
             </div>
-            <!-- 优惠管理 -->
             <div id="tab-offers" class="content-section">
                 <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
                     <h3 class="font-bold mb-4">添加新优惠</h3>
@@ -93,12 +101,63 @@
     document.getElementById('artCoverFile').addEventListener('change', async (e) => { const file = e.target.files[0]; if(!file) return; const formData = new FormData(); formData.append('image', file); const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'x-admin-pwd': adminPwd }, body: formData }); const data = await res.json(); if(data.url) document.getElementById('artCoverUrl').value = data.url; });
     quill.getModule('toolbar').addHandler('image', () => { const input = document.createElement('input'); input.setAttribute('type', 'file'); input.setAttribute('accept', 'image/*'); input.click(); input.onchange = async () => { const file = input.files[0]; const formData = new FormData(); formData.append('image', file); const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'x-admin-pwd': adminPwd }, body: formData }); const data = await res.json(); if(data.url) { const range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', data.url); } }; });
     
-    async function publishArticle() {
-        const payload = { lang: document.getElementById('artLang').value, title: document.getElementById('artTitle').value, summary: document.getElementById('artSummary').value, coverUrl: document.getElementById('artCoverUrl').value, content: quill.root.innerHTML };
+    async function submitArticle() {
+        const id = document.getElementById('editArticleId').value;
+        const payload = { 
+            lang: document.getElementById('artLang').value, 
+            title: document.getElementById('artTitle').value, 
+            summary: document.getElementById('artSummary').value, 
+            coverUrl: document.getElementById('artCoverUrl').value, 
+            content: quill.root.innerHTML 
+        };
         if(!payload.title) return alert('请输入标题');
-        const res = await fetch('/api/admin/article', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
+        
+        let url = '/api/admin/article';
+        let method = 'POST';
+        
+        if (id) {
+            url = `/api/admin/article/${id}`;
+            method = 'PUT';
+        }
+
+        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
         const data = await res.json();
-        if(data.success) { alert('发布成功'); quill.setContents([]); document.getElementById('artTitle').value = ''; document.getElementById('artSummary').value = ''; document.getElementById('artCoverUrl').value = ''; fetchData(); } else alert(data.error);
+        if(data.success) { 
+            alert(id ? '修改成功' : '发布成功'); 
+            resetArticleForm();
+            fetchData(); 
+        } else alert(data.error);
+    }
+
+    function editArticle(id) {
+        const articles = window.allArticles || [];
+        const art = articles.find(a => a.id === id);
+        if (!art) return;
+        
+        document.getElementById('editArticleId').value = art.id;
+        document.getElementById('artLang').value = art.lang;
+        document.getElementById('artTitle').value = art.title;
+        document.getElementById('artSummary').value = art.summary;
+        document.getElementById('artCoverUrl').value = art.coverUrl || '';
+        quill.root.innerHTML = art.content || '';
+        
+        document.getElementById('articleFormTitle').innerText = '编辑文章';
+        document.getElementById('articleSubmitBtn').innerText = '保存修改';
+        document.getElementById('articleCancelBtn').classList.remove('hidden');
+        
+        document.querySelector('#tab-articles').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetArticleForm() {
+        document.getElementById('editArticleId').value = '';
+        document.getElementById('artTitle').value = '';
+        document.getElementById('artSummary').value = '';
+        document.getElementById('artCoverUrl').value = '';
+        quill.setContents([]);
+        
+        document.getElementById('articleFormTitle').innerText = '发布新文章';
+        document.getElementById('articleSubmitBtn').innerText = '发布文章';
+        document.getElementById('articleCancelBtn').classList.add('hidden');
     }
 
     async function addOffer() {
@@ -108,15 +167,31 @@
         fetchData();
     }
     async function deleteOffer(id) { if(!confirm('确认删除？')) return; await fetch('/api/admin/offers/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } }); fetchData(); }
-
     async function saveSurvey() { try { const questions = JSON.parse(document.getElementById('surveyConfig').value); await fetch('/api/admin/survey/questions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ questions }) }); alert('问卷题目已更新'); } catch (e) { alert('JSON 格式错误'); } }
     
     async function fetchData() {
         const res = await fetch('/api/admin/data', { headers: { 'x-admin-pwd': adminPwd } });
         if(res.status === 403) return alert('密码错误');
-        const data = await res.json(); document.getElementById('loginOverlay').classList.add('hidden');
+        const data = await res.json(); 
+        
+        window.allArticles = data.articles;
+        
+        document.getElementById('loginOverlay').classList.add('hidden');
         document.getElementById('userList').innerHTML = data.users.map(u => `<tr class="border-b"><td class="p-4">${u.email}</td><td class="p-4 text-gray-400">${u.password}</td><td class="p-4 font-bold text-blue-600">${u.balance || 0}</td><td class="p-4 text-gray-500">${new Date(u.time).toLocaleString()}</td></tr>`).join('');
-        document.getElementById('articleList').innerHTML = data.articles.map(a => `<div class="border p-3 rounded mb-2 flex justify-between items-center"><div><span class="text-xs bg-gray-200 px-2 py-1 rounded">${a.lang}</span><h4 class="font-bold text-sm mt-1">${a.title}</h4></div><button onclick="deleteArticle('${a.id}')" class="text-red-500 text-sm hover:underline">删除</button></div>`).join('');
+        
+        document.getElementById('articleList').innerHTML = data.articles.map(a => `
+            <div class="border p-3 rounded mb-2 flex justify-between items-center">
+                <div>
+                    <span class="text-xs bg-gray-200 px-2 py-1 rounded">${a.lang}</span>
+                    <h4 class="font-bold text-sm mt-1">${a.title}</h4>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="editArticle('${a.id}')" class="text-blue-500 text-sm hover:underline">编辑</button>
+                    <button onclick="deleteArticle('${a.id}')" class="text-red-500 text-sm hover:underline">删除</button>
+                </div>
+            </div>
+        `).join('');
+        
         document.getElementById('surveyConfig').value = JSON.stringify(data.surveys.questions, null, 2);
         document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `<tr class="border-b"><td class="p-4 text-gray-500">${new Date(s.time).toLocaleString()}</td><td class="p-4">${JSON.stringify(s.answers)}</td></tr>`).join('');
         
