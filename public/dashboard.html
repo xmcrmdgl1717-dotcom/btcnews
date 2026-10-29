@@ -16,14 +16,12 @@
 </head>
 <body class="bg-white font-sans text-gray-800">
 
-<!-- 顶部导航 -->
 <header class="border-b border-gray-100 sticky top-0 bg-white z-40">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2">
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
             <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
         </a>
-        
         <nav class="hidden md:flex items-center gap-8 text-sm">
             <a href="#" class="nav-link active">赚钱</a>
             <a href="offers.html" class="nav-link">优惠</a>
@@ -31,11 +29,9 @@
             <a href="#" class="nav-link" onclick="openWithdraw()">提现</a>
             <a href="leaderboard.html" class="nav-link">排行榜</a>
         </nav>
-
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-full">
-                <span class="text-yellow-500 font-bold text-lg">🪙</span>
-                <span class="font-bold text-gray-800" id="navBalance">0</span>
+                <span class="font-bold text-gray-800 text-sm" id="navBalance">0 金币</span>
             </div>
             <span class="text-sm font-medium text-gray-600 hidden sm:block" id="navEmail">---</span>
             <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500 transition-colors">退出</button>
@@ -49,15 +45,11 @@
         <p class="text-gray-500 text-sm">完成优惠、问卷和游戏，立即获得金币。</p>
     </div>
 
-    <!-- 优惠墙 -->
     <div class="mb-12">
         <h2 class="text-xl font-bold text-gray-800 mb-4">优惠墙</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="offerWall">
-            <!-- JS 动态渲染 -->
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="offerWall"></div>
     </div>
 
-    <!-- 看视频 -->
     <div class="mb-12">
         <h2 class="text-xl font-bold text-gray-800 mb-4">看视频</h2>
         <div class="bg-gray-50 rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border border-gray-100">
@@ -73,7 +65,6 @@
     </div>
 </main>
 
-<!-- 提现弹窗 -->
 <div id="withdrawModal" class="modal">
     <div class="bg-white w-[90%] max-w-sm rounded-2xl p-6 relative">
         <button onclick="closeModal('withdrawModal')" class="absolute top-3 right-4 text-2xl text-gray-400">&times;</button>
@@ -87,7 +78,6 @@
     </div>
 </div>
 
-<!-- 问卷弹窗 -->
 <div id="surveyModal" class="modal">
     <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
         <button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
@@ -98,15 +88,15 @@
 </div>
 
 <script>
-    const currentUser = JSON.parse(localStorage.getItem('wad_user'));
+    let currentUser = JSON.parse(localStorage.getItem('wad_user'));
     if (!currentUser) window.location.href = '/';
+    
     document.getElementById('navEmail').innerText = currentUser.email;
-    document.getElementById('navBalance').innerText = currentUser.balance || 0;
+    document.getElementById('navBalance').innerText = `${currentUser.balance || 0} 金币`;
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    // ===== 优惠墙数据（根据你截图里的内容静态配置） =====
     const offers = [
         { id: 1, name: 'Torox', reward: 85, color: 'text-purple-600 bg-purple-50' },
         { id: 2, name: 'BitLabs', reward: 20, color: 'text-blue-600 bg-blue-50' },
@@ -116,7 +106,6 @@
         { id: 6, name: 'CPX Research', reward: 80, color: 'text-gray-600 bg-gray-100' }
     ];
 
-    // 渲染优惠墙：点击整张卡片跳转到 offers.html
     document.getElementById('offerWall').innerHTML = offers.map(o => `
         <div class="offer-card bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between cursor-pointer" onclick="window.location.href='offers.html'">
             <div class="flex items-center gap-3">
@@ -127,7 +116,6 @@
         </div>
     `).join('');
 
-    // 看视频任务：保持原有加金币逻辑
     async function doTask(reward, name) {
         const res = await fetch('/api/user/tasks/complete', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -135,7 +123,7 @@
         });
         const data = await res.json();
         if(data.success) {
-            document.getElementById('navBalance').innerText = data.balance;
+            document.getElementById('navBalance').innerText = `${data.balance} 金币`;
             currentUser.balance = data.balance;
             localStorage.setItem('wad_user', JSON.stringify(currentUser));
             alert(`【${name}】任务完成！+${reward} 金币已到账。`);
