@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>优惠 - W-Airdrop</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    .nav-link { color: #4b5563; font-weight: 500; transition: color 0.2s; cursor: pointer; }
+    .nav-link:hover, .nav-link.active { color: #2563eb; }
+    .tab-btn { padding: 0.4rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; color: #4b5563; transition: all 0.2s; }
+    .tab-btn.active { background-color: #2563eb; color: white; }
+    .offer-card { border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.2s; cursor: pointer; }
+    .offer-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body class="bg-[#f3f4f9] font-sans text-gray-800">
+
+<!-- 顶部导航 -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
+            <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
+        </a>
+        <nav class="hidden md:flex items-center gap-8 text-sm">
+            <a href="dashboard.html" class="nav-link">赚钱</a>
+            <a href="offers.html" class="nav-link active">优惠</a>
+            <a href="dashboard.html" class="nav-link">问卷</a>
+            <a href="dashboard.html" class="nav-link">提现</a>
+            <a href="leaderboard.html" class="nav-link">排行榜</a>
+        </nav>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-full">
+                <span class="text-yellow-500 font-bold text-lg">🪙</span>
+                <span class="font-bold text-gray-800" id="navBalance">0</span>
+            </div>
+            <span class="text-sm font-medium text-gray-600 hidden sm:block" id="navEmail">---</span>
+            <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500">退出</button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-4 py-10">
+    <!-- 标题与搜索 -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2">优惠</h1>
+        <p class="text-gray-500 text-sm mb-6">高收益游戏、应用和注册任务每日更新。</p>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="relative w-full max-w-md">
+                <input type="text" id="searchInput" placeholder="搜索优惠" class="w-full border border-gray-200 rounded-lg py-2 px-4 outline-none focus:border-blue-500 text-sm bg-gray-50 focus:bg-white transition-colors">
+            </div>
+            <div class="flex gap-2 overflow-x-auto">
+                <button onclick="filterOffers('all', this)" class="tab-btn active">全部</button>
+                <button onclick="filterOffers('game', this)" class="tab-btn">游戏</button>
+                <button onclick="filterOffers('app', this)" class="tab-btn">应用</button>
+                <button onclick="filterOffers('signup', this)" class="tab-btn">注册</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 网格列表 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="offerGrid">
+        <!-- JS 渲染 -->
+    </div>
+</main>
+
+<script>
+    const currentUser = JSON.parse(localStorage.getItem('wad_user'));
+    if (currentUser) {
+        document.getElementById('navEmail').innerText = currentUser.email;
+        document.getElementById('navBalance').innerText = currentUser.balance || 0;
+    } else {
+        window.location.href = '/'; // 强制登录
+    }
+
+    let allOffers = [];
+    let currentCategory = 'all';
+    let searchKeyword = '';
+
+    // 获取数据
+    async function fetchOffers() {
+        const res = await fetch('/api/offers');
+        allOffers = await res.json();
+        renderGrid();
+    }
+
+    // 渲染网格
+    function renderGrid() {
+        const grid = document.getElementById('offerGrid');
+        let filtered = allOffers;
+        
+        if (currentCategory !== 'all') {
+            filtered = filtered.filter(o => o.category === currentCategory);
+        }
+        if (searchKeyword) {
+            filtered = filtered.filter(o => o.title.toLowerCase().includes(searchKeyword.toLowerCase()));
+        }
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-10">没有找到相关优惠</div>';
+            return;
+        }
+
+        grid.innerHTML = filtered.map(o => `
+            <div class="offer-card bg-white flex flex-col" onclick="goToTask()">
+                <!-- 色块区域 (模拟背景图) -->
+                <div style="background-color: ${o.color}" class="h-32 w-full flex items-end p-4 relative overflow-hidden">
+                    <h3 class="text-white font-bold text-lg leading-tight z-10">${o.title}</h3>
+                </div>
+                <!-- 底部信息 -->
+                <div class="p-3 flex justify-between items-center bg-white border-t border-gray-100">
+                    <span class="flex items-center gap-1 text-sm font-bold text-gray-700">
+                        <span class="text-yellow-500 text-lg">🪙</span> ${o.reward}
+                    </span>
+                    <span class="text-blue-500 text-xs font-bold hover:underline">开始赚钱</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 分类切换
+    function filterOffers(category, btn) {
+        currentCategory = category;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderGrid();
+    }
+
+    // 搜索
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        searchKeyword = e.target.value;
+        renderGrid();
+    });
+
+    // 跳转注册/任务
+    function goToTask() {
+        // 按照需求，跳回首页注册页
+        alert('请先前往首页完成注册流程，或前往个人中心做任务！');
+        window.location.href = '/index.html#register';
+    }
+
+    function logout() {
+        localStorage.removeItem('wad_user');
+        window.location.href = '/';
+    }
+
+    fetchOffers();
+</script>
+</body>
+</html>
