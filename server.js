@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
+const translate = require('@vitalets/google-translate-api'); // 谷歌翻译
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,54 +19,25 @@ const DB_FILES = {
     surveys: path.join(DB_DIR, 'surveys.json'),
     offers: path.join(DB_DIR, 'offers.json'),
     languages: path.join(DB_DIR, 'languages.json'),
-    partners: path.join(DB_DIR, 'partners.json') // 合作墙
+    partners: path.join(DB_DIR, 'partners.json')
 };
 
-// 初始化数据文件
+// 默认字典结构（前端依赖这个结构）
+const defaultDict = { realtime: "Live", login: "Login", logout: "Logout", registerTitle: "Register", registerBtn: "Register", heroTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", heroDesc: "Users of our 8 products can participate.", claimBtn: "Claim Free", stat1: "Distributed", stat2: "Users", stat3: "Daily Payouts", stat4: "Play Store Rating", howTitle: "How to Claim", howDesc: "1. Register → 2. Fill Form → 3. Receive Coins", step1Title: "Register", step1Desc: "Sign up with email.", step2Title: "Fill Form", step2Desc: "Complete the survey.", step3Title: "Receive Coins", step3Desc: "Withdraw via crypto.", leaderboardTitle: "Lucky Users", viewLeaderboard: "View Leaderboard →", reviewsTitle: "What Users Say", activeUser: "Active User", faqTitle: "FAQ", faqDesc: "Need help?", faqQ1: "How to claim?", faqA1: "Register and complete forms.", faqQ2: "Claim methods?", faqA2: "PayPal, BTC, LTC, Bank.", faqQ3: "Any fees?", faqA3: "Most are free.", faqQ4: "How long?", faqA4: "Usually within hours.", partnersTitle: "More Partners Coming", footerTitle: "8 Top Companies Jointly Launch 333 ETH Airdrop", footerWarning: "Risk warning: Crypto is volatile.", footerCopy: "© 2024 W-Airdrop.", navEarn: "Earn", navOffers: "Offers", navSurveys: "Surveys", navWithdraw: "Withdraw", navRewards: "Rewards", navLeaderboard: "Leaderboard", safariTitle: "Please open in Safari", safariDesc: "Please use the native Safari browser.", copyBtn: "Copy Link", copied: "Copied", hasAccount: "Have an account?", goLogin: "Login", noAccount: "No account?", goRegister: "Register", loginTitle: "Login", loginBtn: "Login", labelEmail: "Email", labelPass: "Password", labelConfirm: "Confirm Password", labelPayPass: "Pay Password", surveyTitle: "Please fill out the survey", surveyDesc: "Takes 2 mins", submitSurvey: "Submit", readMore: "Read More" };
+
 Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
         if (key === 'surveys') initialData = { questions: [], submissions: [] };
         if (key === 'languages') initialData = [
-            { code: 'zh', name: '简体中文', flag: '🇨🇳', active: true },
-            { code: 'en', name: 'English', flag: '🇺🇸', active: true },
-            { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳', active: true },
-            { code: 'ko', name: '한국어', flag: '🇰🇷', active: true }
+            { code: 'zh', name: '简体中文', flag: '🇨🇳', active: true, dict: { realtime: "实时", login: "登录", logout: "退出", registerTitle: "注册账号", registerBtn: "注册", heroTitle: "WEB3智能时代 8家顶级公司联合打造空投发送333ETH奖励", heroDesc: "使用我们8家产品的用户都能参加，无需任何操作，简单领取奖励，24小时内免费空投发放。", claimBtn: "免费领取", stat1: "累计发放", stat2: "注册用户", stat3: "每日打款", stat4: "Google Play 评分", howTitle: "如何领取", howDesc: "1. 注册账号 → 2. 认真填表 → 3. 领币到账", step1Title: "注册账号", step1Desc: "使用邮箱注册，并设置登录密码与支付密码。", step2Title: "认真填表", step2Desc: "认真完成问卷，提交后即具备奖励资格。", step3Title: "领币到账", step3Desc: "随时通过加密货币热门币链进行提现，门槛低，到账时间快。", leaderboardTitle: "幸运用户", viewLeaderboard: "查看完整排行榜 →", reviewsTitle: "用户怎么说", activeUser: "活跃用户", faqTitle: "常见问题", faqDesc: "有问题？我们来帮你。如果这里没有答案，支持团队随时待命。", faqQ1: "如何领取？", faqA1: "只要您有使用我们的8家产品，免费注册登录后，认真完成每一项表格，提交后就能免费领取。", faqQ2: "有哪些领取方式？", faqA2: "支持PayPal、比特币、莱特币、银行转账，以及Amazon、虚拟Visa卡等热门礼品卡。我们会定期增加新方式。", faqQ3: "领取有手续费吗？", faqA3: "大多数方式免手续费，包括莱特币、Solana、虚拟Visa卡和全部礼品卡。银行转账等会收取少量费用以覆盖转账成本。", faqQ4: "领取需要多久？", faqA4: "我们会尽快处理，通常在数小时内完成。", partnersTitle: "陆续增加合作商家", footerTitle: "8 家顶级公司 联合打造 空投发送 333ETH 奖励", footerWarning: "风险提示：加密货币价格波动剧烈，参与任何空投或奖励活动前请自行判断风险。", footerCopy: "© 2024 W-Airdrop. 保留所有权利。", navEarn: "赚钱", navOffers: "优惠", navSurveys: "问卷", navWithdraw: "提现", navRewards: "奖励", navLeaderboard: "排行榜", safariTitle: "请使用 Safari 浏览器打开", safariDesc: "请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。", copyBtn: "复制当前链接", copied: "已复制", hasAccount: "已有账号？", goLogin: "去登录", noAccount: "还没有账号？", goRegister: "立即注册", loginTitle: "登录账号", loginBtn: "登录", labelEmail: "电子邮箱", labelPass: "登录密码", labelConfirm: "确认密码", labelPayPass: "支付密码", surveyTitle: "用户习惯请您认真填写", surveyDesc: "预计耗时: 2 分钟 | 提交即具空投资格", submitSurvey: "提交问卷", readMore: "查看全文" } },
+            { code: 'en', name: 'English', flag: '🇺🇸', active: true, dict: defaultDict }
         ];
-        if (key === 'articles') initialData = [
-            { id: uuidv4(), lang: 'zh', title: '比特币一度跌破8万美元：三星引发科技股震荡', summary: '受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温。', coverUrl: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=800&auto=format&fit=crop', content: '<p>受三星电子引发的科技股疲软以及美联储维持鹰派立场影响，全球市场避险情绪升温，比特币跌破8万美元。</p>', time: new Date(Date.now() - 1000).toISOString() },
-            { id: uuidv4(), lang: 'zh', title: 'Web3 智能时代：8家顶级公司联合打造空投生态', summary: 'Bitget、Bitpie、Trust Wallet 等8家顶级加密产品公司强强联手，推出 333ETH 超大空投奖励池。', coverUrl: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?q=80&w=800&auto=format&fit=crop', content: '<p>WEB3智能时代已经到来，8家顶级公司联合打造空投发放333ETH奖励，用户只需完成简短的问卷调查即可获得资格。</p>', time: new Date(Date.now() - 2000).toISOString() },
-            { id: uuidv4(), lang: 'zh', title: '如何安全地参与加密问卷调查并保护隐私', summary: '在参与各类 Web3 问卷和空投时，请务必保护好您的私钥和助记词。', coverUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=800&auto=format&fit=crop', content: '<p>参与问卷调查前，请确认平台正规性。任何要求提供私钥或助记词的行为都是诈骗。</p>', time: new Date(Date.now() - 3000).toISOString() }
-        ];
-        if (key === 'offers') initialData = [
-            { id: 1, category: 'game', title: 'Raid: Shadow Legends', reward: '384,926', color: '#1e293b' },
-            { id: 2, category: 'game', title: 'The Best Bet USA', reward: '58,017', color: '#166534' },
-            { id: 3, category: 'game', title: 'Social Casino Spree.com', reward: '45,584', color: '#991b1b' },
-            { id: 4, category: 'game', title: 'Frost & Flame: King of Avalon', reward: '672,832', color: '#1e3a8a' },
-            { id: 5, category: 'game', title: 'World Of Warships', reward: '10,692', color: '#0369a1' },
-            { id: 6, category: 'game', title: 'The Grand Mafia', reward: '573,351', color: '#3f3f46' },
-            { id: 7, category: 'game', title: 'RealPrize Casino', reward: '49,737', color: '#7e22ce' },
-            { id: 8, category: 'app', title: 'Lonestar Casino', reward: '49,737', color: '#9a3412' },
-            { id: 9, category: 'app', title: 'Ignite Classic Slots', reward: '45,593', color: '#831843' },
-            { id: 10, category: 'game', title: 'Mafia City', reward: '447,615', color: '#18181b' },
-            { id: 11, category: 'game', title: 'Duck Survival', reward: '88,876', color: '#4d7c0f' },
-            { id: 12, category: 'app', title: 'Idle Weapon Shop', reward: '125,023', color: '#2563eb' },
-            { id: 13, category: 'signup', title: 'Cash Legends™: Win Real Money', reward: '643,933', color: '#047857' },
-            { id: 14, category: 'signup', title: 'Legend of Mushroom', reward: '109,898', color: '#9a3412' },
-            { id: 15, category: 'app', title: 'Yarnation: Unravel Flow', reward: '45,102', color: '#a21caf' },
-            { id: 16, category: 'game', title: 'High 5 Casino', reward: '37,305', color: '#1e3a8a' },
-            { id: 17, category: 'signup', title: 'Betterment Invest & Save Money', reward: '25,846', color: '#0f766e' },
-            { id: 18, category: 'app', title: 'Can You Spot It - 5 Differences', reward: '86,865', color: '#be185d' }
-        ];
+        if (key === 'articles') initialData = [];
+        if (key === 'offers') initialData = [];
         if (key === 'partners') initialData = [
-            { id: uuidv4(), name: 'Bitget', imageUrl: '' },
-            { id: uuidv4(), name: 'Bitpie', imageUrl: '' },
-            { id: uuidv4(), name: 'Trust Wallet', imageUrl: '' },
-            { id: uuidv4(), name: 'Phantom', imageUrl: '' },
-            { id: uuidv4(), name: 'Solflare', imageUrl: '' },
-            { id: uuidv4(), name: 'Coin98', imageUrl: '' },
-            { id: uuidv4(), name: 'Uniswap', imageUrl: '' },
-            { id: uuidv4(), name: 'Exodus', imageUrl: '' }
+            { id: uuidv4(), name: 'Bitget', imageUrl: '' }, { id: uuidv4(), name: 'Bitpie', imageUrl: '' },
+            { id: uuidv4(), name: 'Trust Wallet', imageUrl: '' }, { id: uuidv4(), name: 'Phantom', imageUrl: '' }
         ];
         fs.writeFileSync(DB_FILES[key], JSON.stringify(initialData, null, 2));
     }
@@ -86,29 +58,23 @@ const upload = multer({ storage });
 
 // ================= 前台 API =================
 app.get('/api/partners', (req, res) => res.json(readDB('partners')));
+app.get('/api/languages', (req, res) => res.json(readDB('languages').filter(l => l.active))); // 只返回启用的语言
 app.get('/api/marquee', (req, res) => {
     const users = readDB('users').slice(-10).reverse();
     let list = users.map(u => ({ name: u.email.split('@')[0], amount: (Math.random() * 500).toFixed(0) }));
     const fakeNames = ['Lutali', 'Chimmy', 'Peter', 'Hoang Ha', 'Anon', 'Whe...', 'Safa'];
-    while (list.length < 15) {
-        list.push({ name: fakeNames[Math.floor(Math.random()*fakeNames.length)], amount: (Math.random() * 2000).toFixed(0) });
-    }
+    while (list.length < 15) { list.push({ name: fakeNames[Math.floor(Math.random()*fakeNames.length)], amount: (Math.random() * 2000).toFixed(0) }); }
     res.json(list);
 });
 
 app.get('/api/offers', (req, res) => res.json(readDB('offers')));
-app.get('/api/languages', (req, res) => res.json(readDB('languages').filter(l => l.active)));
-
 app.post('/api/register', (req, res) => {
     const { email, password, payPassword } = req.body;
     const users = readDB('users');
     if (users.find(u => u.email === email)) return res.status(400).json({ error: '邮箱已注册' });
     const newUser = { id: uuidv4(), email, password, payPassword: payPassword || '', balance: 0, totalEarned: 0, time: new Date().toISOString() };
-    users.push(newUser);
-    writeDB('users', users);
-    res.json({ success: true, user: newUser });
+    users.push(newUser); writeDB('users', users); res.json({ success: true, user: newUser });
 });
-
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
     const users = readDB('users');
@@ -116,39 +82,26 @@ app.post('/api/login', (req, res) => {
     if (user) res.json({ success: true, user: { email: user.email, balance: user.balance || 0 } });
     else res.status(401).json({ error: '邮箱或密码错误' });
 });
-
 app.get('/api/leaderboard', (req, res) => {
     const period = req.query.period || 'daily';
     const users = readDB('users');
     let list = users.map(u => ({ name: u.email.split('@')[0], amount: period === 'daily' ? (u.balance || 0) : (u.totalEarned || 0), avatar: u.email[0].toUpperCase(), isReal: true }));
-    const fakeNames = ['Johnny Midan', 'Bebazz YT', 'Awatix', 'ItzGyNoRmOuS', 'Puppylover', 'Quang Nguyễn Minh', 'Khuong nguyen', 'Safa', 'Peter Hoffmann', 'Lutali', 'ChimmyChanga', 'Ove'];
-    while (list.length < 100) {
-        list.push({ name: fakeNames[Math.floor(Math.random() * fakeNames.length)] + Math.floor(Math.random() * 99), amount: Math.floor(Math.random() * 50000) + 1000, avatar: 'U', isReal: false });
-    }
-    list.sort((a, b) => b.amount - a.amount);
-    res.json(list.slice(0, 100));
+    const fakeNames = ['Johnny Midan', 'Bebazz YT', 'Awatix', 'Puffylover'];
+    while (list.length < 100) { list.push({ name: fakeNames[Math.floor(Math.random()*fakeNames.length)] + Math.floor(Math.random()*99), amount: Math.floor(Math.random() * 50000) + 1000, avatar: 'U', isReal: false }); }
+    list.sort((a, b) => b.amount - a.amount); res.json(list.slice(0, 100));
 });
-
 app.post('/api/user/tasks/complete', (req, res) => {
     const { email, reward } = req.body;
     const users = readDB('users');
     const user = users.find(u => u.email === email);
-    if (user) {
-        user.balance = (user.balance || 0) + reward;
-        user.totalEarned = (user.totalEarned || 0) + reward;
-        writeDB('users', users);
-        res.json({ success: true, balance: user.balance, totalEarned: user.totalEarned });
-    } else res.status(404).json({ error: '用户不存在' });
+    if (user) { user.balance = (user.balance || 0) + reward; user.totalEarned = (user.totalEarned || 0) + reward; writeDB('users', users); res.json({ success: true, balance: user.balance, totalEarned: user.totalEarned }); }
+    else res.status(404).json({ error: '用户不存在' });
 });
-
 app.get('/api/survey/questions', (req, res) => res.json(readDB('surveys').questions));
 app.post('/api/survey', (req, res) => {
-    const surveyData = readDB('surveys');
-    surveyData.submissions.push({ id: uuidv4(), answers: req.body.answers, time: new Date().toISOString() });
-    writeDB('surveys', surveyData);
-    res.json({ success: true });
+    const surveyData = readDB('surveys'); surveyData.submissions.push({ id: uuidv4(), answers: req.body.answers, time: new Date().toISOString() });
+    writeDB('surveys', surveyData); res.json({ success: true });
 });
-
 app.get('/api/articles/latest', (req, res) => {
     const { lang = 'zh' } = req.query;
     const articles = readDB('articles').filter(a => a.lang === lang).sort((a,b) => new Date(b.time) - new Date(a.time));
@@ -163,86 +116,82 @@ const auth = (req, res, next) => {
     if (pwd !== ADMIN_PWD) return res.status(403).json({ error: '密码错误' });
     next();
 };
-
 app.post('/api/admin/upload', auth, upload.single('image'), (req, res) => res.json({ url: `/uploads/${req.file.filename}` }));
-
 app.get('/api/admin/data', auth, (req, res) => {
     res.json({ users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'), offers: readDB('offers'), languages: readDB('languages'), partners: readDB('partners') });
 });
 
-// 合作墙管理
-app.post('/api/admin/partners', auth, (req, res) => {
-    const { name, imageUrl } = req.body;
-    const partners = readDB('partners');
-    partners.push({ id: uuidv4(), name, imageUrl });
-    writeDB('partners', partners);
-    res.json({ success: true });
-});
-app.delete('/api/admin/partners/:id', auth, (req, res) => {
-    let partners = readDB('partners').filter(p => p.id !== req.params.id);
-    writeDB('partners', partners);
-    res.json({ success: true });
-});
-
-// 语言管理
-app.post('/api/admin/languages', auth, (req, res) => {
-    const { code, name, flag, active } = req.body;
-    const languages = readDB('languages');
-    const index = languages.findIndex(l => l.code === code);
-    if (index !== -1) languages[index] = { ...languages[index], name, flag, active };
-    else languages.push({ code, name, flag, active });
-    writeDB('languages', languages);
-    res.json({ success: true });
-});
-app.delete('/api/admin/languages/:code', auth, (req, res) => {
-    let languages = readDB('languages').filter(l => l.code !== req.params.code);
-    writeDB('languages', languages);
-    res.json({ success: true });
-});
-
-// 优惠管理
-app.post('/api/admin/offers', auth, (req, res) => {
-    const { category, title, reward, color } = req.body;
-    const offers = readDB('offers');
-    offers.push({ id: uuidv4(), category, title, reward, color });
-    writeDB('offers', offers);
-    res.json({ success: true });
-});
-app.delete('/api/admin/offers/:id', auth, (req, res) => {
-    let offers = readDB('offers').filter(o => o.id !== req.params.id);
-    writeDB('offers', offers);
-    res.json({ success: true });
-});
-
-// 文章管理
-app.post('/api/admin/article', auth, (req, res) => {
-    const { lang, title, summary, content, coverUrl } = req.body;
+// 自动翻译发布文章
+app.post('/api/admin/article/translate', auth, async (req, res) => {
+    const { title, summary, content, coverUrl, targetLangs } = req.body;
     const articles = readDB('articles');
-    articles.push({ id: uuidv4(), lang, title, summary, content, coverUrl, time: new Date().toISOString() });
-    writeDB('articles', articles);
-    res.json({ success: true });
+    
+    try {
+        for (let lang of targetLangs) {
+            if (lang === 'zh') {
+                articles.push({ id: uuidv4(), lang: 'zh', title, summary, content, coverUrl, time: new Date().toISOString() });
+            } else {
+                // 调用谷歌翻译
+                const tTitle = (await translate(title, { to: lang })).text;
+                const tSummary = (await translate(summary, { to: lang })).text;
+                const tContent = (await translate(content, { to: lang })).text;
+                articles.push({ id: uuidv4(), lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });
+            }
+        }
+        writeDB('articles', articles);
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: '翻译或保存失败，请重试' });
+    }
 });
+
+// 文章编辑与删除
 app.put('/api/admin/article/:id', auth, (req, res) => {
     const { lang, title, summary, content, coverUrl } = req.body;
     const articles = readDB('articles');
     const index = articles.findIndex(a => a.id === req.params.id);
-    if (index !== -1) {
-        articles[index] = { ...articles[index], lang, title, summary, content, coverUrl };
-        writeDB('articles', articles);
-        res.json({ success: true });
-    } else res.status(404).json({ error: '文章不存在' });
+    if (index !== -1) { articles[index] = { ...articles[index], lang, title, summary, content, coverUrl }; writeDB('articles', articles); res.json({ success: true }); }
+    else res.status(404).json({ error: '文章不存在' });
 });
 app.delete('/api/admin/article/:id', auth, (req, res) => {
-    let articles = readDB('articles').filter(a => a.id !== req.params.id);
-    writeDB('articles', articles);
-    res.json({ success: true });
+    let articles = readDB('articles').filter(a => a.id !== req.params.id); writeDB('articles', articles); res.json({ success: true });
 });
 
+// 合作墙增删改
+app.post('/api/admin/partners', auth, (req, res) => {
+    const { name, imageUrl } = req.body; const partners = readDB('partners');
+    partners.push({ id: uuidv4(), name, imageUrl }); writeDB('partners', partners); res.json({ success: true });
+});
+app.put('/api/admin/partners/:id', auth, (req, res) => {
+    const { name, imageUrl } = req.body; const partners = readDB('partners');
+    const index = partners.findIndex(p => p.id === req.params.id);
+    if (index !== -1) { partners[index] = { ...partners[index], name, imageUrl }; writeDB('partners', partners); res.json({ success: true }); }
+    else res.status(404).json({ error: '不存在' });
+});
+app.delete('/api/admin/partners/:id', auth, (req, res) => {
+    let partners = readDB('partners').filter(p => p.id !== req.params.id); writeDB('partners', partners); res.json({ success: true });
+});
+
+// 多语言字典编辑
+app.put('/api/admin/languages/:code', auth, (req, res) => {
+    const { name, flag, active, dict } = req.body; const languages = readDB('languages');
+    const index = languages.findIndex(l => l.code === req.params.code);
+    if (index !== -1) { languages[index] = { ...languages[index], name, flag, active, dict }; writeDB('languages', languages); res.json({ success: true }); }
+    else res.status(404).json({ error: '语言不存在' });
+});
+
+// 用户管理（修改余额）
+app.put('/api/admin/users/:id', auth, (req, res) => {
+    const { balance } = req.body; const users = readDB('users');
+    const index = users.findIndex(u => u.id === req.params.id);
+    if (index !== -1) { users[index].balance = Number(balance); writeDB('users', users); res.json({ success: true }); }
+    else res.status(404).json({ error: '用户不存在' });
+});
+
+// 问卷更新
 app.post('/api/admin/survey/questions', auth, (req, res) => {
-    const surveyData = readDB('surveys');
-    surveyData.questions = req.body.questions;
-    writeDB('surveys', surveyData);
-    res.json({ success: true });
+    const surveyData = readDB('surveys'); surveyData.questions = req.body.questions; writeDB('surveys', surveyData); res.json({ success: true });
 });
 
 app.listen(PORT, () => console.log(`Server on port ${PORT}`));
