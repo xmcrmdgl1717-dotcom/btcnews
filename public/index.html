@@ -73,25 +73,18 @@
         </div>
     </div>
 
+    <!-- 精选优惠区块修改 -->
     <div id="offers">
         <div class="flex justify-between items-end mb-6">
             <div>
                 <h2 class="text-2xl font-bold text-[#0A3466]">精选优惠</h2>
                 <p class="text-gray-500 text-sm mt-1">浏览每日更新高收益任务，做完即刻结算。</p>
             </div>
-            <a href="javascript:void(0)" onclick="goToTasks()" class="text-blue-600 text-sm font-medium hover:underline">登录做任务 →</a>
+            <!-- 登录后显示“查看任务” -->
+            <a href="javascript:void(0)" onclick="goToOffers()" class="text-blue-600 text-sm font-medium hover:underline">查看任务 →</a>
         </div>
-        <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer" onclick="goToTasks()">
-                <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 mb-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <h3 class="font-bold mb-1">DeFi 认知问卷</h3>
-                <p class="text-xs text-gray-500 flex-1">8 道选择题，约 2 分钟完成。</p>
-                <div class="mt-4 flex justify-between items-center text-sm">
-                    <span class="text-green-600 font-bold bg-green-50 px-2 py-1 rounded">+180 金币</span>
-                </div>
-            </div>
+        <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4" id="homeOfferGrid">
+            <!-- JS 动态渲染 -->
         </div>
     </div>
 
@@ -111,6 +104,7 @@
     </div>
 </footer>
 
+<!-- 弹窗区 -->
 <div id="safariModal" class="modal">
     <div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white relative">
         <button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
@@ -163,6 +157,7 @@
 
 <script>
     let latestArticleId = null;
+    
     function isSafari() {
         const ua = navigator.userAgent;
         return /iPad|iPhone|iPod/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|MQQBrowser|MicroMessenger|Android/.test(ua);
@@ -176,6 +171,7 @@
             openModal('safariModal');
         }
     }
+    
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     function copyLink() { navigator.clipboard.writeText(window.location.href); document.getElementById('copyMsg').classList.remove('hidden'); }
@@ -187,9 +183,10 @@
         if (user) { loadSurveyQuestions(); openModal('surveyModal'); } 
         else { triggerSafariCheck('register'); }
     }
-    function goToTasks() {
+
+    function goToOffers() {
         const user = JSON.parse(localStorage.getItem('wad_user'));
-        if (user) { window.location.href = '/dashboard.html'; } 
+        if (user) { window.location.href = '/offers.html'; } 
         else { triggerSafariCheck('login'); }
     }
 
@@ -283,6 +280,24 @@
         }
     }
 
+    async function loadHomeOffers() {
+        const res = await fetch('/api/offers');
+        const offers = (await res.json()).slice(0, 4); // 只取前4个
+        let html = '';
+        offers.forEach(o => {
+            html += `
+                <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col hover:-translate-y-1 transition-transform cursor-pointer" onclick="goToOffers()">
+                    <div class="w-full h-16 rounded-lg mb-3" style="background-color: ${o.color}"></div>
+                    <h3 class="font-bold mb-1 truncate">${o.title}</h3>
+                    <div class="mt-2 flex justify-between items-center text-sm">
+                        <span class="text-green-600 font-bold bg-green-50 px-2 py-1 rounded">🪙 ${o.reward}</span>
+                        <span class="text-blue-500 text-xs font-bold">开始赚钱</span>
+                    </div>
+                </div>`;
+        });
+        document.getElementById('homeOfferGrid').innerHTML = html;
+    }
+
     async function loadTopLeaderboard() {
         const res = await fetch('/api/leaderboard?period=daily');
         const list = await res.json();
@@ -300,7 +315,7 @@
         document.getElementById('topUsersList').innerHTML = html;
     }
 
-    updateAuthUI(); loadMarquee(); loadNews(); loadTopLeaderboard();
+    updateAuthUI(); loadMarquee(); loadNews(); loadHomeOffers(); loadTopLeaderboard();
 </script>
 </body>
 </html>
