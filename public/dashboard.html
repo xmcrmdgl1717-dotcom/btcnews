@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的账户 - W-Airdrop</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    .task-tab { cursor: pointer; border-bottom: 2px solid transparent; }
+    .task-tab.active { border-bottom-color: #2563eb; color: #2563eb; font-weight: bold; }
+</style>
+</head>
+<body class="bg-[#f3f4f9] font-sans text-gray-800">
+
+<!-- 导航栏 (与首页保持一致的简化版) -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
+            <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span id="navEmail" class="text-sm font-medium text-gray-600"></span>
+            <button onclick="logout()" class="text-sm text-red-500 hover:underline">退出</button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    
+    <!-- 1. 账户总览卡片 -->
+    <div class="bg-[#0A3466] rounded-2xl p-6 text-white shadow-lg">
+        <h2 class="text-lg font-medium text-blue-200 mb-2">我的总资产</h2>
+        <div class="flex items-baseline gap-2 mb-6">
+            <span class="text-4xl font-bold" id="userBalance">0</span>
+            <span class="text-blue-200">金币</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="bg-white/10 p-3 rounded-xl">
+                <p class="text-blue-200">累计赚取</p>
+                <p class="font-bold text-lg" id="totalEarned">0 金币</p>
+            </div>
+            <div class="bg-white/10 p-3 rounded-xl">
+                <p class="text-blue-200">邀请码</p>
+                <p class="font-bold text-lg" id="inviteCode">---</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 任务中心 -->
+    <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="text-xl font-bold mb-4">任务中心</h2>
+        
+        <!-- 分类Tab -->
+        <div class="flex gap-6 border-b mb-4 text-sm text-gray-500">
+            <div class="task-tab active pb-2" onclick="filterTasks('all')">全部任务</div>
+            <div class="task-tab pb-2" onclick="filterTasks('survey')">问卷</div>
+            <div class="task-tab pb-2" onclick="filterTasks('offer')">优惠</div>
+            <div class="task-tab pb-2" onclick="filterTasks('video')">视频</div>
+        </div>
+
+        <!-- 任务列表 -->
+        <div id="taskList" class="space-y-3">
+            <!-- 由 JS 动态渲染 -->
+        </div>
+    </div>
+
+    <!-- 3. 提现中心 -->
+    <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="text-xl font-bold mb-4">提现中心</h2>
+        <p class="text-sm text-gray-500 mb-4">最低提现金额：500 金币</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <button class="border p-3 rounded-xl hover:bg-blue-50 hover:border-blue-500 font-medium text-sm" onclick="withdraw('PayPal')">PayPal</button>
+            <button class="border p-3 rounded-xl hover:bg-blue-50 hover:border-blue-500 font-medium text-sm" onclick="withdraw('比特币')">比特币</button>
+            <button class="border p-3 rounded-xl hover:bg-blue-50 hover:border-blue-500 font-medium text-sm" onclick="withdraw('莱特币')">莱特币</button>
+            <button class="border p-3 rounded-xl hover:bg-blue-50 hover:border-blue-500 font-medium text-sm" onclick="withdraw('礼品卡')">礼品卡</button>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    // 获取当前用户 (从 localStorage 读取)
+    const currentUser = JSON.parse(localStorage.getItem('wad_user'));
+    if (!currentUser) {
+        window.location.href = '/'; // 未登录跳回首页
+    }
+
+    let allTasks = [];
+    let currentFilter = 'all';
+
+    // 初始化页面
+    async function init() {
+        // 设置导航邮箱
+        document.getElementById('navEmail').innerText = currentUser.email;
+        // 加载用户信息
+        await loadProfile();
+        // 加载任务
+        await loadTasks();
+    }
+
+    async function loadProfile() {
+        const res = await fetch(`/api/user/profile?email=${currentUser.email}`);
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('userBalance').innerText = data.user.balance;
+            document.getElementById('totalEarned').innerText = data.user.totalEarned + ' 金币';
+            document.getElementById('inviteCode').innerText = data.user.inviteCode;
+        }
+    }
+
+    async function loadTasks() {
+        const res = await fetch('/api/user/tasks');
+        allTasks = await res.json();
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('taskList');
+        const filtered = currentFilter === 'all' ? allTasks : allTasks.filter(t => t.type === currentFilter);
+        
+        container.innerHTML = filtered.map(t => `
+            <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition-colors">
+                <div>
+                    <h4 class="font-bold text-[15px]">${t.title}</h4>
+                    <p class="text-xs text-gray-500 mt-0.5">${t.desc} · 耗时 ${t.time}</p>
+                </div>
+                <button onclick="completeTask(${t.id}, ${t.reward})" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-100 transition-colors">
+                    +${t.reward} 金币
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function filterTasks(type) {
+        currentFilter = type;
+        document.querySelectorAll('.task-tab').forEach(el => el.classList.remove('active'));
+        event.target.classList.add('active');
+        renderTasks();
+    }
+
+    async function completeTask(taskId, reward) {
+        const res = await fetch('/api/user/tasks/complete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: currentUser.email, taskId, reward })
+        });
+        const data = await res.json();
+        if (data.success) {
+            // 更新本地存储和 UI
+            currentUser.balance = data.balance;
+            localStorage.setItem('wad_user', JSON.stringify(currentUser));
+            
+            document.getElementById('userBalance').innerText = data.balance;
+            document.getElementById('totalEarned').innerText = data.totalEarned + ' 金币';
+            
+            alert(`任务完成！+${reward} 金币已到账。`);
+        } else {
+            alert(data.error);
+        }
+    }
+
+    async function withdraw(method) {
+        if (currentUser.balance < 500) {
+            alert('余额不足 500 金币，暂时无法提现。');
+            return;
+        }
+        const amount = prompt(`请输入提现金额（当前余额: ${currentUser.balance} 金币）:`);
+        if (!amount || isNaN(amount) || amount <= 0) return;
+        
+        const res = await fetch('/api/user/withdraw', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: currentUser.email, amount: Number(amount), method })
+        });
+        const data = await res.json();
+        alert(data.message);
+    }
+
+    function logout() {
+        localStorage.removeItem('wad_user');
+        window.location.href = '/';
+    }
+
+    init();
+</script>
+</body>
+</html>
