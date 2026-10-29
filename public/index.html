@@ -113,9 +113,9 @@
         </div>
     </div>
 
+    <!-- 合作墙：强制一行 3 个 -->
     <div>
         <h2 class="text-xl font-bold text-center mb-6" data-i18n="partnersTitle"></h2>
-        <!-- 合作墙修改为强制一行 3 个 -->
         <div class="grid grid-cols-3 gap-3" id="partnersGrid"></div>
     </div>
 </main>
@@ -131,7 +131,7 @@
     </div>
 </footer>
 
-<!-- 弹窗组件（省略重复样式，保持不变） -->
+<!-- 弹窗组件 -->
 <div id="safariModal" class="modal"><div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-blue-900 relative"><button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button><h3 class="text-xl font-bold mb-2" data-i18n="safariTitle"></h3><p class="text-sm text-gray-300 mb-4" data-i18n="safariDesc"></p><button onclick="copyLink()" class="w-full bg-[#1e3a8a] border border-blue-500 py-3 rounded-xl font-bold mt-4" data-i18n="copyBtn"></button><p id="copyMsg" class="text-green-400 text-sm hidden mt-2" data-i18n="copied"></p></div></div>
 <div id="registerModal" class="modal"><div class="bg-white w-[90%] max-w-md rounded-2xl p-8 relative shadow-2xl"><button onclick="closeModal('registerModal')" class="absolute top-4 right-5 text-2xl text-gray-400 hover:text-gray-600">&times;</button><div class="flex items-center gap-2 mb-6"><div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div><span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span></div><h3 class="text-2xl font-bold mb-2" data-i18n="registerTitle"></h3><p class="text-sm text-gray-500 mb-6">加入 W-Airdrop，几分钟即可开始赚钱。</p><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelEmail"></label><input type="email" id="regEmail" placeholder="you@example.com" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPass"></label><input type="password" id="regPass" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelConfirm"></label><input type="password" id="regConfirmPass" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPayPass"></label><input type="password" id="regPayPass" class="w-full border p-3 rounded-xl text-sm"></div></div><button onclick="doRegister()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mt-6 hover:bg-blue-700" data-i18n="registerBtn"></button><div class="text-center text-sm text-gray-500 mt-5"><span data-i18n="hasAccount"></span> <a href="javascript:void(0)" onclick="switchToLogin()" class="text-blue-600 font-bold hover:underline" data-i18n="goLogin"></a></div></div></div>
 <div id="loginModal" class="modal"><div class="bg-white w-[90%] max-w-sm rounded-2xl p-8 relative shadow-2xl"><button onclick="closeModal('loginModal')" class="absolute top-4 right-5 text-2xl text-gray-400">&times;</button><h3 class="text-xl font-bold mb-6 text-center" data-i18n="loginTitle"></h3><input type="email" id="loginEmail" placeholder="Email" class="w-full border p-3 rounded-xl mb-3"><input type="password" id="loginPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-4"><button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold" data-i18n="loginBtn"></button><div class="text-center text-sm text-gray-500 mt-4"><span data-i18n="noAccount"></span> <a href="javascript:void(0)" onclick="switchToRegister()" class="text-blue-600 font-bold hover:underline" data-i18n="goRegister"></a></div></div></div>
@@ -287,7 +287,7 @@
         const grid = document.getElementById('partnersGrid');
         if (partners.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center text-gray-400">暂无合作商家</div>'; return; }
         
-        // 强制一行 3 个，调整尺寸
+        // 强制 3 列布局，高度微调
         grid.innerHTML = partners.map(p => `
             <div class="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center justify-center gap-2 h-24 hover:shadow-md transition-shadow">
                 ${p.imageUrl 
