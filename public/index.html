@@ -21,7 +21,6 @@
 </head>
 <body class="bg-[#f3f4f9] font-sans text-gray-800">
 
-<!-- 跑马灯 -->
 <div class="bg-[#0b1b3a] text-white text-[13px] py-2 flex items-center overflow-hidden">
     <div class="flex items-center gap-1.5 px-4 shrink-0 bg-[#0b1b3a] z-10 shadow-[5px_0_10px_#0b1b3a]">
         <i class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></i>
@@ -30,7 +29,6 @@
     <div class="flex-1 overflow-hidden relative"><div class="marquee-content" id="marqueeData"></div></div>
 </div>
 
-<!-- 导航栏 -->
 <header class="bg-white shadow-sm sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2">
@@ -58,13 +56,11 @@
 </header>
 
 <main class="max-w-4xl mx-auto px-4 py-8 space-y-16">
-    <!-- 轮播 -->
     <div class="relative w-full">
         <div id="newsCarousel" class="flex overflow-x-auto snap-x-mandatory hide-scrollbar gap-4 pb-4"></div>
         <div class="flex justify-center gap-2 mt-2" id="carouselDots"></div>
     </div>
 
-    <!-- Hero -->
     <div id="earn" class="text-center space-y-5 py-4">
         <h1 class="text-3xl md:text-4xl font-extrabold text-[#0A3466] leading-tight" data-i18n="heroTitle"></h1>
         <p class="text-gray-500 max-w-2xl mx-auto text-lg" data-i18n="heroDesc"></p>
@@ -73,7 +69,6 @@
         </div>
     </div>
 
-    <!-- 统计数据 -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
         <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">$2.5M+</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat1"></div></div>
         <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">550K+</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat2"></div></div>
@@ -81,7 +76,6 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm"><div class="text-2xl font-bold text-blue-600">4.7</div><div class="text-sm text-gray-500 mt-1" data-i18n="stat4"></div></div>
     </div>
 
-    <!-- 如何领取 -->
     <div id="withdraw" class="bg-white p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold text-center mb-2" data-i18n="howTitle"></h2>
         <p class="text-center text-gray-500 text-sm mb-8" data-i18n="howDesc"></p>
@@ -92,7 +86,6 @@
         </div>
     </div>
 
-    <!-- 排行榜预览 -->
     <div id="leaderboard" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold" data-i18n="leaderboardTitle"></h2>
@@ -101,7 +94,6 @@
         <div class="space-y-3" id="topUsersList"></div>
     </div>
 
-    <!-- 评价 -->
     <div>
         <h2 class="text-2xl font-bold text-center mb-6" data-i18n="reviewsTitle"></h2>
         <div class="grid md:grid-cols-2 gap-4">
@@ -110,7 +102,6 @@
         </div>
     </div>
 
-    <!-- FAQ -->
     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold mb-2" data-i18n="faqTitle"></h2>
         <p class="text-sm text-gray-500 mb-6" data-i18n="faqDesc"></p>
@@ -122,7 +113,6 @@
         </div>
     </div>
 
-    <!-- 合作墙 -->
     <div>
         <h2 class="text-xl font-bold text-center mb-6" data-i18n="partnersTitle"></h2>
         <div class="grid grid-cols-3 gap-3" id="partnersGrid"></div>
@@ -132,9 +122,7 @@
 <footer class="bg-[#0A3466] text-white py-12 mt-12">
     <div class="max-w-4xl mx-auto px-4 flex flex-col items-center">
         <h2 class="text-xl md:text-2xl font-bold text-center mb-8 leading-relaxed" data-i18n="footerTitle"></h2>
-        <!-- 这里的简体中文按钮已经删除 -->
         <div class="text-center text-xs text-white/50 space-y-2">
-            <p data-i18n="footerWarning"></p>
             <p data-i18n="footerCopy"></p>
         </div>
     </div>
@@ -193,6 +181,10 @@
             const key = el.getAttribute('data-i18n');
             if (currentDict[key]) el.innerText = currentDict[key];
         });
+        // 如果问卷弹窗是打开的，实时更新问卷内容
+        if (document.getElementById('surveyModal').classList.contains('active')) {
+            loadSurveyQuestions();
+        }
     }
 
     function isSafari() {
@@ -308,13 +300,23 @@
         `).join('');
     }
 
+    // ==== 核心修改：从当前语言字典中读取问卷内容 ====
     async function loadSurveyQuestions() {
-        const defaultQuestions = [
-            { title: '您平时最经常使用的加密钱包是哪一款？', options: ['Bitget / Bitpie', 'Trust Wallet / Phantom', 'Solflare / Coin98', 'Uniswap / Exodus'] },
-            { title: '您使用加密钱包的主要用途是什么？', options: ['DApp & DeFi', 'Swap', 'NFT', 'Store'] }
+        const dict = currentDict;
+        // 组装多语言问卷
+        const questions = [
+            { 
+                title: dict.surveyQ1 || '您平时最经常使用的加密钱包是哪一款？', 
+                options: [dict.surveyOpt1_1, dict.surveyOpt1_2, dict.surveyOpt1_3, dict.surveyOpt1_4] 
+            },
+            { 
+                title: dict.surveyQ2 || '您使用加密钱包的主要用途是什么？', 
+                options: [dict.surveyOpt2_1, dict.surveyOpt2_2, dict.surveyOpt2_3, dict.surveyOpt2_4] 
+            }
         ];
+        
         let html = '';
-        defaultQuestions.forEach((q, i) => {
+        questions.forEach((q, i) => {
             html += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
             q.options.forEach(opt => { html += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="q${i}" value="${opt}" class="accent-blue-500"> ${opt}</label>`; });
             html += `</div>`;
