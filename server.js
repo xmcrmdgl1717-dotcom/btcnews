@@ -134,7 +134,7 @@ app.get('/api/admin/data', auth, (req, res) => {
     res.json({ users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'), offers: readDB('offers'), languages: readDB('languages'), partners: readDB('partners') });
 });
 
-// 文章自动机翻发布接口 (增加代理与容错)
+// 文章自动机翻发布接口
 app.post('/api/admin/article/translate', auth, async (req, res) => {
     const { title, summary, content, coverUrl, targetLangs } = req.body;
     const articles = readDB('articles');
@@ -157,7 +157,7 @@ app.post('/api/admin/article/translate', auth, async (req, res) => {
         res.json({ success: true });
     } catch (e) {
         console.error('翻译失败', e);
-        res.status(500).json({ error: '翻译服务暂时不可用，请稍后重试或减少单次翻译语言数量' });
+        res.status(500).json({ error: '翻译服务触发限制，请减少单次勾选语言数量或稍后重试' });
     }
 });
 
