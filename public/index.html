@@ -118,7 +118,6 @@
         <div class="space-y-3" id="topUsersList"></div>
     </div>
 
-    <!-- 用户评价模块：去掉加入成千上万副标题，去掉活跃用户 -->
     <div id="reviews" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold mb-6" data-i18n="reviewsTitle"></h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="reviewsList"></div>
@@ -169,7 +168,6 @@
     let carouselIndex = 0;
     let carouselInterval = null;
 
-    // ===== 改动：IP 信息缓存（语言/评论国家匹配 + 访问追踪共用一次请求） =====
     let ipInfoPromise = null;
     function fetchIPInfo() {
         if (!ipInfoPromise) {
@@ -187,7 +185,6 @@
             return;
         }
 
-        // 打乱数组，随机选取最多 4 条
         let shuffled = [...reviews].sort(() => 0.5 - Math.random());
         let selected = shuffled.slice(0, 4);
 
@@ -303,10 +300,10 @@
             applyLanguage();
             loadAllData();
 
-            // ===== 改动：拿到 IP 国家后再按国家校准一次语言（用户未手动选择语言时） =====
+            // 拿到 IP 国家后再按国家校准一次语言（用户未手动选择语言时）
             fetchIPInfo().then(ipInfo => {
                 countryCode = ipInfo.country;
-                if (localStorage.getItem('wad_lang')) return; // 用户手动选过语言，不覆盖
+                if (localStorage.getItem('wad_lang')) return;
                 const better = autoMatchLanguage(availableLangs);
                 if (!better || better === currentLang) return;
                 const betterObj = availableLangs.find(l => l.code === better);
@@ -315,7 +312,7 @@
                 currentDict = betterObj.dict;
                 document.getElementById('currentLangText').innerText = betterObj.name;
                 applyLanguage();
-                loadAllData(); // 重新拉取数据以刷新「按国家匹配的评论」
+                loadAllData();
             });
         } catch (e) { console.error('语言加载失败', e); }
     }
@@ -330,7 +327,7 @@
         document.getElementById('langMenu').classList.remove('active');
         document.getElementById('currentLangText').innerText = name;
         applyLanguage();
-        loadAllData(); // 重新拉取数据以刷新评价展示（评价是随机的）
+        loadAllData();
     }
 
     function applyLanguage() {
@@ -444,19 +441,15 @@
         `).join('');
     }
 
-    // ===== 改动：请求评论时带上当前语言（= 当前国家），由后台 reviewMode 决定是否按语言过滤 =====
+    // ✅ 改动：不再在前端兜底拉全量；空结果直接显示"暂无评价"，语言降级交给后端
     async function loadReviews() {
         try {
-            let res = await fetch(`/api/reviews?lang=${encodeURIComponent(currentLang)}`);
-            let reviews = await res.json();
-            if (!Array.isArray(reviews) || reviews.length === 0) {
-                // 兜底：没有匹配数据时退回全量随机
-                res = await fetch('/api/reviews');
-                reviews = await res.json();
-            }
+            const res = await fetch(`/api/reviews?lang=${encodeURIComponent(currentLang)}`);
+            const reviews = await res.json();
             renderReviews(reviews);
         } catch (e) {
             console.error('评价加载失败', e);
+            renderReviews([]);
         }
     }
 
