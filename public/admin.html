@@ -295,7 +295,7 @@
                         <div class="card p-6 flex-1 overflow-y-auto">
                             <h3 class="font-bold mb-4">用户提交记录</h3>
                             <table class="w-full text-left text-sm">
-                                <thead><tr><th class="p-3">用户</th><th class="p-3">答案</th><th class="p-3">时间</th></tr></thead>
+                               <thead><tr><th class="p-3">用户</th><th class="p-3">答案</th><th class="p-3">钱包/地址</th><th class="p-3">时间</th></tr></thead>
                                 <tbody id="surveyList"></tbody>
                             </table>
                         </div>
@@ -857,7 +857,17 @@
         /* ===================== 问卷渲染结束 ===================== */
 
         // 用户提交记录
-        document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `<tr><td class="p-3 font-medium">${s.email || '游客'}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${JSON.stringify(s.answers)}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${new Date(s.time).toLocaleString()}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-500">暂无记录</td></tr>';
+        document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `
+    <tr>
+        <td class="p-3 font-medium">${s.email || '游客'}</td>
+        <td class="p-3 text-xs text-gray-500 dark:text-slate-400">${JSON.stringify(s.answers)}</td>
+        <td class="p-3 text-xs font-mono text-blue-500">
+            ${s.wallet ? `<div>${s.wallet}</div>` : ''}
+            <div class="text-gray-400">${s.walletAddress || '-'}</div>
+        </td>
+        <td class="p-3 text-xs text-gray-500 dark:text-slate-400">${new Date(s.time).toLocaleString()}</td>
+    </tr>
+`).join('') || '<tr><td colspan="4" class="text-center py-4 text-gray-500">暂无记录</td></tr>';
 
         // 用户
         document.getElementById('userList').innerHTML = data.users.map(u => `<tr><td class="p-4">${u.email}</td><td class="p-4 text-gray-500">${u.password}</td><td class="p-4 font-bold text-blue-600">${u.balance || 0}</td><td class="p-4 text-gray-500">${new Date(u.time).toLocaleString()}</td></tr>`).join('');
