@@ -1,0 +1,20 @@
+/* 跑马灯动画 */
+.marquee-content { display: flex; white-space: nowrap; animation: scroll 30s linear infinite; }
+@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.marquee-content:hover { animation-play-state: paused; }
+
+/* 弹窗控制 */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; align-items: center; justify-content: center; padding: 1rem; }
+.modal.active { display: flex; }
+
+/* 隐藏滚动条 */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* 滑动对齐 */
+.snap-x-mandatory { scroll-snap-type: x mandatory; }
+.snap-center { scroll-snap-align: center; }
+
+/* 语言下拉菜单 */
+.lang-menu { display: none; }
+.lang-menu.active { display: block; }
