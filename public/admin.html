@@ -394,6 +394,18 @@
     let currentEditArticleGroupId = null;
     let currentEditArticleMainLang = 'zh';
 
+    function formatTranslateError(data) {
+        let msg = data.error || '操作失败';
+        if (data.reason) msg += '\n原因: ' + data.reason;
+        if (Array.isArray(data.details) && data.details.length) {
+            msg += '\n\n各服务商失败明细:';
+            data.details.forEach(d => {
+                msg += `\n- ${d.provider} [${d.type}]: ${d.message}`;
+            });
+        }
+        return msg;
+    }
+
     const ADMIN_I18N = {
         zh: {
             navDashboard: '📊 数据汇总', navUsers: '👥 用户管理', navArticles: '📝 文章管理',
@@ -632,12 +644,17 @@
         btn.innerText = '正在保存处理...'; btn.disabled = true;
 
         try {
-            await fetch('/api/admin/survey/translate', {
+            const res = await fetch('/api/admin/survey/translate', {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
                 body: JSON.stringify({ questions, targetLangs: checkedLangs, sourceLang: currentSurveySourceLang })
             });
-            alert('问卷已保存并更新');
-            resetSurveyForm();
+            const data = await res.json();
+            if (data.success) {
+                alert('问卷已保存并更新');
+                resetSurveyForm();
+            } else {
+                alert(formatTranslateError(data));
+            }
         } finally {
             btn.innerText = originalText; btn.disabled = false;
             fetchData();
@@ -965,7 +982,7 @@
                     })
                 });
                 const data = await res.json();
-                if (data.success) { alert('保存成功！'); resetArticleForm(); fetchData(); } else alert(data.error || '保存失败');
+                if (data.success) { alert('保存成功！'); resetArticleForm(); fetchData(); } else alert(formatTranslateError(data));
             } else {
                 const res = await fetch('/api/admin/article/translate', { 
                     method: 'POST', 
@@ -973,7 +990,7 @@
                     body: JSON.stringify({ title, summary, content, coverUrl, targetLangs: checkedLangs }) 
                 });
                 const data = await res.json();
-                if (data.success) { alert('发布成功！'); resetArticleForm(); fetchData(); } else alert(data.error);
+                if (data.success) { alert('发布成功！'); resetArticleForm(); fetchData(); } else alert(formatTranslateError(data));
             }
         } catch (e) {
             alert('网络错误');
@@ -1128,7 +1145,7 @@
                     resetReviewForm();
                     fetchData();
                 } else {
-                    alert(data.error || '发布失败');
+                    alert(formatTranslateError(data));
                 }
             } catch (e) {
                 alert('网络错误');
