@@ -1,0 +1,6 @@
+.nav-link { color: #4b5563; font-weight: 500; transition: color 0.2s; cursor: pointer; }
+.nav-link:hover, .nav-link.active { color: #2563eb; }
+.offer-card { transition: transform 0.2s, box-shadow 0.2s; }
+.offer-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border-color: #e5e7eb; }
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; align-items: center; justify-content: center; padding: 1rem; }
+.modal.active { display: flex; }
