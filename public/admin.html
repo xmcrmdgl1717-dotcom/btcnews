@@ -203,24 +203,29 @@
             <div id="tab-reviews" class="content-section">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6">
-                        <h3 class="font-bold mb-4" id="reviewFormTitle">添加评论</h3>
+                        <h3 class="font-bold mb-4" id="reviewFormTitle">发布评论</h3>
                         <input type="hidden" id="editReviewId">
                         <div class="space-y-3 mb-4">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">语言</label>
-                                    <select id="revLang" class="input w-full p-2 rounded"></select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">评分</label>
-                                    <select id="revStars" class="input w-full p-2 rounded">
-                                        <option value="5">★★★★★ (5)</option>
-                                        <option value="4">★★★★☆ (4)</option>
-                                        <option value="3">★★★☆☆ (3)</option>
-                                        <option value="2">★★☆☆☆ (2)</option>
-                                        <option value="1">★☆☆☆☆ (1)</option>
-                                    </select>
-                                </div>
+                            <!-- 创建模式：多语言勾选 -->
+                            <div id="reviewLangCheckboxBox" class="border border-gray-200 dark:border-slate-700 p-3 rounded bg-gray-50 dark:bg-[#0f172a]">
+                                <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言（源语言固定为中文，勾选其他语言将进行机翻）：</p>
+                                <div class="flex flex-wrap gap-3" id="reviewLangCheckboxes"></div>
+                            </div>
+                            <!-- 编辑模式：单语言 -->
+                            <div id="reviewLangSelectBox" class="hidden">
+                                <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">语言</label>
+                                <select id="revLang" class="input w-full p-2 rounded"></select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">评分</label>
+                                <select id="revStars" class="input w-full p-2 rounded">
+                                    <option value="5">★★★★★ (5)</option>
+                                    <option value="4">★★★★☆ (4)</option>
+                                    <option value="3">★★★☆☆ (3)</option>
+                                    <option value="2">★★☆☆☆ (2)</option>
+                                    <option value="1">★☆☆☆☆ (1)</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">用户名</label>
@@ -228,20 +233,28 @@
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">评论内容</label>
-                                <textarea id="revText" placeholder="请输入评论内容" rows="4" class="input w-full p-2 rounded"></textarea>
+                                <textarea id="revText" placeholder="请输入评论内容（中文原版）" rows="4" class="input w-full p-2 rounded"></textarea>
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="saveReview()" id="reviewSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">添加</button>
+                            <button onclick="saveReview()" id="reviewSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">智能翻译并发布</button>
                             <button onclick="resetReviewForm()" id="reviewCancelBtn" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-6 py-2 rounded font-bold hover:bg-gray-300 dark:hover:bg-slate-600 hidden">取消编辑</button>
                         </div>
                     </div>
                     <div class="card p-6 overflow-y-auto" style="max-height: 800px;">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold">评论列表</h3>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold">评论列表 <span id="reviewCount" class="text-xs font-normal text-gray-500 dark:text-slate-400">(0)</span></h3>
                             <select id="reviewFilterLang" class="input text-sm p-1.5 rounded" onchange="renderReviewList()">
                                 <option value="all">全部语言</option>
                             </select>
+                        </div>
+                        <!-- 前台展示模式切换 -->
+                        <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-slate-800 p-2.5 rounded border border-gray-200 dark:border-slate-700">
+                            <span class="text-xs text-gray-600 dark:text-slate-400">前台展示模式：</span>
+                            <div class="flex gap-2">
+                                <button onclick="setReviewMode('all')" id="modeBtn-all" class="px-3 py-1 rounded text-xs font-bold bg-blue-600 text-white">全部随机</button>
+                                <button onclick="setReviewMode('match')" id="modeBtn-match" class="px-3 py-1 rounded text-xs font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300">按语言随机</button>
+                            </div>
                         </div>
                         <div id="reviewList" class="space-y-3"></div>
                     </div>
@@ -267,7 +280,7 @@
                         <div id="surveyConfigArea" class="space-y-4 mb-4 max-h-[500px] overflow-y-auto pr-2 flex-1"></div>
                         <button onclick="saveSurvey(this)" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 mt-2">保存并更新问卷</button>
                     </div>
-                    
+
                     <!-- 右侧：上下结构 -->
                     <div class="flex flex-col gap-6" style="max-height: 800px;">
                         <div class="card p-6 flex-1 overflow-y-auto">
@@ -370,6 +383,7 @@
     let quill = null;
     let allVisits = [];
     let currentSurveySourceLang = 'zh';
+    let currentReviewMode = 'all';
 
     const ADMIN_I18N = {
         zh: {
@@ -544,10 +558,10 @@
         const questions = window.allSurveys.questions[lang];
         renderSurveyEditor(questions);
         currentSurveySourceLang = lang;
-        
+
         document.getElementById('surveyFormTitle').innerText = '编辑问卷 (' + lang + ')';
         document.getElementById('surveyResetBtn').classList.remove('hidden');
-        
+
         const langBox = document.getElementById('surveyLangBox');
         langBox.innerHTML = `
             <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">当前编辑源语言: <span class="text-blue-500 uppercase">${lang}</span>，勾选其他语言将进行机器翻译覆盖:</p>
@@ -566,14 +580,14 @@
         currentSurveySourceLang = 'zh';
         document.getElementById('surveyFormTitle').innerText = '发布新问卷';
         document.getElementById('surveyResetBtn').classList.add('hidden');
-        
+
         const langBox = document.getElementById('surveyLangBox');
         langBox.innerHTML = `
             <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言 (源语言固定为中文，勾选其他语言将进行机翻):</p>
             <div class="flex flex-wrap gap-3" id="surveyLangCheckboxes"></div>
         `;
         renderSurveyEditor([]);
-        
+
         document.getElementById('surveyLangCheckboxes').innerHTML = (window.allLangs || []).filter(l => l.active).map(l => `
             <label class="flex items-center gap-1 text-sm cursor-pointer">
                 <input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}> 
@@ -585,9 +599,8 @@
     async function saveSurvey(btn) {
         const area = document.getElementById('surveyConfigArea');
         const questions = [];
-        // 跳过"暂无题目"
         const children = Array.from(area.children).filter(el => el.tagName === 'DIV' && el.querySelector('.q-title'));
-        
+
         for (let i = 0; i < children.length; i++) {
             const el = children[i];
             const title = el.querySelector('.q-title').value.trim();
@@ -597,7 +610,7 @@
                 questions.push({ id: 'q' + (i + 1), title, options });
             }
         }
-        
+
         const checkedLangs = Array.from(document.querySelectorAll('#surveyLangCheckboxes input:checked')).map(cb => cb.value);
         if (!checkedLangs.includes(currentSurveySourceLang)) checkedLangs.push(currentSurveySourceLang);
 
@@ -738,12 +751,14 @@
             `;
         });
         document.getElementById('surveyPublishedList').innerHTML = pubHtml || '<div class="text-center text-gray-500 py-4">暂无发布的问卷</div>';
-        
+
         // 用户提交记录
         document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `<tr><td class="p-3 font-medium">${s.email || '游客'}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${JSON.stringify(s.answers)}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${new Date(s.time).toLocaleString()}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-500">暂无记录</td></tr>';
 
-        // 文章
+        // 用户
         document.getElementById('userList').innerHTML = data.users.map(u => `<tr><td class="p-4">${u.email}</td><td class="p-4 text-gray-500">${u.password}</td><td class="p-4 font-bold text-blue-600">${u.balance || 0}</td><td class="p-4 text-gray-500">${new Date(u.time).toLocaleString()}</td></tr>`).join('');
+
+        // 文章语言勾选
         document.getElementById('articleLangCheckboxes').innerHTML = data.languages.filter(l => l.active).map(l => `<label class="flex items-center gap-1 text-sm cursor-pointer"><input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}> ${l.flag} ${l.name}</label>`).join('');
 
         const groups = {};
@@ -757,9 +772,12 @@
         });
         document.getElementById('articleList').innerHTML = articleHtml || '<div class="text-center text-gray-500 py-4">暂无文章</div>';
 
-        // 评论管理
+        // 评论管理：复选框 + 下拉 + 列表
         populateReviewLangSelects(data.languages);
         renderReviewList();
+        const settings = data.settings || { reviewMode: 'all' };
+        currentReviewMode = settings.reviewMode || 'all';
+        updateReviewModeButtons(currentReviewMode);
 
         // 其他
         document.getElementById('offerList').innerHTML = data.offers.map(o => `<tr><td class="p-4"><div class="w-6 h-6 rounded" style="background-color: ${o.color}"></div></td><td class="p-4">${o.category}</td><td class="p-4 font-bold">${o.title}</td><td class="p-4 text-yellow-600">${o.reward}</td><td class="p-4"><button onclick="deleteOffer('${o.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
@@ -767,21 +785,36 @@
         document.getElementById('languageList').innerHTML = data.languages.map(l => `<tr><td class="p-4 font-bold">${l.code}</td><td class="p-4">${l.flag} ${l.name}</td><td class="p-4"><button onclick="toggleLangStatus('${l.code}', ${l.active})" class="px-3 py-1 rounded text-xs font-bold ${l.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300'}">${l.active ? '启用中' : '已禁用'}</button></td><td class="p-4"><button onclick="openEditLang('${l.code}')" class="text-blue-500 hover:underline">编辑字典</button></td></tr>`).join('');
     }
 
-    /* ================= 评论管理 ================= */
+    /* ================= 评论管理（改造版） ================= */
     function populateReviewLangSelects(languages) {
-        const langSel = document.getElementById('revLang');
-        const prevLang = langSel.value;
-        langSel.innerHTML = languages
-            .filter(l => l.active)
-            .map(l => `<option value="${l.code}">${l.flag} ${l.name} (${l.code})</option>`)
-            .join('');
-        if (prevLang) langSel.value = prevLang;
+        // 1. 复选框（创建模式）
+        const cbContainer = document.getElementById('reviewLangCheckboxes');
+        if (cbContainer) {
+            cbContainer.innerHTML = languages.filter(l => l.active).map(l => `
+                <label class="flex items-center gap-1 text-sm cursor-pointer">
+                    <input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}>
+                    ${l.flag} ${l.name}
+                </label>
+            `).join('');
+        }
 
+        // 2. 单语言下拉（编辑模式）
+        const langSel = document.getElementById('revLang');
+        if (langSel) {
+            const prev = langSel.value;
+            langSel.innerHTML = languages.filter(l => l.active)
+                .map(l => `<option value="${l.code}">${l.flag} ${l.name} (${l.code})</option>`).join('');
+            if (prev) langSel.value = prev;
+        }
+
+        // 3. 列表筛选下拉
         const filterSel = document.getElementById('reviewFilterLang');
-        const prevFilter = filterSel.value;
-        filterSel.innerHTML = '<option value="all">全部语言</option>' +
-            languages.map(l => `<option value="${l.code}">${l.flag} ${l.name}</option>`).join('');
-        if (prevFilter) filterSel.value = prevFilter;
+        if (filterSel) {
+            const prevFilter = filterSel.value;
+            filterSel.innerHTML = '<option value="all">全部语言</option>' +
+                languages.map(l => `<option value="${l.code}">${l.flag} ${l.name}</option>`).join('');
+            if (prevFilter) filterSel.value = prevFilter;
+        }
     }
 
     function renderReviewList() {
@@ -793,6 +826,14 @@
 
         let filtered = reviews;
         if (filterLang !== 'all') filtered = filtered.filter(r => r.lang === filterLang);
+
+        // 条数展示
+        const countEl = document.getElementById('reviewCount');
+        if (countEl) {
+            countEl.innerText = filterLang === 'all'
+                ? `(${reviews.length})`
+                : `(${filtered.length} / ${reviews.length})`;
+        }
 
         const listEl = document.getElementById('reviewList');
         if (filtered.length === 0) {
@@ -837,6 +878,11 @@
         document.getElementById('reviewFormTitle').innerText = '编辑评论 (' + review.lang + ')';
         document.getElementById('reviewSubmitBtn').innerText = '保存修改';
         document.getElementById('reviewCancelBtn').classList.remove('hidden');
+
+        // 切换到单语言模式
+        document.getElementById('reviewLangCheckboxBox').classList.add('hidden');
+        document.getElementById('reviewLangSelectBox').classList.remove('hidden');
+
         document.getElementById('reviewFormTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
@@ -845,35 +891,61 @@
         document.getElementById('revStars').value = '5';
         document.getElementById('revName').value = '';
         document.getElementById('revText').value = '';
-        document.getElementById('reviewFormTitle').innerText = '添加评论';
-        document.getElementById('reviewSubmitBtn').innerText = '添加';
+        document.getElementById('reviewFormTitle').innerText = '发布评论';
+        document.getElementById('reviewSubmitBtn').innerText = '智能翻译并发布';
         document.getElementById('reviewCancelBtn').classList.add('hidden');
+
+        // 切回多语言模式
+        document.getElementById('reviewLangCheckboxBox').classList.remove('hidden');
+        document.getElementById('reviewLangSelectBox').classList.add('hidden');
     }
 
     async function saveReview() {
         const id = document.getElementById('editReviewId').value;
-        const lang = document.getElementById('revLang').value;
         const stars = Number(document.getElementById('revStars').value);
         const name = document.getElementById('revName').value.trim();
         const text = document.getElementById('revText').value.trim();
-        if (!lang) return alert('请选择语言');
         if (!name) return alert('请填写用户名');
         if (!text) return alert('请填写评论内容');
 
-        let url = '/api/admin/reviews';
-        let method = 'POST';
-        if (id) { url = `/api/admin/reviews/${id}`; method = 'PUT'; }
-
-        const res = await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
-            body: JSON.stringify({ lang, stars, name, text })
-        });
-        if (res.ok) {
-            resetReviewForm();
-            fetchData();
+        if (id) {
+            // 编辑模式：单条更新
+            const lang = document.getElementById('revLang').value;
+            if (!lang) return alert('请选择语言');
+            const res = await fetch(`/api/admin/reviews/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
+                body: JSON.stringify({ lang, stars, name, text })
+            });
+            if (res.ok) { resetReviewForm(); fetchData(); }
+            else alert('操作失败');
         } else {
-            alert('操作失败');
+            // 创建模式：多语言翻译发布
+            const checkedLangs = Array.from(document.querySelectorAll('#reviewLangCheckboxes input:checked')).map(cb => cb.value);
+            if (!checkedLangs.includes('zh')) checkedLangs.push('zh');
+
+            const btn = document.getElementById('reviewSubmitBtn');
+            const originalText = btn.innerText;
+            btn.innerText = '正在翻译发布...'; btn.disabled = true;
+            try {
+                const res = await fetch('/api/admin/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
+                    body: JSON.stringify({ targetLangs: checkedLangs, stars, name, text })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('发布成功！');
+                    resetReviewForm();
+                    fetchData();
+                } else {
+                    alert(data.error || '发布失败');
+                }
+            } catch (e) {
+                alert('网络错误');
+            } finally {
+                btn.innerText = originalText; btn.disabled = false;
+            }
         }
     }
 
@@ -881,6 +953,34 @@
         if (!confirm('确认删除该评论？')) return;
         await fetch('/api/admin/reviews/' + id, { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } });
         fetchData();
+    }
+
+    /* ====== 评论展示模式切换 ====== */
+    function updateReviewModeButtons(mode) {
+        const allBtn = document.getElementById('modeBtn-all');
+        const matchBtn = document.getElementById('modeBtn-match');
+        if (!allBtn || !matchBtn) return;
+        if (mode === 'match') {
+            matchBtn.className = 'px-3 py-1 rounded text-xs font-bold bg-blue-600 text-white';
+            allBtn.className = 'px-3 py-1 rounded text-xs font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300';
+        } else {
+            allBtn.className = 'px-3 py-1 rounded text-xs font-bold bg-blue-600 text-white';
+            matchBtn.className = 'px-3 py-1 rounded text-xs font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300';
+        }
+    }
+
+    async function setReviewMode(mode) {
+        try {
+            const res = await fetch('/api/admin/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
+                body: JSON.stringify({ reviewMode: mode })
+            });
+            if (!res.ok) return alert('设置失败');
+            currentReviewMode = mode;
+            updateReviewModeButtons(mode);
+            alert(mode === 'match' ? '已切换：按用户当前语言随机展示评论' : '已切换：全部评论随机展示');
+        } catch (e) { alert('设置失败'); }
     }
 
     // ====== 文章相关操作 ======
@@ -924,11 +1024,11 @@
         document.getElementById('articleFormTitle').innerText = '编辑文章 (' + art.lang + ')';
         document.getElementById('articleSubmitBtn').innerText = '保存修改';
         document.getElementById('articleCancelBtn').classList.remove('hidden');
-        
+
         const checkboxes = document.getElementById('articleLangCheckboxes').querySelectorAll('input');
         checkboxes.forEach(cb => {
             cb.checked = (cb.value === art.lang);
-            cb.disabled = false; // 允许用户修改/切换语言
+            cb.disabled = false;
         });
         document.querySelector('#tab-articles').scrollIntoView({ behavior: 'smooth' });
     }
@@ -940,7 +1040,7 @@
         document.getElementById('articleFormTitle').innerText = '发布新文章';
         document.getElementById('articleSubmitBtn').innerText = '智能翻译并发布';
         document.getElementById('articleCancelBtn').classList.add('hidden');
-        
+
         const checkboxes = document.getElementById('articleLangCheckboxes').querySelectorAll('input');
         checkboxes.forEach(cb => {
             cb.disabled = (cb.value === 'zh');
