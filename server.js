@@ -306,6 +306,66 @@ app.put('/api/admin/settings', auth, (req, res) => {
     res.json({ success: true });
 });
 
+// 新增：文章整组更新/机翻新增接口
+app.put('/api/admin/article/group/:groupId', auth, async (req, res) => {
+    const groupId = req.params.groupId;
+    const { sourceLang, targetLangs, title, summary, content, coverUrl } = req.body;
+    const articles = readDB('articles');
+    
+    const groupArticles = articles.filter(a => (a.groupId || a.id) === groupId);
+    if (groupArticles.length === 0) return res.status(404).json({ error: '组不存在' });
+    
+    let sourceArticle = groupArticles.find(a => a.lang === sourceLang);
+    if (!sourceArticle) {
+        sourceArticle = { id: uuidv4(), groupId, lang: sourceLang, title, summary, content, coverUrl, time: new Date().toISOString() };
+        articles.push(sourceArticle);
+    } else {
+        sourceArticle.title = title;
+        sourceArticle.summary = summary;
+        sourceArticle.content = content;
+        sourceArticle.coverUrl = coverUrl;
+        sourceArticle.time = new Date().toISOString();
+    }
+    
+    const foreignLangs = targetLangs.filter(l => l !== sourceLang);
+    
+    try {
+        for (let lang of foreignLangs) {
+            const googleLang = lang.split('-')[0];
+            const [tTitle, tSummary, tContent] = await Promise.all([
+                translate(title, { to: googleLang }), 
+                translate(summary, { to: googleLang }), 
+                translate(content, { to: googleLang })
+            ]);
+            
+            let existing = groupArticles.find(a => a.lang === lang);
+            if (existing) {
+                existing.title = tTitle.text;
+                existing.summary = tSummary.text;
+                existing.content = tContent.text;
+                existing.coverUrl = coverUrl;
+                existing.time = new Date().toISOString();
+            } else {
+                articles.push({ id: uuidv4(), groupId, lang, title: tTitle.text, summary: tSummary.text, content: tContent.text, coverUrl, time: new Date().toISOString() });
+            }
+            await new Promise(r => setTimeout(r, 500));
+        }
+        writeDB('articles', articles);
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: '翻译失败' });
+    }
+});
+
+// 新增：问卷删除整组接口
+app.delete('/api/admin/survey/group', auth, (req, res) => {
+    const surveys = readDB('surveys');
+    surveys.questions = {};
+    writeDB('surveys', surveys);
+    res.json({ success: true });
+});
+
 // 问卷翻译与保存
 app.post('/api/admin/survey/translate', auth, async (req, res) => {
     const { questions, targetLangs, sourceLang = 'zh' } = req.body;
