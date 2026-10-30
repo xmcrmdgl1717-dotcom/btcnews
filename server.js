@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { translate } = require('google-translate-api-x');
+const { translateWithPolling, describeError } = require('./translator');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
