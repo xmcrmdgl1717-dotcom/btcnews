@@ -384,17 +384,23 @@
     </div>
 
 <script>
-    let adminPwd = '';
+    // 初始化时，优先读取 sessionStorage，其次读取 localStorage
+    let adminPwd = sessionStorage.getItem('wad_admin_pwd') || localStorage.getItem('wad_admin_pwd') || '';
     let quill = null;
     let allVisits = [];
     let currentSurveySourceLang = 'zh';
     let currentReviewMode = 'all';
 
+    // 如果已有密码，先隐藏登录框，防止刷新闪烁
+    if (adminPwd) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+    }
+
     // 记录文章正在编辑的整组ID和源语言
     let currentEditArticleGroupId = null;
     let currentEditArticleMainLang = 'zh';
 
-        function formatTranslateError(data) {
+    function formatTranslateError(data) {
         let msg = data.error || '操作失败';
         if (data.reason) msg += '\n原因: ' + data.reason;
 
@@ -489,28 +495,40 @@
         try {
             const res = await fetch('/api/admin/data', { headers: { 'x-admin-pwd': adminPwd } });
             if (res.status === 403) return alert(adminLang === 'zh' ? '密码错误' : 'Wrong password');
+            
+            // 同时存入 session 和 local
             sessionStorage.setItem('wad_admin_pwd', adminPwd);
+            localStorage.setItem('wad_admin_pwd', adminPwd);
+            
             document.getElementById('loginOverlay').classList.add('hidden');
             fetchData();
         } catch (e) { alert(adminLang === 'zh' ? '登录失败' : 'Login failed'); }
     }
 
     async function tryAutoLogin() {
-        const saved = sessionStorage.getItem('wad_admin_pwd');
-        if (!saved) return;
-        adminPwd = saved;
+        if (!adminPwd) return;
         try {
             const res = await fetch('/api/admin/data', { headers: { 'x-admin-pwd': adminPwd } });
             if (res.ok) {
                 document.getElementById('loginOverlay').classList.add('hidden');
                 fetchData();
             } else {
-                sessionStorage.removeItem('wad_admin_pwd'); adminPwd = '';
+                // 密码失效，清理状态并显示登录框
+                sessionStorage.removeItem('wad_admin_pwd'); 
+                localStorage.removeItem('wad_admin_pwd');
+                adminPwd = '';
+                document.getElementById('loginOverlay').classList.remove('hidden');
             }
-        } catch (e) {}
+        } catch (e) {
+            // 网络异常时不退出，保持界面
+        }
     }
 
-    function logout() { sessionStorage.removeItem('wad_admin_pwd'); location.reload(); }
+    function logout() { 
+        sessionStorage.removeItem('wad_admin_pwd'); 
+        localStorage.removeItem('wad_admin_pwd');
+        location.reload(); 
+    }
 
     function switchTab(tabId, el) {
         document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active'));
