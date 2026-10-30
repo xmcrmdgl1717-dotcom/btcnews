@@ -155,23 +155,32 @@
     <div class="bg-[#1e293b] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-gray-700 relative shadow-2xl">
         <button onclick="closeModal('safariModal')" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-white">&times;</button>
         
-        <!-- Safari 图标 -->
+        <!-- Safari 图标区域 (支持后台配置替换) -->
         <div class="flex justify-center mb-4 mt-2">
-            <svg class="w-16 h-16" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="50" fill="#007AFF"/>
-                <path d="M50 20 L65 50 L50 80 L35 50 Z" fill="white" stroke="#007AFF" stroke-width="2"/>
-                <path d="M50 35 L58 50 L50 65 L42 50 Z" fill="#007AFF"/>
+            <!-- 默认的高仿 Safari SVG 图标 -->
+            <svg id="defaultSafariSvg" viewBox="0 0 100 100" class="w-16 h-16" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="48" fill="#1B8EF2" stroke="#E5E7EB" stroke-width="2"/>
+                <g stroke="#FFFFFF" stroke-width="1.5" opacity="0.6">
+                    <line x1="50" y1="10" x2="50" y2="18" />
+                    <line x1="50" y1="82" x2="50" y2="90" />
+                    <line x1="10" y1="50" x2="18" y2="50" />
+                    <line x1="82" y1="50" x2="90" y2="50" />
+                </g>
+                <polygon points="50,25 62,50 50,75 38,50" fill="#FFFFFF" />
+                <polygon points="50,25 50,50 38,50" fill="#EF4444" />
+                <polygon points="50,50 62,50 50,75" fill="#EF4444" />
+                <circle cx="50" cy="50" r="3" fill="#1B8EF2" />
             </svg>
+            <!-- 后台自定义上传的图标 -->
+            <img id="customSafariLogo" src="" class="w-16 h-16 hidden object-contain rounded-xl">
         </div>
 
         <h3 class="text-xl font-bold mb-2" data-i18n="safariTitle">请使用 Safari 浏览器打开</h3>
         <p class="text-sm text-gray-300 mb-6" data-i18n="safariDesc">请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。</p>
         
+        <!-- 红圈部分修改：去掉了文字，只留动态获取的链接 -->
         <div class="bg-[#0f172a] rounded-xl p-4 mb-6 border border-gray-700 text-left">
-            <h4 class="text-sm font-bold text-white mb-2">Safari Required</h4>
-            <p class="text-xs text-gray-400 leading-relaxed mb-3">点击浏览器菜单并选择「在 Safari 中打开」，或复制当前链接后在 Safari 中粘贴访问。</p>
-            
-            <input type="text" value="https://wad33.com/" readonly class="w-full bg-[#1e293b] border border-gray-700 rounded-lg p-2 text-blue-400 text-xs font-mono mb-2 outline-none text-center">
+            <input type="text" id="safariLinkInput" readonly class="w-full bg-[#1e293b] border border-gray-700 rounded-lg p-3 text-blue-400 text-sm font-mono outline-none text-center select-all cursor-pointer">
         </div>
 
         <button onclick="copyLink()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="copyBtn">复制当前链接</button>
@@ -502,11 +511,37 @@
         document.getElementById(id).classList.remove('active'); 
     }
 
+    // 动态获取网站链接并填充到输入框
+    function setSafariLink() {
+        const input = document.getElementById('safariLinkInput');
+        if (input) {
+            input.value = window.location.origin + window.location.pathname;
+        }
+    }
+
+    // 获取系统设置(用于替换 Logo)
+    async function loadSystemSettings() {
+        try {
+            const res = await fetch('/api/public/settings');
+            const data = await res.json();
+            if (data && data.safariLogo) {
+                const defaultSvg = document.getElementById('defaultSafariSvg');
+                const customImg = document.getElementById('customSafariLogo');
+                defaultSvg.classList.add('hidden');
+                customImg.src = data.safariLogo;
+                customImg.classList.remove('hidden');
+            }
+        } catch(e) {}
+    }
+
     function copyLink() { 
-        const input = document.querySelector('#safariModal input[type="text"]');
+        const input = document.getElementById('safariLinkInput');
         if (input) {
             navigator.clipboard.writeText(input.value).then(() => {
                 document.getElementById('copyMsg').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('copyMsg').classList.add('hidden');
+                }, 2000);
             }).catch(() => {});
         } else {
             navigator.clipboard.writeText(window.location.href); 
@@ -526,7 +561,6 @@
     }
 
     function handleClaim() {
-        // 直接调用 triggerSafariCheck('register') 即可，它内部会处理 Safari 和登录状态
         triggerSafariCheck('register');
     }
 
@@ -781,8 +815,11 @@
         loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners(); loadReviews();
     }
 
+    // 初始化执行
     updateAuthUI();
     checkUrlParams();
+    setSafariLink(); // 动态设置 Safari 链接
+    loadSystemSettings(); // 加载后台上传的 Safari 图标
     initLanguages().finally(recordVisit);
 </script>
 </body>
