@@ -253,30 +253,34 @@ function getReqInfo(req) {
 // ================= 前台 API =================
 app.get('/api/languages', async (req, res) => {
     try {
-        // 1. 【重要】这里必须换成你原本读取数据的代码！
-        // 例如：如果你原本是用 fs 读取文件，就保留你原来的写法
-        // 如果你原本就是直接用 require('./languages.json') 读的，就写你原来的。
-        // 假设你的变量名叫 languagesData：
-        let languages = ... ; // <-- 这里填你原本的获取逻辑，不要用 db.getLanguages()
+        // 1. 读取文件中的语言数据
+        let languages = readDB('languages');
 
-        // 2. 强制注入逻辑（保持原样）
+        // 2. 强制注入逻辑（动态覆盖翻译）
         if (Array.isArray(languages)) {
             languages = languages.map(lang => {
-                if (forcedDicts[lang.code]) {
-                    lang.dict = Object.assign({}, lang.dict || {}, forcedDicts[lang.code]);
+                // 兼容处理 en-US / en-GB，统一映射到 en 字典
+                let targetCode = lang.code;
+                if (targetCode.startsWith('en')) {
+                    targetCode = 'en';
+                }
+
+                if (forcedDicts[targetCode]) {
+                    // 合并原有字典和新注入的字典（新字典覆盖旧字典）
+                    lang.dict = Object.assign({}, lang.dict || {}, forcedDicts[targetCode]);
                 }
                 return lang;
             });
         }
 
-        // 3. 返回数据
+        // 3. 返回处理后的数据
         res.json(languages);
-
     } catch (error) {
         console.error("加载语言字典失败:", error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 app.get('/api/partners', (req, res) => res.json(readDB('partners')));
 
 app.get('/api/reviews', (req, res) => {
