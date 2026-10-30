@@ -23,7 +23,7 @@ const DB_FILES = {
     partners: path.join(DB_DIR, 'partners.json'),
     visits: path.join(DB_DIR, 'visits.json'),
     reviews: path.join(DB_DIR, 'reviews.json'),
-    settings: path.join(DB_DIR, 'settings.json') // 新增设置文件
+    settings: path.join(DB_DIR, 'settings.json')
 };
 
 // ================= 完整全量多语言字典 =================
@@ -43,7 +43,7 @@ Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
         if (key === 'admin') initialData = { password: 'admin888' };
-        if (key === 'settings') initialData = { reviewMode: 'all' }; // 默认：全部随机
+        if (key === 'settings') initialData = { reviewMode: 'all' };
         if (key === 'surveys') initialData = {
             questions: { zh: [{ id: "q1", title: "您平时最经常使用的加密钱包是哪一款？", options: ["Bitget / Bitpie 钱包", "Trust Wallet / Phantom钱包", "Solflare / Coin98 钱包", "Uniswap / Exodus钱包"] }, { id: "q2", title: "您使用加密钱包的主要用途是什么？", options: ["DApp交互与 DeFi理财", "代币 Swap(交换)闪兑交易", "NFT收藏与交易", "资产长期存储与转账"] }] },
             submissions: []
@@ -62,7 +62,6 @@ Object.keys(DB_FILES).forEach(key => {
             { code: 'tr', name: 'Türkçe', flag: '🇹🇷', active: true, dict: dictTr }
         ];
         if (key === 'reviews') {
-            // 初始化的随机用户评论，前端随机抽取展示
             initialData = [
                 { id: uuidv4(), lang: 'en-US', stars: 5, name: 'Matthew Betancourt', text: "The Best GPT site without question. I've been using it for about 2 months and it is my go-to starting point for figuring what offers I'll work on as passive income." },
                 { id: uuidv4(), lang: 'en-US', stars: 5, name: 'Parvez Shah', text: "Gain.gg is a good website for earning small rewards by doing simple tasks like surveys and watching videos. It's a nice option for students or anyone looking to earn a little extra." },
@@ -105,7 +104,6 @@ function getReqInfo(req) {
 app.get('/api/languages', (req, res) => res.json(readDB('languages').filter(l => l.active)));
 app.get('/api/partners', (req, res) => res.json(readDB('partners')));
 
-//改动：/api/reviews 增加语言降级匹配 + reviewMode 兜底
 app.get('/api/reviews', (req, res) => {
     const reviews = readDB('reviews');
     const settings = readDB('settings') || {};
@@ -113,19 +111,15 @@ app.get('/api/reviews', (req, res) => {
     const lang = req.query.lang;
 
     if (reviewMode === 'match' && lang) {
-        // 1) 精确匹配
         let filtered = reviews.filter(r => r.lang === lang);
-        // 2) 主语言降级：en-GB / en-US -> en；zh-CN -> zh 等
         if (filtered.length === 0) {
             const mainLang = String(lang).split('-')[0];
             filtered = reviews.filter(r => String(r.lang || '').split('-')[0] === mainLang);
         }
         return res.json(filtered);
     }
-    // 全部随机 / 未指定语言 → 返回全量
     res.json(reviews);
 });
-
 
 app.get('/api/marquee', (req, res) => {
     const users = readDB('users').slice(-10).reverse();
@@ -294,11 +288,10 @@ app.get('/api/admin/data', auth, (req, res) => {
         users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'),
         offers: readDB('offers'), languages: readDB('languages'), partners: readDB('partners'), visits: readDB('visits'),
         reviews: readDB('reviews'),
-        settings: readDB('settings') // 返回设置给前端
+        settings: readDB('settings')
     });
 });
 
-// 设置更新 API
 app.put('/api/admin/settings', auth, (req, res) => {
     const settings = readDB('settings');
     const newSettings = { ...settings, ...req.body };
@@ -306,7 +299,7 @@ app.put('/api/admin/settings', auth, (req, res) => {
     res.json({ success: true });
 });
 
-// 新增：文章整组更新/机翻新增接口
+// 文章整组更新/机翻新增（多服务轮询）
 app.put('/api/admin/article/group/:groupId', auth, async (req, res) => {
     const groupId = req.params.groupId;
     const { sourceLang, targetLangs, title, summary, content, coverUrl } = req.body;
@@ -330,38 +323,39 @@ app.put('/api/admin/article/group/:groupId', auth, async (req, res) => {
     const foreignLangs = targetLangs.filter(l => l !== sourceLang);
     
     try {
-    for (let lang of foreignLangs) {
-        const googleLang = lang.split('-')[0];
-        const [tTitle, tSummary, tContent] = await Promise.all([
-            translateWithPolling(title, googleLang, sourceLang),
-            translateWithPolling(summary, googleLang, sourceLang),
-            translateWithPolling(content, googleLang, sourceLang)
-        ]);
-        
-        let existing = groupArticles.find(a => a.lang === lang);
-        if (existing) {
-            existing.title = tTitle;
-            existing.summary = tSummary;
-            existing.content = tContent;
-            existing.coverUrl = coverUrl;
-            existing.time = new Date().toISOString();
-        } else {
-            articles.push({ id: uuidv4(), groupId, lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });
+        for (let lang of foreignLangs) {
+            const googleLang = lang.split('-')[0];
+            const [tTitle, tSummary, tContent] = await Promise.all([
+                translateWithPolling(title, googleLang, sourceLang),
+                translateWithPolling(summary, googleLang, sourceLang),
+                translateWithPolling(content, googleLang, sourceLang)
+            ]);
+            
+            let existing = groupArticles.find(a => a.lang === lang);
+            if (existing) {
+                existing.title = tTitle;
+                existing.summary = tSummary;
+                existing.content = tContent;
+                existing.coverUrl = coverUrl;
+                existing.time = new Date().toISOString();
+            } else {
+                articles.push({ id: uuidv4(), groupId, lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });
+            }
+            await new Promise(r => setTimeout(r, 500));
         }
-        await new Promise(r => setTimeout(r, 500));
+        writeDB('articles', articles);
+        res.json({ success: true });
+    } catch (e) {
+        console.error('[文章整组] 翻译失败:', e);
+        res.status(502).json({
+            error: '翻译失败',
+            reason: describeError(e),
+            details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
+        });
     }
-    writeDB('articles', articles);
-    res.json({ success: true });
-} catch (e) {
-    console.error('[文章整组] 翻译失败:', e);
-    res.status(502).json({
-        error: '翻译失败',
-        reason: describeError(e),
-        details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
-    });
-}
+});
 
-// 新增：问卷删除整组接口
+// 问卷删除整组
 app.delete('/api/admin/survey/group', auth, (req, res) => {
     const surveys = readDB('surveys');
     surveys.questions = {};
@@ -369,37 +363,38 @@ app.delete('/api/admin/survey/group', auth, (req, res) => {
     res.json({ success: true });
 });
 
-// 问卷翻译与保存
+// 问卷翻译与保存（多服务轮询）
 app.post('/api/admin/survey/translate', auth, async (req, res) => {
     const { questions, targetLangs, sourceLang = 'zh' } = req.body;
     const surveys = readDB('surveys');
     surveys.questions[sourceLang] = questions;
     const foreignLangs = targetLangs.filter(lang => lang !== sourceLang);
 
-   try {
-    for (let lang of foreignLangs) {
-        const googleLang = lang.split('-')[0];
-        const translated = [];
-        for (let q of questions) {
-            const tTitle = await translateWithPolling(q.title, googleLang, sourceLang);
-            const tOptions = [];
-            for (let opt of q.options) {
-                tOptions.push(await translateWithPolling(opt, googleLang, sourceLang));
+    try {
+        for (let lang of foreignLangs) {
+            const googleLang = lang.split('-')[0];
+            const translated = [];
+            for (let q of questions) {
+                const tTitle = await translateWithPolling(q.title, googleLang, sourceLang);
+                const tOptions = [];
+                for (let opt of q.options) {
+                    tOptions.push(await translateWithPolling(opt, googleLang, sourceLang));
+                }
+                translated.push({ id: q.id, title: tTitle, options: tOptions });
             }
-            translated.push({ id: q.id, title: tTitle, options: tOptions });
+            surveys.questions[lang] = translated;
         }
-        surveys.questions[lang] = translated;
+        writeDB('surveys', surveys);
+        res.json({ success: true });
+    } catch (e) {
+        console.error('[问卷] 翻译失败:', e);
+        res.status(502).json({
+            error: '翻译失败',
+            reason: describeError(e),
+            details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
+        });
     }
-    writeDB('surveys', surveys);
-    res.json({ success: true });
-} catch (e) {
-    console.error('[问卷] 翻译失败:', e);
-    res.status(502).json({
-        error: '翻译失败',
-        reason: describeError(e),
-        details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
-    });
-}
+});
 
 app.post('/api/admin/languages', auth, (req, res) => {
     const { code, name, flag } = req.body;
@@ -418,6 +413,7 @@ app.put('/api/admin/languages/:code', auth, (req, res) => {
     else res.status(404).json({ error: '语言不存在' });
 });
 
+// 文章新建 + 多语言机翻（多服务轮询）
 app.post('/api/admin/article/translate', auth, async (req, res) => {
     const { title, summary, content, coverUrl, targetLangs } = req.body;
     const articles = readDB('articles');
@@ -429,24 +425,25 @@ app.post('/api/admin/article/translate', auth, async (req, res) => {
         for (let lang of foreignLangs) {
             const googleLang = lang.split('-')[0];
             const [tTitle, tSummary, tContent] = await Promise.all([
-              translateWithPolling(title, googleLang, 'zh'),
-              translateWithPolling(summary, googleLang, 'zh'),
-              translateWithPolling(content, googleLang, 'zh')
-]);
-    translatedArticles.push({ id: uuidv4(), groupId, lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });});
+                translateWithPolling(title, googleLang, 'zh'),
+                translateWithPolling(summary, googleLang, 'zh'),
+                translateWithPolling(content, googleLang, 'zh')
+            ]);
+            translatedArticles.push({ id: uuidv4(), groupId, lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });
             await new Promise(r => setTimeout(r, 500));
         }
         articles.push(...translatedArticles);
         writeDB('articles', articles);
         res.json({ success: true });
-   } catch (e) {
-    console.error('[文章新建] 翻译失败:', e);
-    res.status(502).json({
-        error: '翻译失败',
-        reason: describeError(e),
-        details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
-    });
-}
+    } catch (e) {
+        console.error('[文章新建] 翻译失败:', e);
+        res.status(502).json({
+            error: '翻译失败',
+            reason: describeError(e),
+            details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
+        });
+    }
+});
 
 app.put('/api/admin/article/:id', auth, (req, res) => {
     const { lang, title, summary, content, coverUrl } = req.body;
@@ -477,39 +474,38 @@ app.delete('/api/admin/partners/:id', auth, (req, res) => {
     let partners = readDB('partners').filter(p => p.id !== req.params.id); writeDB('partners', partners); res.json({ success: true });
 });
 
-// ====== 新增：评论管理 API ======
+// ====== 评论管理 API（多服务轮询） ======
 app.post('/api/admin/reviews', auth, async (req, res) => {
     const { targetLangs, stars, name, text } = req.body;
     const reviews = readDB('reviews');
     const groupId = uuidv4();
-    const sourceLang = 'zh'; // 默认源语言为中文
+    const sourceLang = 'zh';
     const foreignLangs = targetLangs.filter(lang => lang !== sourceLang);
 
     try {
-        // 保存中文原版
         if (targetLangs.includes(sourceLang)) {
             reviews.push({ id: uuidv4(), groupId, lang: sourceLang, stars: Number(stars) || 5, name, text });
         }
 
-        // 翻译并保存其他语言
         for (let lang of foreignLangs) {
-    const googleLang = lang.split('-')[0];
-    const tText = await translateWithPolling(text, googleLang, 'zh');
-    const tName = await translateWithPolling(name, googleLang, 'zh');
-    reviews.push({ id: uuidv4(), groupId, lang, stars: Number(stars) || 5, name: tName, text: tText });
-    await new Promise(r => setTimeout(r, 300));
-}
+            const googleLang = lang.split('-')[0];
+            const tText = await translateWithPolling(text, googleLang, sourceLang);
+            const tName = await translateWithPolling(name, googleLang, sourceLang);
+            reviews.push({ id: uuidv4(), groupId, lang, stars: Number(stars) || 5, name: tName, text: tText });
+            await new Promise(r => setTimeout(r, 300));
+        }
 
         writeDB('reviews', reviews);
         res.json({ success: true });
-   } catch (e) {
-    console.error('[评论] 翻译失败:', e);
-    res.status(502).json({
-        error: '翻译失败',
-        reason: describeError(e),
-        details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
-    });
-}
+    } catch (e) {
+        console.error('[评论] 翻译失败:', e);
+        res.status(502).json({
+            error: '翻译失败',
+            reason: describeError(e),
+            details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
+        });
+    }
+});
 
 app.put('/api/admin/reviews/:id', auth, (req, res) => {
     const { lang, stars, name, text } = req.body;
