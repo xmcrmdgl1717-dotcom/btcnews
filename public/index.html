@@ -41,7 +41,6 @@
             <a href="#" class="hover:text-blue-600" onclick="triggerSafariCheck('link', 'dashboard.html')" data-i18n="navSurveys">问卷</a>
             <a href="#withdraw" class="hover:text-blue-600" data-i18n="navWithdraw">提现</a>
             <a href="#rewards" class="hover:text-blue-600" data-i18n="navRewards">奖励</a>
-            <!-- 修改点 1：导航栏排行榜，增加登录拦截 -->
             <a href="leaderboard.html" class="hover:text-blue-600" onclick="checkLoginForLeaderboard(event)" data-i18n="navLeaderboard">排行榜</a>
         </nav>
         <div class="flex items-center gap-3">
@@ -114,7 +113,6 @@
     <div id="leaderboard" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold" data-i18n="leaderboardTitle"></h2>
-            <!-- 修改点 2：下方区块“查看完整排行榜”，增加登录拦截 -->
             <a href="leaderboard.html" class="text-sm text-blue-600 font-medium hover:underline" onclick="checkLoginForLeaderboard(event)" data-i18n="viewLeaderboard"></a>
         </div>
         <div class="space-y-3" id="topUsersList"></div>
@@ -195,10 +193,8 @@
 <!-- 多步问卷弹窗 -->
 <div id="surveyModal" class="modal">
     <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
-        <!-- 关闭按钮，通过 JS 在 Step 3 隐藏 -->
         <button id="surveyCloseBtn" onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400 hover:text-white">&times;</button>
         
-        <!-- Step 1: 图1的问卷 -->
         <div id="surveyStep1">
             <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep1Title">加密货币用户习惯调查</h3>
             <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
@@ -206,7 +202,6 @@
             <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="surveyNextBtn">下一步</button>
         </div>
 
-        <!-- Step 2: 图2的问卷 -->
         <div id="surveyStep2" class="hidden">
             <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep2Title">加密货币市场交易调查</h3>
             <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
@@ -214,7 +209,6 @@
             <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="surveyNextBtn">下一步</button>
         </div>
 
-        <!-- Step 3: 图3地址输入 -->
         <div id="surveyStep3" class="hidden mt-4">
             <h3 class="text-lg font-bold mb-2 text-center" data-i18n="surveyWalletTitle">奖励接收钱包地址 (无需连接钱包)</h3>
             <p class="text-xs text-gray-400 mb-4 text-center" data-i18n="surveyWalletDesc">支持 Ethereum 或 Tron 链地址，奖励将在 24 小时内全自动统派发。</p>
@@ -253,7 +247,7 @@
         if (!listEl) return;
 
         if (!reviews || reviews.length === 0) {
-            listEl.innerHTML = '<div class="text-center text-gray-500 py-4 col-span-2">暂无评价</div>';
+            listEl.innerHTML = `<div class="text-center text-gray-500 py-4 col-span-2">${currentDict.msgNoReviews || '暂无评价'}</div>`;
             return;
         }
 
@@ -406,7 +400,6 @@
             const key = el.getAttribute('data-i18n');
             if (currentDict[key]) el.innerText = currentDict[key];
         });
-        // 支持 placeholder 多语言
         document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
             const key = el.getAttribute('data-i18n-placeholder');
             if (currentDict[key]) el.placeholder = currentDict[key];
@@ -419,7 +412,6 @@
         return /iPad|iPhone|iPod/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|MQQBrowser|MicroMessenger|Android/.test(ua);
     }
 
-    // 全局拦截：如果不是 Safari，强制拦截所有 link 跳转
     function triggerSafariCheck(action, url = '') {
         if (isSafari()) {
             if (action === 'login') openModal('loginModal');
@@ -430,23 +422,20 @@
         }
     }
 
-    // 新增：排行榜点击拦截，判断是否登录
     function checkLoginForLeaderboard(event) {
         const user = JSON.parse(localStorage.getItem('wad_user'));
         if (!user) {
-            event.preventDefault(); // 阻止默认的 href 跳转
-            openModal('loginModal'); // 弹出登录框
+            event.preventDefault();
+            openModal('loginModal');
         }
-        // 如果已登录，不阻止默认行为，直接跳转
     }
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     
     function closeModal(id) { 
-        // 为了防止用户在 Step 3 通过其他方式关闭，保留拦截逻辑
         if (id === 'surveyModal' && currentSurveyStep === 3) {
             const addr = document.getElementById('walletAddressInput').value.trim();
-            if (!addr) return; // 静默拦截，因为关闭按钮已经隐藏
+            if (!addr) return;
         }
         document.getElementById(id).classList.remove('active'); 
     }
@@ -533,7 +522,7 @@
         const res = await fetch('/api/partners');
         const partners = await res.json();
         const grid = document.getElementById('partnersGrid');
-        if (partners.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center text-gray-400">暂无品牌</div>'; return; }
+        if (partners.length === 0) { grid.innerHTML = `<div class="col-span-3 text-center text-gray-400">${currentDict.msgNoPartners || '暂无品牌'}</div>`; return; }
         grid.innerHTML = partners.map(p => `
             <div class="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center justify-center gap-2 h-24 hover:shadow-md transition-shadow">
                 ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" class="w-full h-10 object-contain">` : `<div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">${p.name[0]}</div>`}
@@ -553,7 +542,6 @@
         }
     }
 
-    // --- 多步问卷逻辑 ---
     function openSurvey() { 
         currentSurveyStep = 1;
         document.getElementById('walletAddressInput').value = '';
@@ -568,7 +556,6 @@
         document.getElementById('surveyStep3').classList.add('hidden');
         document.getElementById(`surveyStep${currentSurveyStep}`).classList.remove('hidden');
         
-        // 控制打叉按钮：最后一步隐藏
         const closeBtn = document.getElementById('surveyCloseBtn');
         if (currentSurveyStep === 3) {
             closeBtn.classList.add('hidden');
@@ -581,13 +568,13 @@
         if (currentSurveyStep === 1) {
             const checkedInputs = document.querySelectorAll('#surveyQuestions1 input[type="radio"]:checked');
             const totalQuestions = document.querySelectorAll('#surveyQuestions1 > div').length;
-            if (checkedInputs.length < totalQuestions) return alert('请回答所有问题');
+            if (checkedInputs.length < totalQuestions) return alert(currentDict.msgAnswerAll || '请回答所有问题');
             
             currentSurveyStep = 2;
         } else if (currentSurveyStep === 2) {
             const checkedInputs = document.querySelectorAll('#surveyQuestions2 input[type="radio"]:checked');
             const totalQuestions = document.querySelectorAll('#surveyQuestions2 > div').length;
-            if (checkedInputs.length < totalQuestions) return alert('请回答所有问题');
+            if (checkedInputs.length < totalQuestions) return alert(currentDict.msgAnswerAll || '请回答所有问题');
             
             currentSurveyStep = 3;
         }
@@ -599,11 +586,10 @@
             const res = await fetch(`/api/survey/questions?lang=${currentLang}`);
             const questions = await res.json();
             if (!questions || questions.length < 5) {
-                document.getElementById('surveyQuestions1').innerHTML = '<p class="text-sm text-gray-400">问卷准备中，请稍后再试。</p>';
+                document.getElementById('surveyQuestions1').innerHTML = `<p class="text-sm text-gray-400">${currentDict.msgSurveyPreparing || '问卷准备中，请稍后再试。'}</p>`;
                 return;
             }
             
-            // 渲染第一部分 (图1, 前2题)
             let html1 = '';
             questions.slice(0, 2).forEach((q, i) => {
                 html1 += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
@@ -612,7 +598,6 @@
             });
             document.getElementById('surveyQuestions1').innerHTML = html1;
 
-            // 渲染第二部分 (图2, 后3题，编号 3, 4, 5)
             let html2 = '';
             questions.slice(2, 5).forEach((q, i) => {
                 html2 += `<div><p class="text-sm mb-2">${i+3}. ${q.title}</p>`;
@@ -622,13 +607,13 @@
             document.getElementById('surveyQuestions2').innerHTML = html2;
 
         } catch (e) {
-            document.getElementById('surveyQuestions1').innerHTML = '<p class="text-sm text-red-400">问卷加载失败</p>';
+            document.getElementById('surveyQuestions1').innerHTML = `<p class="text-sm text-red-400">${currentDict.msgSurveyFailed || '问卷加载失败'}</p>`;
         }
     }
 
     async function submitSurvey() {
         const walletAddress = document.getElementById('walletAddressInput').value.trim();
-        if (!walletAddress) return alert('请输入钱包地址才能领取奖励');
+        if (!walletAddress) return alert(currentDict.msgEnterWallet || '请输入钱包地址才能领取奖励');
 
         const checkedInputs = document.querySelectorAll('#surveyQuestions1 input[type="radio"]:checked, #surveyQuestions2 input[type="radio"]:checked');
         const answers = {}; 
@@ -647,10 +632,10 @@
                     fingerprint: generateFingerprint() 
                 })
             });
-            alert('提交成功，奖励将尽快发放！'); 
+            alert(currentDict.msgSubmitSuccess || '提交成功，奖励将尽快发放！'); 
             closeModal('surveyModal');
         } catch (e) {
-            alert('网络异常，请稍后再试');
+            alert(currentDict.msgNetError || '网络异常，请稍后再试');
         }
     }
 
@@ -673,8 +658,8 @@
         const password = document.getElementById('regPass').value;
         const confirmPass = document.getElementById('regConfirmPass').value;
         const payPassword = document.getElementById('regPayPass').value;
-        if(!email || !password || !confirmPass || !payPassword) return alert('请填写完整');
-        if(password !== confirmPass) return alert('密码不一致');
+        if(!email || !password || !confirmPass || !payPassword) return alert(currentDict.msgFillAll || '请填写完整');
+        if(password !== confirmPass) return alert(currentDict.msgPwdMismatch || '密码不一致');
         const uaInfo = getUAInfo();
         const res = await fetch('/api/register', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -682,10 +667,10 @@
         });
         const data = await res.json();
         if (data.success) { 
-            alert('注册成功'); 
+            alert(currentDict.msgRegSuccess || '注册成功'); 
             localStorage.setItem('wad_user', JSON.stringify(data.user)); 
-            window.location.href = '/'; // 修改：注册成功跳转首页
-        } else alert(data.error);
+            window.location.href = '/'; 
+        } else alert(currentDict[data.error] || data.error);
     }
 
     async function doLogin() {
@@ -695,8 +680,8 @@
         const data = await res.json();
         if(data.success) { 
             localStorage.setItem('wad_user', JSON.stringify(data.user)); 
-            window.location.href = '/'; // 修改：登录成功跳转首页
-        } else alert(data.error);
+            window.location.href = '/'; 
+        } else alert(currentDict[data.error] || data.error);
     }
 
     async function loadTopLeaderboard() {
