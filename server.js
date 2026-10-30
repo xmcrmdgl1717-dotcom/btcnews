@@ -22,7 +22,8 @@ const DB_FILES = {
     languages: path.join(DB_DIR, 'languages.json'),
     partners: path.join(DB_DIR, 'partners.json'),
     visits: path.join(DB_DIR, 'visits.json'),
-    reviews: path.join(DB_DIR, 'reviews.json') // 新增评论数据
+    reviews: path.join(DB_DIR, 'reviews.json'),
+    settings: path.join(DB_DIR, 'settings.json') // 新增设置文件
 };
 
 // ================= 完整全量多语言字典 =================
@@ -42,6 +43,7 @@ Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
         if (key === 'admin') initialData = { password: 'admin888' };
+        if (key === 'settings') initialData = { reviewMode: 'all' }; // 默认：全部随机
         if (key === 'surveys') initialData = {
             questions: { zh: [{ id: "q1", title: "您平时最经常使用的加密钱包是哪一款？", options: ["Bitget / Bitpie 钱包", "Trust Wallet / Phantom钱包", "Solflare / Coin98 钱包", "Uniswap / Exodus钱包"] }, { id: "q2", title: "您使用加密钱包的主要用途是什么？", options: ["DApp交互与 DeFi理财", "代币 Swap(交换)闪兑交易", "NFT收藏与交易", "资产长期存储与转账"] }] },
             submissions: []
@@ -102,7 +104,19 @@ function getReqInfo(req) {
 // ================= 前台 API =================
 app.get('/api/languages', (req, res) => res.json(readDB('languages').filter(l => l.active)));
 app.get('/api/partners', (req, res) => res.json(readDB('partners')));
-app.get('/api/reviews', (req, res) => res.json(readDB('reviews'))); // 新增：获取所有评论
+
+// 获取评论：结合 settings 中的 reviewMode 判断是否按语言过滤
+app.get('/api/reviews', (req, res) => {
+    const reviews = readDB('reviews');
+    const settings = readDB('settings');
+    const lang = req.query.lang;
+    
+    if (settings.reviewMode === 'match' && lang) {
+        return res.json(reviews.filter(r => r.lang === lang));
+    }
+    res.json(reviews);
+});
+
 app.get('/api/marquee', (req, res) => {
     const users = readDB('users').slice(-10).reverse();
     let list = users.map(u => ({ name: u.email.split('@')[0], amount: (Math.random() * 500).toFixed(0) }));
@@ -269,13 +283,22 @@ app.get('/api/admin/data', auth, (req, res) => {
     res.json({
         users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'),
         offers: readDB('offers'), languages: readDB('languages'), partners: readDB('partners'), visits: readDB('visits'),
-        reviews: readDB('reviews') // 返回评论给后台
+        reviews: readDB('reviews'),
+        settings: readDB('settings') // 返回设置给前端
     });
+});
+
+// 设置更新 API
+app.put('/api/admin/settings', auth, (req, res) => {
+    const settings = readDB('settings');
+    const newSettings = { ...settings, ...req.body };
+    writeDB('settings', newSettings);
+    res.json({ success: true });
 });
 
 // 问卷翻译与保存
 app.post('/api/admin/survey/translate', auth, async (req, res) => {
-    const { questions, targetLangs, sourceLang = 'zh' } = req.body; // 新增 sourceLang
+    const { questions, targetLangs, sourceLang = 'zh' } = req.body;
     const surveys = readDB('surveys');
     surveys.questions[sourceLang] = questions;
     const foreignLangs = targetLangs.filter(lang => lang !== sourceLang);
@@ -371,22 +394,58 @@ app.delete('/api/admin/partners/:id', auth, (req, res) => {
 });
 
 // ====== 新增：评论管理 API ======
-app.post('/api/admin/reviews', auth, (req, res) => {
-    const { lang, stars, name, text } = req.body;
+app.post('/api/admin/reviews', auth, async (req, res) => {
+    const { targetLangs, stars, name, text } = req.body;
     const reviews = readDB('reviews');
-    reviews.push({ id: uuidv4(), lang, stars: Number(stars) || 5, name, text });
-    writeDB('reviews', reviews);
-    res.json({ success: true });
+    const groupId = uuidv4();
+    const sourceLang = 'zh'; // 默认源语言为中文
+    const foreignLangs = targetLangs.filter(lang => lang !== sourceLang);
+
+    try {
+        // 保存中文原版
+        if (targetLangs.includes(sourceLang)) {
+            reviews.push({ id: uuidv4(), groupId, lang: sourceLang, stars: Number(stars) || 5, name, text });
+        }
+
+        // 翻译并保存其他语言
+        for (let lang of foreignLangs) {
+            const googleLang = lang.split('-')[0];
+            const tText = (await translate(text, { to: googleLang })).text;
+            const tName = (await translate(name, { to: googleLang })).text;
+            reviews.push({ id: uuidv4(), groupId, lang, stars: Number(stars) || 5, name: tName, text: tText });
+            await new Promise(r => setTimeout(r, 300));
+        }
+
+        writeDB('reviews', reviews);
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: '翻译失败' });
+    }
 });
+
 app.put('/api/admin/reviews/:id', auth, (req, res) => {
     const { lang, stars, name, text } = req.body;
     const reviews = readDB('reviews');
     const index = reviews.findIndex(r => r.id === req.params.id);
-    if (index !== -1) { reviews[index] = { ...reviews[index], lang, stars: Number(stars) || 5, name, text }; writeDB('reviews', reviews); res.json({ success: true }); }
+    if (index !== -1) { 
+        reviews[index] = { ...reviews[index], lang, stars: Number(stars) || 5, name, text }; 
+        writeDB('reviews', reviews); 
+        res.json({ success: true }); 
+    }
     else res.status(404).json({ error: '评论不存在' });
 });
+
 app.delete('/api/admin/reviews/:id', auth, (req, res) => {
-    let reviews = readDB('reviews').filter(r => r.id !== req.params.id); writeDB('reviews', reviews); res.json({ success: true });
+    let reviews = readDB('reviews').filter(r => r.id !== req.params.id); 
+    writeDB('reviews', reviews); 
+    res.json({ success: true });
+});
+
+app.delete('/api/admin/review-group/:groupId', auth, (req, res) => {
+    let reviews = readDB('reviews').filter(r => r.groupId !== req.params.groupId); 
+    writeDB('reviews', reviews); 
+    res.json({ success: true });
 });
 
 app.put('/api/admin/users/:id', auth, (req, res) => {
