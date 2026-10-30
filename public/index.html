@@ -5,15 +5,210 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>W-Airdrop - 全球顶级公司联合打造</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- 引入抽离的 CSS -->
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="bg-[#f3f4f9] font-sans text-gray-800">
 
-<!-- 顶栏、Header、Main 内容区域与之前完全一样（省略折叠...，直接复制之前的即可） -->
-<!-- ... 包括各种弹窗结构 ... -->
+<div class="bg-[#0b1b3a] text-white text-[13px] py-2 flex items-center overflow-hidden">
+    <div class="flex items-center gap-1.5 px-4 shrink-0 bg-[#0b1b3a] z-10 shadow-[5px_0_10px_#0b1b3a]">
+        <i class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></i>
+        <span data-i18n="realtime" class="font-medium">实时</span>
+    </div>
+    <div class="flex-1 overflow-hidden relative"><div class="marquee-content" id="marqueeData"></div></div>
+</div>
 
-<!-- 引入抽离的 JS (放在 body 结尾) -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
+            <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
+        </a>
+        <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+            <a href="#earn" class="hover:text-blue-600" data-i18n="navEarn">赚钱</a>
+            <a href="#offers" class="hover:text-blue-600" data-i18n="navOffers">优惠</a>
+            <a href="#" class="hover:text-blue-600" onclick="triggerSafariCheck('link', 'dashboard.html')" data-i18n="navSurveys">问卷</a>
+            <a href="#withdraw" class="hover:text-blue-600" data-i18n="navWithdraw">提现</a>
+            <a href="#rewards" class="hover:text-blue-600" data-i18n="navRewards">奖励</a>
+            <a href="leaderboard.html" class="hover:text-blue-600" onclick="checkLoginForLeaderboard(event)" data-i18n="navLeaderboard">排行榜</a>
+        </nav>
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <button onclick="toggleLangMenu()" class="flex items-center gap-1 text-sm font-medium border px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600">
+                    🌐 <span id="currentLangText">中文</span>
+                </button>
+                <div id="langMenu" class="lang-menu absolute right-0 mt-2 w-36 bg-white border shadow-xl rounded-lg overflow-hidden z-50 max-h-80 overflow-y-auto"></div>
+            </div>
+            <div id="authBtnArea"></div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-4 py-8 space-y-16">
+    <div class="relative w-full">
+        <div id="newsCarousel" class="flex overflow-x-auto snap-x-mandatory hide-scrollbar gap-4 pb-4"></div>
+        <div class="flex justify-center gap-2 mt-2" id="carouselDots"></div>
+    </div>
+
+    <div id="earn" class="text-center py-8 px-4 max-w-3xl mx-auto">
+        <h1 class="text-2xl md:text-3xl font-extrabold text-[#0A3466] leading-normal tracking-wide mb-4" data-i18n="heroTitle"></h1>
+        <p class="text-gray-500 text-base leading-relaxed max-w-2xl mx-auto" data-i18n="heroDesc"></p>
+        <div class="flex justify-center pt-6">
+            <button onclick="handleClaim()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-700 shadow-xl transition-transform hover:scale-105" data-i18n="claimBtn"></button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+            <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div class="text-xl font-bold text-blue-600">$2.5M+</div>
+            <div class="text-xs text-gray-500 mt-1" data-i18n="stat1"></div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </div>
+            <div class="text-xl font-bold text-blue-600">550K+</div>
+            <div class="text-xs text-gray-500 mt-1" data-i18n="stat2"></div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+            </div>
+            <div class="text-xl font-bold text-blue-600">1,000+</div>
+            <div class="text-xs text-gray-500 mt-1" data-i18n="stat3"></div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path></svg>
+            </div>
+            <div class="text-xl font-bold text-blue-600">4.7</div>
+            <div class="text-xs text-gray-500 mt-1" data-i18n="stat4"></div>
+        </div>
+    </div>
+
+    <div id="withdraw" class="bg-white p-8 rounded-2xl shadow-sm">
+        <h2 class="text-2xl font-bold text-center mb-2" data-i18n="howTitle"></h2>
+        <p class="text-center text-gray-500 text-sm mb-8" data-i18n="howDesc"></p>
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">01</div><h3 class="font-bold text-lg mb-1" data-i18n="step1Title"></h3><p class="text-sm text-gray-600" data-i18n="step1Desc"></p></div>
+            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">02</div><h3 class="font-bold text-lg mb-1" data-i18n="step2Title"></h3><p class="text-sm text-gray-600" data-i18n="step2Desc"></p></div>
+            <div class="p-5 bg-[#f3f4f9] rounded-xl"><div class="text-4xl font-bold text-gray-200 mb-2">03</div><h3 class="font-bold text-lg mb-1" data-i18n="step3Title"></h3><p class="text-sm text-gray-600" data-i18n="step3Desc"></p></div>
+        </div>
+    </div>
+
+    <div id="leaderboard" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold" data-i18n="leaderboardTitle"></h2>
+            <a href="leaderboard.html" class="text-sm text-blue-600 font-medium hover:underline" onclick="checkLoginForLeaderboard(event)" data-i18n="viewLeaderboard"></a>
+        </div>
+        <div class="space-y-3" id="topUsersList"></div>
+    </div>
+
+    <div id="reviews" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
+        <h2 class="text-2xl font-bold mb-6" data-i18n="reviewsTitle"></h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="reviewsList"></div>
+    </div>
+
+    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
+        <h2 class="text-2xl font-bold mb-2" data-i18n="faqTitle"></h2>
+        <p class="text-sm text-gray-500 mb-6" data-i18n="faqDesc"></p>
+        <div class="space-y-4">
+            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ1"></span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA1"></p></details>
+            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ2"></span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA2"></p></details>
+            <details class="group border-b border-gray-100 pb-4"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ3"></span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA3"></p></details>
+            <details class="group pb-2"><summary class="font-bold cursor-pointer flex justify-between items-center text-sm md:text-base"><span data-i18n="faqQ4"></span><span class="faq-icon text-blue-500 text-xl font-light">+</span></summary><p class="text-sm text-gray-500 mt-3 leading-relaxed" data-i18n="faqA4"></p></details>
+        </div>
+    </div>
+
+    <div>
+        <h2 class="text-xl font-bold text-center mb-6" data-i18n="partnersTitle"></h2>
+        <div class="grid grid-cols-3 gap-3" id="partnersGrid"></div>
+    </div>
+</main>
+
+<footer class="bg-[#0A3466] text-white py-12 mt-12">
+    <div class="max-w-4xl mx-auto px-4 flex flex-col items-center">
+        <h2 class="text-xl md:text-2xl font-bold text-center mb-8 leading-relaxed" data-i18n="footerTitle"></h2>
+        <div class="text-center text-xs text-white/50 space-y-2"><p data-i18n="footerCopy"></p></div>
+    </div>
+</footer>
+
+<div id="safariModal" class="modal">
+    <div class="bg-[#1e293b] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-gray-700 relative shadow-2xl">
+        <button onclick="closeModal('safariModal')" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-white">&times;</button>
+        <div class="flex justify-center mb-4 mt-2">
+            <svg id="defaultSafariSvg" viewBox="0 0 100 100" class="w-16 h-16" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="48" fill="#1B8EF2" stroke="#E5E7EB" stroke-width="2"/>
+                <g stroke="#FFFFFF" stroke-width="1.5" opacity="0.6"><line x1="50" y1="10" x2="50" y2="18" /><line x1="50" y1="82" x2="50" y2="90" /><line x1="10" y1="50" x2="18" y2="50" /><line x1="82" y1="50" x2="90" y2="50" /></g>
+                <polygon points="50,25 62,50 50,75 38,50" fill="#FFFFFF" /><polygon points="50,25 50,50 38,50" fill="#EF4444" /><polygon points="50,50 62,50 50,75" fill="#EF4444" />
+                <circle cx="50" cy="50" r="3" fill="#1B8EF2" />
+            </svg>
+            <img id="customSafariLogo" src="" class="w-16 h-16 hidden object-contain rounded-xl">
+        </div>
+        <h3 class="text-xl font-bold mb-2" data-i18n="safariTitle">请使用 Safari 浏览器打开</h3>
+        <p class="text-sm text-gray-300 mb-6" data-i18n="safariDesc">请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。</p>
+        <div class="bg-[#0f172a] rounded-xl p-4 mb-6 border border-gray-700 text-left">
+            <input type="text" id="safariLinkInput" readonly class="w-full bg-[#1e293b] border border-gray-700 rounded-lg p-3 text-blue-400 text-sm font-mono outline-none text-center select-all cursor-pointer">
+        </div>
+        <button onclick="copyLink()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="copyBtn">复制当前链接</button>
+        <p id="copyMsg" class="text-green-400 text-sm hidden mt-2" data-i18n="copied">已复制</p>
+    </div>
+</div>
+
+<div id="registerModal" class="modal">
+    <div class="bg-white w-[90%] max-w-md rounded-2xl p-8 relative shadow-2xl">
+        <button onclick="closeModal('registerModal')" class="absolute top-4 right-5 text-2xl text-gray-400 hover:text-gray-600">&times;</button>
+        <div class="flex items-center gap-2 mb-6"><div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div><span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span></div>
+        <h3 class="text-2xl font-bold mb-2" data-i18n="registerTitle"></h3>
+        <p class="text-sm text-gray-500 mb-6" data-i18n="registerDesc"></p>
+        <div class="space-y-4">
+            <div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelEmail"></label><input type="email" id="regEmail" placeholder="you@example.com" class="w-full border p-3 rounded-xl text-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPass"></label><input type="password" id="regPass" class="w-full border p-3 rounded-xl text-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelConfirm"></label><input type="password" id="regConfirmPass" class="w-full border p-3 rounded-xl text-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPayPass"></label><input type="password" id="regPayPass" class="w-full border p-3 rounded-xl text-sm"></div>
+        </div>
+        <button onclick="doRegister()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mt-6 hover:bg-blue-700" data-i18n="registerBtn"></button>
+        <div class="text-center text-sm text-gray-500 mt-5"><span data-i18n="hasAccount"></span> <a href="javascript:void(0)" onclick="switchToLogin()" class="text-blue-600 font-bold hover:underline" data-i18n="goLogin"></a></div>
+    </div>
+</div>
+
+<div id="loginModal" class="modal">
+    <div class="bg-white w-[90%] max-w-sm rounded-2xl p-8 relative shadow-2xl">
+        <button onclick="closeModal('loginModal')" class="absolute top-4 right-5 text-2xl text-gray-400">&times;</button>
+        <h3 class="text-xl font-bold mb-6 text-center" data-i18n="loginTitle"></h3>
+        <input type="email" id="loginEmail" placeholder="Email" class="w-full border p-3 rounded-xl mb-3">
+        <input type="password" id="loginPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-4">
+        <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold" data-i18n="loginBtn"></button>
+        <div class="text-center text-sm text-gray-500 mt-4"><span data-i18n="noAccount"></span> <a href="javascript:void(0)" onclick="switchToRegister()" class="text-blue-600 font-bold hover:underline" data-i18n="goRegister"></a></div>
+    </div>
+</div>
+
+<div id="surveyModal" class="modal">
+    <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
+        <button id="surveyCloseBtn" onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400 hover:text-white">&times;</button>
+        <div id="surveyStep1">
+            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep1Title">用户习惯请您认真填写</h3>
+            <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
+            <div id="surveyQuestions1" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
+            <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="surveyNextBtn">下一步</button>
+        </div>
+        <div id="surveyStep2" class="hidden">
+            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep2Title">用户习惯请您认真填写</h3>
+            <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
+            <div id="surveyQuestions2" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
+            <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="surveyNextBtn">下一步</button>
+        </div>
+        <div id="surveyStep3" class="hidden mt-4">
+            <h3 class="text-lg font-bold mb-2 text-center" data-i18n="surveyWalletTitle">奖励接收钱包地址 (无需连接钱包)</h3>
+            <p class="text-xs text-gray-400 mb-4 text-center" data-i18n="surveyWalletDesc">仅支持 Ethereum (ETH) 链地址，奖励将在 24 小时内全自动统派发。</p>
+            <input type="text" id="walletAddressInput" data-i18n-placeholder="surveyWalletPlaceholder" placeholder="例如: 0x..." class="w-full bg-[#0f172a] border border-gray-700 rounded-xl p-3 text-white mb-6 outline-none focus:border-blue-500 text-sm">
+            <button onclick="submitSurvey()" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 py-3 rounded-xl font-bold hover:opacity-90" data-i18n="surveySubmitBtn">提交问卷并领取奖励</button>
+        </div>
+    </div>
+</div>
+
 <script src="/js/index.js"></script>
 </body>
 </html>
