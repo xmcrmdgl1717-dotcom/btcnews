@@ -193,30 +193,31 @@
 <!-- 多步问卷弹窗 -->
 <div id="surveyModal" class="modal">
     <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
-        <button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400 hover:text-white">&times;</button>
+        <!-- 关闭按钮，通过 JS 在 Step 3 隐藏 -->
+        <button id="surveyCloseBtn" onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400 hover:text-white">&times;</button>
         
         <!-- Step 1: 图1的问卷 -->
         <div id="surveyStep1">
-            <h3 class="text-lg font-bold text-center mb-1">加密货币用户习惯调查</h3>
-            <p class="text-xs text-gray-400 text-center mb-6">预计耗时: 2 分钟 | 提交即具空投资格</p>
+            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep1Title">加密货币用户习惯调查</h3>
+            <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
             <div id="surveyQuestions1" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
-            <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700">下一步</button>
+            <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="surveyNextBtn">下一步</button>
         </div>
 
         <!-- Step 2: 图2的问卷 -->
         <div id="surveyStep2" class="hidden">
-            <h3 class="text-lg font-bold text-center mb-1">加密货币市场交易调查</h3>
-            <p class="text-xs text-gray-400 text-center mb-6">预计耗时: 2 分钟 | 提交即具空投资格</p>
+            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep2Title">加密货币市场交易调查</h3>
+            <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
             <div id="surveyQuestions2" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
-            <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700">下一步</button>
+            <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="surveyNextBtn">下一步</button>
         </div>
 
         <!-- Step 3: 图3地址输入 -->
-        <div id="surveyStep3" class="hidden">
-            <h3 class="text-lg font-bold mb-2">奖励接收钱包地址 (无需连接钱包)</h3>
-            <p class="text-xs text-gray-400 mb-4">支持 Ethereum 或 Tron 链地址，奖励将在 24 小时内全自动统派发。</p>
-            <input type="text" id="walletAddressInput" placeholder="E.g. 0x... or T..." class="w-full bg-[#0f172a] border border-gray-700 rounded-xl p-3 text-white mb-6 outline-none focus:border-blue-500 text-sm">
-            <button onclick="submitSurvey()" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 py-3 rounded-xl font-bold hover:opacity-90">提交问卷并领取奖励</button>
+        <div id="surveyStep3" class="hidden mt-4">
+            <h3 class="text-lg font-bold mb-2 text-center" data-i18n="surveyWalletTitle">奖励接收钱包地址 (无需连接钱包)</h3>
+            <p class="text-xs text-gray-400 mb-4 text-center" data-i18n="surveyWalletDesc">支持 Ethereum 或 Tron 链地址，奖励将在 24 小时内全自动统派发。</p>
+            <input type="text" id="walletAddressInput" data-i18n-placeholder="surveyWalletPlaceholder" placeholder="E.g. 0x... or T..." class="w-full bg-[#0f172a] border border-gray-700 rounded-xl p-3 text-white mb-6 outline-none focus:border-blue-500 text-sm">
+            <button onclick="submitSurvey()" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 py-3 rounded-xl font-bold hover:opacity-90" data-i18n="surveySubmitBtn">提交问卷并领取奖励</button>
         </div>
     </div>
 </div>
@@ -403,6 +404,11 @@
             const key = el.getAttribute('data-i18n');
             if (currentDict[key]) el.innerText = currentDict[key];
         });
+        // 支持 placeholder 多语言
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (currentDict[key]) el.placeholder = currentDict[key];
+        });
         if (document.getElementById('surveyModal').classList.contains('active')) { loadSurveyQuestions(); }
     }
 
@@ -425,12 +431,10 @@
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     
     function closeModal(id) { 
-        // 如果在问卷最后一步且未填地址，拦截关闭
+        // 为了防止用户在 Step 3 通过其他方式关闭，保留拦截逻辑
         if (id === 'surveyModal' && currentSurveyStep === 3) {
             const addr = document.getElementById('walletAddressInput').value.trim();
-            if (!addr) {
-                return alert('请填写钱包地址完成领取，否则无法关闭。');
-            }
+            if (!addr) return; // 静默拦截，因为关闭按钮已经隐藏
         }
         document.getElementById(id).classList.remove('active'); 
     }
@@ -551,6 +555,14 @@
         document.getElementById('surveyStep2').classList.add('hidden');
         document.getElementById('surveyStep3').classList.add('hidden');
         document.getElementById(`surveyStep${currentSurveyStep}`).classList.remove('hidden');
+        
+        // 控制打叉按钮：最后一步隐藏
+        const closeBtn = document.getElementById('surveyCloseBtn');
+        if (currentSurveyStep === 3) {
+            closeBtn.classList.add('hidden');
+        } else {
+            closeBtn.classList.remove('hidden');
+        }
     }
 
     function nextSurveyStep() {
@@ -588,10 +600,10 @@
             });
             document.getElementById('surveyQuestions1').innerHTML = html1;
 
-            // 渲染第二部分 (图2, 后3题)
+            // 渲染第二部分 (图2, 后3题，编号 3, 4, 5)
             let html2 = '';
             questions.slice(2, 5).forEach((q, i) => {
-                html2 += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
+                html2 += `<div><p class="text-sm mb-2">${i+3}. ${q.title}</p>`;
                 q.options.forEach(opt => { html2 += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="${q.id}" value="${opt}" class="accent-blue-500"> ${opt}</label>`; });
                 html2 += `</div>`;
             });
