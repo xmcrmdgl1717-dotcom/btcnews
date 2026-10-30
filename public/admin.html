@@ -16,16 +16,281 @@
 <script>tailwind.config = { darkMode: 'class' };</script>
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-<!-- 引入外部 CSS 和 Ace 编辑器 -->
-<link rel="stylesheet" href="/css/admin.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
+<link rel="stylesheet" href="/css/admin.css">
 </head>
 <body class="h-screen flex overflow-hidden font-sans transition-colors duration-300">
-    
-    <!-- 弹窗与结构跟原来完全一模一样（直接保留即可，不需要改动 HTML 结构） -->
-    <!-- ... -->
 
-    <!-- 底部引入外部 JS -->
+    <div id="loginOverlay" class="absolute inset-0 bg-black/80 z-50 flex items-center justify-center">
+        <div class="card p-8 w-96 text-center">
+            <h2 class="text-2xl font-bold mb-6" id="loginTitle" data-i18n="loginTitle">后台登录</h2>
+            <input type="password" id="adminPwd" placeholder="请输入后台密码" data-i18n-placeholder="loginPlaceholder" class="input w-full p-3 rounded-lg mb-4">
+            <button onclick="doLogin()" data-i18n="loginBtn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700">登录</button>
+        </div>
+    </div>
+
+    <aside class="w-64 border-r flex flex-col hidden md:flex bg-white dark:bg-[#0f172a] border-gray-200 dark:border-slate-800 transition-colors">
+        <div class="h-16 flex items-center justify-between px-6 font-bold text-xl text-blue-600 dark:text-blue-400 border-b border-gray-200 dark:border-slate-800">
+            <span>W-Airdrop CMS</span>
+            <button onclick="toggleTheme()" class="text-gray-500 dark:text-slate-400 hover:text-black dark:hover:text-white" title="切换主题 / Toggle theme">
+                <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4">
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 active" data-i18n="navDashboard" onclick="switchTab('dashboard', this)">📊 数据汇总</div>
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navUsers" onclick="switchTab('users', this)">👥 用户管理</div>
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navArticles" onclick="switchTab('articles', this)">📝 文章管理</div>
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navReviews" onclick="switchTab('reviews', this)">💬 评论管理</div>
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navSurveys" onclick="switchTab('surveys', this)">📋 问卷管理</div>
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navOffers" onclick="switchTab('offers', this)">🎁 优惠管理</div>
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navPartners" onclick="switchTab('partners', this)">🤝 合作墙管理</div>
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navLanguages" onclick="switchTab('languages', this)">🌐 多语言管理</div>
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navSettings" onclick="switchTab('settings', this)">⚙️ 系统设置</div>
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navCodeEditor" onclick="switchTab('code', this)">💻 代码编辑器</div>
+        </nav>
+        <div class="p-4 border-t border-gray-200 dark:border-slate-800">
+            <button onclick="openChangePwd()" data-i18n="changePwd" class="w-full bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 py-2 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-slate-700 mb-2">修改密码</button>
+            <button onclick="logout()" data-i18n="logout" class="w-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-lg font-medium hover:bg-red-100 dark:hover:bg-red-900/50">退出登录</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative bg-gray-50 dark:bg-[#0b1120] transition-colors">
+        <header class="h-16 border-b flex items-center justify-between px-6 shrink-0 bg-white dark:bg-[#0f172a] border-gray-200 dark:border-slate-800">
+            <h2 class="text-lg font-bold" id="pageTitle" data-i18n="pageDashboard">数据汇总</h2>
+            <button onclick="toggleAdminLang()" class="text-sm px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800" title="Language / 语言">
+                <span id="adminLangLabel">EN</span>
+            </button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6" id="mainContent">
+            <!-- 1. 数据汇总 -->
+            <div id="tab-dashboard" class="content-section active">
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+                    <div class="card p-4"><div class="text-xs text-gray-500 dark:text-slate-400 mb-1">总记录</div><div class="text-2xl font-bold" id="statTotal">0</div></div>
+                    <div class="card p-4"><div class="text-xs text-gray-500 dark:text-slate-400 mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> 访问中</div><div class="text-2xl font-bold text-green-500" id="statVisiting">0</div></div>
+                    <div class="card p-4"><div class="text-xs text-gray-500 dark:text-slate-400 mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 已注册</div><div class="text-2xl font-bold text-blue-500" id="statRegistered">0</div></div>
+                    <div class="card p-4"><div class="text-xs text-gray-500 dark:text-slate-400 mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> 已答题</div><div class="text-2xl font-bold text-purple-500" id="statAnswered">0</div></div>
+                    <div class="card p-4"><div class="text-xs text-gray-500 dark:text-slate-400 mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> 安卓</div><div class="text-2xl font-bold text-yellow-500" id="statAndroid">0</div></div>
+                    <div class="card p-4"><div class="text-xs text-gray-500 dark:text-slate-400 mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-pink-500"></span> 苹果</div><div class="text-2xl font-bold text-pink-500" id="statIos">0</div></div>
+                </div>
+
+                <div class="card p-4 mb-6 flex flex-wrap gap-4 items-center">
+                    <select class="input text-sm p-2 rounded" id="filterStatus"><option value="all">全部状态</option><option value="访问中">访问中</option><option value="已注册">已注册</option><option value="已答题">已答题</option></select>
+                    <select class="input text-sm p-2 rounded" id="filterDevice"><option value="all">全部设备</option><option value="Mobile">Mobile</option><option value="Desktop">Desktop</option></select>
+                    <select class="input text-sm p-2 rounded" id="filterOS"><option value="all">全部系统</option><option value="Android">Android</option><option value="iOS">iOS</option><option value="Windows">Windows</option><option value="macOS">macOS</option></select>
+                    <select class="input text-sm p-2 rounded" id="filterOSVersion"><option value="all">全部系统版本</option></select>
+                    <select class="input text-sm p-2 rounded" id="filterLang"><option value="all">全部语言</option></select>
+                    <input type="text" id="searchInput" placeholder="搜索 IP / 邮箱 / 指纹" class="input text-sm p-2 rounded flex-1 min-w-[200px]">
+                    <button onclick="renderVisitList()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">搜索</button>
+                    <button onclick="resetFilters()" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-2 rounded text-sm hover:bg-gray-300 dark:hover:bg-slate-600">重置</button>
+                </div>
+
+                <div class="flex gap-2 mb-4">
+                    <button onclick="fetchData()" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-1.5 rounded text-sm hover:bg-gray-300 dark:hover:bg-slate-600">🔄 刷新</button>
+                    <button onclick="exportCSV()" class="bg-emerald-600 text-white px-4 py-1.5 rounded text-sm hover:bg-emerald-700">⬇️ 导出 CSV (当前筛选)</button>
+                    <div class="flex-1 text-right text-xs text-gray-500 dark:text-slate-500 pt-2">共 <span id="filteredCount">0</span> 条记录</div>
+                </div>
+                <div class="space-y-2" id="visitList"></div>
+            </div>
+
+            <!-- 2. 用户管理 -->
+            <div id="tab-users" class="content-section">
+                <div class="card overflow-hidden">
+                    <table class="w-full text-left text-sm"><thead><tr><th class="p-4">邮箱</th><th class="p-4">密码</th><th class="p-4">余额</th><th class="p-4">时间</th></tr></thead><tbody id="userList"></tbody></table>
+                </div>
+            </div>
+
+            <!-- 3. 文章管理 -->
+            <div id="tab-articles" class="content-section">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold mb-4" id="articleFormTitle">发布新文章</h3>
+                        <div class="space-y-3 mb-4">
+                            <input type="hidden" id="editArticleId">
+                            <div class="border border-gray-200 dark:border-slate-700 p-3 rounded bg-gray-50 dark:bg-[#0f172a] mb-2">
+                                <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言（勾选后源内容将机翻为其他语言）：</p>
+                                <div class="flex flex-wrap gap-3" id="articleLangCheckboxes"></div>
+                            </div>
+                            <input type="text" id="artTitle" placeholder="源标题" class="input w-full p-2 rounded">
+                            <textarea id="artSummary" placeholder="源摘要" class="input w-full p-2 rounded" rows="2"></textarea>
+                            <div>
+                                <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">封面图 (建议尺寸 1200x630 16:9，最大 2MB)</label>
+                                <div class="flex items-center gap-2"><input type="file" id="artCoverFile" accept="image/*" class="text-sm w-full text-gray-500 dark:text-slate-400"><input type="text" id="artCoverUrl" placeholder="封面图URL" class="input flex-1 p-2 rounded text-sm" readonly></div>
+                            </div>
+                            <div class="bg-white text-black"><div id="editor-container"></div></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="submitArticle()" id="articleSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">智能翻译并发布</button>
+                            <button onclick="resetArticleForm()" id="articleCancelBtn" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-6 py-2 rounded font-bold hover:bg-gray-300 dark:hover:bg-slate-600 hidden">取消编辑</button>
+                        </div>
+                    </div>
+                    <div class="card p-6 overflow-y-auto" style="max-height: 800px;">
+                        <h3 class="font-bold mb-4">已发布文章</h3>
+                        <div id="articleList" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 评论管理 -->
+            <div id="tab-reviews" class="content-section">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold mb-4" id="reviewFormTitle">发布评论</h3>
+                        <input type="hidden" id="editReviewId">
+                        <div class="space-y-3 mb-4">
+                            <div id="reviewLangCheckboxBox" class="border border-gray-200 dark:border-slate-700 p-3 rounded bg-gray-50 dark:bg-[#0f172a]">
+                                <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言（源语言固定为中文，勾选其他语言将进行机翻）：</p>
+                                <div class="flex flex-wrap gap-3" id="reviewLangCheckboxes"></div>
+                            </div>
+                            <div id="reviewLangSelectBox" class="hidden"><label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">语言</label><select id="revLang" class="input w-full p-2 rounded"></select></div>
+                            <div><label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">评分</label><select id="revStars" class="input w-full p-2 rounded"><option value="5">★★★★★ (5)</option><option value="4">★★★★☆ (4)</option><option value="3">★★★☆☆ (3)</option><option value="2">★★☆☆☆ (2)</option><option value="1">★☆☆☆☆ (1)</option></select></div>
+                            <div><label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">用户名</label><input type="text" id="revName" placeholder="例如：王小明" class="input w-full p-2 rounded"></div>
+                            <div><label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">评论内容</label><textarea id="revText" placeholder="请输入评论内容（中文原版）" rows="4" class="input w-full p-2 rounded"></textarea></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="saveReview()" id="reviewSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">智能翻译并发布</button>
+                            <button onclick="resetReviewForm()" id="reviewCancelBtn" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-6 py-2 rounded font-bold hover:bg-gray-300 dark:hover:bg-slate-600 hidden">取消编辑</button>
+                        </div>
+                    </div>
+                    <div class="card p-6 overflow-y-auto" style="max-height: 800px;">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold">评论列表 <span id="reviewCount" class="text-xs font-normal text-gray-500 dark:text-slate-400">(0)</span></h3>
+                            <select id="reviewFilterLang" class="input text-sm p-1.5 rounded" onchange="renderReviewList()"><option value="all">全部语言</option></select>
+                        </div>
+                        <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-slate-800 p-2.5 rounded border border-gray-200 dark:border-slate-700">
+                            <span class="text-xs text-gray-600 dark:text-slate-400">前台展示模式：</span>
+                            <div class="flex gap-2"><button onclick="setReviewMode('all')" id="modeBtn-all" class="px-3 py-1 rounded text-xs font-bold bg-blue-600 text-white">全部随机</button><button onclick="setReviewMode('match')" id="modeBtn-match" class="px-3 py-1 rounded text-xs font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300">按语言随机</button></div>
+                        </div>
+                        <div id="reviewList" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. 问卷管理 -->
+            <div id="tab-surveys" class="content-section">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6 flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold" id="surveyFormTitle">发布新问卷</h3>
+                            <div class="flex gap-2">
+                                <button onclick="resetSurveyForm()" id="surveyResetBtn" class="hidden bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-3 py-1 rounded text-sm hover:bg-gray-300 dark:hover:bg-slate-600">取消编辑</button>
+                                <button onclick="addSurveyQuestion()" class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50">+ 添加题目</button>
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 dark:border-slate-700 p-3 rounded bg-gray-50 dark:bg-[#0f172a] mb-4" id="surveyLangBox">
+                            <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言 (源语言固定为中文，勾选其他语言将进行机翻):</p>
+                            <div class="flex flex-wrap gap-3" id="surveyLangCheckboxes"></div>
+                        </div>
+                        <div id="surveyConfigArea" class="space-y-4 mb-4 max-h-[500px] overflow-y-auto pr-2 flex-1"></div>
+                        <button onclick="saveSurvey(this)" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 mt-2">保存并更新问卷</button>
+                    </div>
+                    <div class="flex flex-col gap-6" style="max-height: 800px;">
+                        <div class="card p-6 flex-1 overflow-y-auto"><h3 class="font-bold mb-4">已发布问卷列表</h3><div id="surveyPublishedList" class="space-y-3"></div></div>
+                        <div class="card p-6 flex-1 overflow-y-auto">
+                            <h3 class="font-bold mb-4">用户提交记录</h3>
+                            <table class="w-full text-left text-sm"><thead><tr><th class="p-3">用户</th><th class="p-3">答案</th><th class="p-3">钱包/地址</th><th class="p-3">时间</th></tr></thead><tbody id="surveyList"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. 优惠管理 -->
+            <div id="tab-offers" class="content-section">
+                <div class="card p-6 mb-6">
+                    <h3 class="font-bold mb-4">添加新优惠</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <select id="oCategory" class="input p-2 rounded"><option value="game">游戏</option><option value="app">应用</option><option value="signup">注册</option></select>
+                        <input type="text" id="oColor" placeholder="背景色(如 #1e293b)" class="input p-2 rounded" value="#1e293b">
+                        <input type="text" id="oTitle" placeholder="优惠名称" class="input p-2 rounded col-span-2">
+                        <input type="text" id="oReward" placeholder="奖励数量" class="input p-2 rounded col-span-2">
+                    </div>
+                    <button onclick="addOffer()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">添加</button>
+                </div>
+                <div class="card overflow-hidden"><table class="w-full text-left text-sm"><thead><tr><th class="p-4">颜色</th><th class="p-4">分类</th><th class="p-4">标题</th><th class="p-4">奖励</th><th class="p-4">操作</th></tr></thead><tbody id="offerList"></tbody></table></div>
+            </div>
+
+            <!-- 7. 合作墙 -->
+            <div id="tab-partners" class="content-section">
+                <div class="card p-6 mb-6">
+                    <h3 class="font-bold mb-4" id="partnerFormTitle">添加合作商家</h3>
+                    <p class="text-xs text-red-400 mb-2">建议图片尺寸：宽高 1:1 (如 200x200) 或 16:9，最大不超过 500KB</p>
+                    <input type="hidden" id="editPartnerId">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div><label class="block text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">商家名称</label><input type="text" id="pName" class="input w-full p-2 rounded"></div>
+                        <div><label class="block text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">商家 LOGO</label><input type="file" id="pFile" accept="image/*" class="w-full text-gray-500 dark:text-slate-400 text-sm p-1"><input type="hidden" id="pImageUrl"></div>
+                    </div>
+                    <button onclick="savePartner()" id="partnerSubmitBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">添加</button>
+                    <button onclick="resetPartnerForm()" id="partnerCancelBtn" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-6 py-2 rounded font-bold hover:bg-gray-300 dark:hover:bg-slate-600 hidden">取消编辑</button>
+                </div>
+                <div class="card overflow-hidden"><table class="w-full text-left text-sm"><thead><tr><th class="p-4">Logo</th><th class="p-4">名称</th><th class="p-4">操作</th></tr></thead><tbody id="partnerList"></tbody></table></div>
+            </div>
+
+            <!-- 8. 多语言 -->
+            <div id="tab-languages" class="content-section">
+                <div class="card p-6 mb-6">
+                    <h3 class="font-bold mb-4">添加新语言</h3>
+                    <div class="grid grid-cols-3 gap-3 mb-3">
+                        <input type="text" id="newLangCode" placeholder="代码 (如 fr)" class="input p-2 rounded">
+                        <input type="text" id="newLangName" placeholder="名称 (如 Français)" class="input p-2 rounded">
+                        <input type="text" id="newLangFlag" placeholder="国旗 (如 🇫🇷)" class="input p-2 rounded">
+                    </div>
+                    <button onclick="addLanguage()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">添加</button>
+                </div>
+                <div class="card overflow-hidden"><table class="w-full text-left text-sm"><thead><tr><th class="p-4">代码</th><th class="p-4">名称</th><th class="p-4">状态开关</th><th class="p-4">操作</th></tr></thead><tbody id="languageList"></tbody></table></div>
+            </div>
+
+            <!-- 9. 系统设置 -->
+            <div id="tab-settings" class="content-section">
+                <div class="card p-6 max-w-2xl">
+                    <h3 class="font-bold text-lg mb-4">Safari 提示弹窗 LOGO</h3>
+                    <p class="text-xs text-gray-500 mb-4">建议尺寸：正方形（如 128x128），支持 PNG/SVG/JPG，上传后前台弹窗将展示此图片。</p>
+                    <div class="flex items-center gap-6 mb-6">
+                        <div class="w-24 h-24 rounded-2xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center border border-gray-200 dark:border-slate-700 overflow-hidden">
+                            <img id="currentSafariLogo" src="" class="w-full h-full object-cover hidden">
+                            <span id="noSafariLogo" class="text-xs text-gray-400 text-center px-2">未设置 LOGO<br>(使用默认代码图标)</span>
+                        </div>
+                        <div class="flex-1">
+                            <input type="file" id="safariLogoFile" accept="image/*" class="w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-slate-800 dark:file:text-blue-400">
+                        </div>
+                    </div>
+                    <button onclick="uploadSafariLogo()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">上传并保存</button>
+                </div>
+            </div>
+
+            <!-- 10. 代码编辑器 -->
+            <div id="tab-code" class="content-section">
+                <div class="card p-4 h-[calc(100vh-120px)] flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center gap-4">
+                            <select id="codeFileSelect" onchange="loadFileContent()" class="input p-2 rounded font-mono text-sm w-64"><option value="">加载中...</option></select>
+                            <span class="text-xs text-gray-500 dark:text-slate-400">仅限白名单文件，修改后需保存</span>
+                        </div>
+                        <button onclick="saveFileContent()" id="saveCodeBtn" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">保存代码</button>
+                    </div>
+                    <div id="codeEditor" class="flex-1 border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden w-full"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="changePwdModal" class="modal">
+        <div class="card p-6 w-96">
+            <h3 class="font-bold text-lg mb-4">修改后台密码</h3>
+            <input type="password" id="newPwdInput" placeholder="输入新密码" class="input w-full p-2 rounded mb-4">
+            <div class="flex gap-2"><button onclick="savePassword()" class="flex-1 bg-blue-600 text-white py-2 rounded font-bold">保存</button><button onclick="document.getElementById('changePwdModal').classList.remove('active')" class="flex-1 bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white py-2 rounded font-bold">取消</button></div>
+        </div>
+    </div>
+
+    <div id="editLangModal" class="modal">
+        <div class="card p-6 w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <h3 class="font-bold text-lg mb-4">编辑语言字典 JSON</h3>
+            <input type="hidden" id="editLangCode">
+            <textarea id="editLangDict" class="input w-full flex-1 p-3 rounded font-mono text-sm mb-4" rows="15"></textarea>
+            <div class="flex gap-2 justify-end"><button onclick="saveLangDict()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold">保存</button><button onclick="document.getElementById('editLangModal').classList.remove('active')" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-6 py-2 rounded font-bold">取消</button></div>
+        </div>
+    </div>
+
     <script src="/js/admin.js"></script>
 </body>
 </html>
