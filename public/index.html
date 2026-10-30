@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>W-Airdrop - 8家顶级公司联合打造</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
 <style>
     .marquee-content { display: flex; white-space: nowrap; animation: scroll 30s linear infinite; }
     @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -160,9 +159,30 @@
     let countryCode = 'CN';
     let browserLang = navigator.language || navigator.userLanguage;
 
+    // ⚠️ 原代码缺失：轮播相关状态
+    let carouselArticles = [];
+    let carouselIndex = 0;
+    let carouselInterval = null;
+
+    /* ================= 指纹 & UA & IP ================= */
+
     function generateFingerprint() {
-        let fp = localStorage.getItem('wad_fp');
-        if (!fp) { fp = uuidv4(); localStorage.setItem('wad_fp', fp); }
+        let fp = null;
+        try { fp = localStorage.getItem('wad_fp'); } catch (e) {}
+        if (fp) return fp;
+
+        let rnd = '';
+        if (window.crypto && typeof crypto.randomUUID === 'function') {
+            rnd = crypto.randomUUID();
+        } else if (window.crypto && typeof crypto.getRandomValues === 'function') {
+            const buf = new Uint8Array(16);
+            crypto.getRandomValues(buf);
+            rnd = Array.from(buf, b => b.toString(16).padStart(2, '0')).join('');
+        } else {
+            rnd = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        }
+        fp = 'fp_' + rnd;
+        try { localStorage.setItem('wad_fp', fp); } catch (e) {}
         return fp;
     }
 
@@ -184,36 +204,65 @@
         return { device, os, osVersion, browser, browserVersion };
     }
 
+    // ⚠️ 修复：加 3 秒超时 + 状态码判断
     async function getIPInfo() {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 3000);
         try {
-            const res = await fetch('https://ipapi.co/json/');
+            const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+            if (!res.ok) throw new Error('ipapi ' + res.status);
             const data = await res.json();
-            return { ip: data.ip, country: data.country_code };
+            return { ip: data.ip || 'Unknown', country: data.country_code || 'Unknown' };
         } catch (e) {
-            return { ip: 'Unknown', country: 'CN' };
+            return { ip: 'Unknown', country: 'Unknown' };
+        } finally {
+            clearTimeout(timer);
         }
     }
 
+    // ⚠️ 修复：整段 try 包裹，generateFingerprint 不再让链路断掉
     async function recordVisit() {
-        const uaInfo = getUAInfo();
-        const ipInfo = await getIPInfo();
-        countryCode = ipInfo.country;
-
-        const payload = {
-            action: 'visit',
-            fingerprint: generateFingerprint(),
-            ...uaInfo, ip: ipInfo.ip, country: ipInfo.country, lang: currentLang
-        };
         try {
-            const res = await fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const uaInfo = getUAInfo();
+            const ipInfo = await getIPInfo();
+            countryCode = ipInfo.country;
+
+            const payload = {
+                action: 'visit',
+                fingerprint: generateFingerprint(),
+                ...uaInfo,
+                ip: ipInfo.ip,
+                country: ipInfo.country,
+                lang: currentLang
+            };
+
+            const res = await fetch('/api/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                keepalive: true
+            });
+            if (!res.ok) throw new Error('track status ' + res.status);
             const data = await res.json();
             trackId = data.id;
-        } catch (e) {}
+        } catch (e) {
+            console.warn('[track] recordVisit failed:', e);
+        }
     }
 
+    // ⚠️ 修复：sendBeacon 用 Blob 保证 Content-Type: application/json
     window.addEventListener('beforeunload', () => {
-        if (trackId) { navigator.sendBeacon('/api/track', JSON.stringify({ id: trackId, action: 'leave' })); }
+        if (!trackId) return;
+        try {
+            const blob = new Blob(
+                [JSON.stringify({ id: trackId, action: 'leave' })],
+                { type: 'application/json' }
+            );
+            navigator.sendBeacon('/api/track', blob);
+        } catch (e) {}
     });
+
+    /* ================= 语言 ================= */
 
     function autoMatchLanguage(langs) {
         const savedLang = localStorage.getItem('wad_lang');
@@ -236,10 +285,10 @@
             availableLangs = await res.json();
             const menu = document.getElementById('langMenu');
             menu.innerHTML = availableLangs.map(l => `<a href="#" onclick="changeLang('${l.code}', '${l.name}')" class="block px-4 py-2 text-sm hover:bg-gray-100">${l.flag} ${l.name}</a>`).join('');
-            
+
             const finalLang = autoMatchLanguage(availableLangs);
             const langObj = availableLangs.find(l => l.code === finalLang);
-            
+
             if (langObj) {
                 currentLang = langObj.code;
                 currentDict = langObj.dict;
@@ -252,7 +301,7 @@
 
     function toggleLangMenu() { document.getElementById('langMenu').classList.toggle('active'); }
     function changeLang(code, name) {
-        localStorage.setItem('wad_lang', code); 
+        localStorage.setItem('wad_lang', code);
         const langObj = availableLangs.find(l => l.code === code);
         if (!langObj) return;
         currentLang = code;
@@ -260,7 +309,7 @@
         document.getElementById('langMenu').classList.remove('active');
         document.getElementById('currentLangText').innerText = name;
         applyLanguage();
-        loadAllData(); 
+        loadAllData();
     }
 
     function applyLanguage() {
@@ -270,6 +319,8 @@
         });
         if (document.getElementById('surveyModal').classList.contains('active')) { loadSurveyQuestions(); }
     }
+
+    /* ================= 弹窗 / Safari 检测 ================= */
 
     function isSafari() {
         const ua = navigator.userAgent;
@@ -297,31 +348,33 @@
 
     function handleClaim() {
         const user = JSON.parse(localStorage.getItem('wad_user'));
-        if (user) { loadSurveyQuestions(); openModal('surveyModal'); } 
+        if (user) { loadSurveyQuestions(); openModal('surveyModal'); }
         else { triggerSafariCheck('register'); }
     }
+
+    /* ================= 数据加载 ================= */
 
     async function loadMarquee() {
         const res = await fetch('/api/marquee');
         const data = await res.json();
         let html = '';
-        [...data, ...data].forEach(item => { 
-            html += `<span class="inline-flex items-center gap-2 px-4"><i class="w-2 h-2 rounded-full bg-green-500"></i>${item.name} <b class="text-green-400">+${item.amount}</b></span>`; 
+        [...data, ...data].forEach(item => {
+            html += `<span class="inline-flex items-center gap-2 px-4"><i class="w-2 h-2 rounded-full bg-green-500"></i>${item.name} <b class="text-green-400">+${item.amount}</b></span>`;
         });
         document.getElementById('marqueeData').innerHTML = html;
     }
 
     async function loadNewsCarousel() {
-        const res = await fetch(`/api/articles/latest?lang=${currentLang}`); 
+        const res = await fetch(`/api/articles/latest?lang=${currentLang}`);
         let data = await res.json();
         if (!data || data.length === 0) { const fallbackRes = await fetch(`/api/articles/latest?lang=zh`); data = await fallbackRes.json(); }
-        
+
         const container = document.getElementById('newsCarousel');
         const dotsContainer = document.getElementById('carouselDots');
         if (!data || data.length === 0) { container.innerHTML = `<div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h2 class="text-xl font-bold mb-2">No News</h2></div>`; return; }
-        
+
         carouselArticles = data; carouselIndex = 0;
-        container.innerHTML = data.map((item, index) => `
+        container.innerHTML = data.map((item) => `
             <div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer">
                 <h2 class="text-xl font-bold mb-2 leading-snug">${item.title}</h2>
                 <p class="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-3">${item.summary}</p>
@@ -329,7 +382,7 @@
                 <div class="text-blue-600 font-medium text-sm text-center" data-i18n="readMore" onclick="window.location.href='/article.html?id=${item.id}'">查看全文</div>
             </div>
         `).join('');
-        
+
         dotsContainer.innerHTML = data.map((_, i) => `<button onclick="scrollToArticle(${i})" class="w-2.5 h-2.5 rounded-full transition-all ${i === 0 ? 'bg-blue-600 w-6' : 'bg-gray-300'}"></button>`).join('');
         applyLanguage(); updateDots(0); startCarousel();
     }
@@ -370,11 +423,11 @@
         const partners = await res.json();
         const grid = document.getElementById('partnersGrid');
         if (partners.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center text-gray-400">暂无合作商家</div>'; return; }
-        
+
         grid.innerHTML = partners.map(p => `
             <div class="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center justify-center gap-2 h-24 hover:shadow-md transition-shadow">
-                ${p.imageUrl 
-                    ? `<img src="${p.imageUrl}" alt="${p.name}" class="w-full h-10 object-contain">` 
+                ${p.imageUrl
+                    ? `<img src="${p.imageUrl}" alt="${p.name}" class="w-full h-10 object-contain">`
                     : `<div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">${p.name[0]}</div>`}
                 <span class="font-bold text-gray-600 text-xs truncate w-full text-center">${p.name}</span>
             </div>
@@ -405,11 +458,11 @@
         const checkedInputs = document.querySelectorAll('#surveyQuestions input[type="radio"]:checked');
         if(checkedInputs.length === 0) return alert('请回答所有问题');
         const answers = {}; checkedInputs.forEach(input => { answers[input.name] = input.value; });
-        
+
         const user = JSON.parse(localStorage.getItem('wad_user'));
-        await fetch('/api/survey', { 
-            method: 'POST', headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify({ answers, email: user ? user.email : '游客', fingerprint: generateFingerprint() }) 
+        await fetch('/api/survey', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ answers, email: user ? user.email : '游客', fingerprint: generateFingerprint() })
         });
         alert('提交成功'); closeModal('surveyModal');
     }
@@ -435,11 +488,11 @@
         const payPassword = document.getElementById('regPayPass').value;
         if(!email || !password || !confirmPass || !payPassword) return alert('请填写完整');
         if(password !== confirmPass) return alert('密码不一致');
-        
+
         const uaInfo = getUAInfo();
-        const res = await fetch('/api/register', { 
-            method: 'POST', headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify({ email, password, payPassword, fingerprint: generateFingerprint(), country: countryCode, lang: currentLang, ...uaInfo }) 
+        const res = await fetch('/api/register', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email, password, payPassword, fingerprint: generateFingerprint(), country: countryCode, lang: currentLang, ...uaInfo })
         });
         const data = await res.json();
         if (data.success) { alert('注册成功'); localStorage.setItem('wad_user', JSON.stringify(data.user)); window.location.href = '/dashboard.html'; } else alert(data.error);
@@ -474,7 +527,11 @@
         loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners();
     }
 
-    initLanguages(); updateAuthUI(); checkUrlParams(); recordVisit();
+    /* ================= 初始化 ================= */
+    updateAuthUI();
+    checkUrlParams();
+    // ⚠️ 修复：等语言字典就绪后再上报，lang 字段才准确；且 .finally 兜底
+    initLanguages().finally(recordVisit);
 </script>
 </body>
 </html>
