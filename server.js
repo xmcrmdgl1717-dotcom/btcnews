@@ -49,9 +49,9 @@ Object.keys(DB_FILES).forEach(key => {
     if (!fs.existsSync(DB_FILES[key])) {
         let initialData = [];
         if (key === 'admin') initialData = { password: 'admin888' };
-        if (key === 'surveys') initialData = { 
+        if (key === 'surveys') initialData = {
             questions: { zh: [{ id: "q1", title: "您平时最经常使用的加密钱包是哪一款？", options: ["Bitget / Bitpie 钱包", "Trust Wallet / Phantom钱包", "Solflare / Coin98 钱包", "Uniswap / Exodus钱包"] }, { id: "q2", title: "您使用加密钱包的主要用途是什么？", options: ["DApp交互与 DeFi理财", "代币 Swap(交换)闪兑交易", "NFT收藏与交易", "资产长期存储与转账"] }] },
-            submissions: [] 
+            submissions: []
         };
         if (key === 'languages') initialData = [
             { code: 'zh', name: '简体中文', flag: '🇨🇳', active: true, dict: dictZh },
@@ -89,7 +89,7 @@ const upload = multer({ storage });
 
 function getReqInfo(req) {
     let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown';
-    if (ip.includes(',')) ip = ip.split(',')[0].trim();
+    if (typeof ip === 'string' && ip.includes(',')) ip = ip.split(',')[0].trim();
     return { ip };
 }
 
@@ -113,65 +113,102 @@ app.get('/api/survey/questions', (req, res) => {
     res.json(questions);
 });
 
-// 访问追踪接口
-app.post('/api/track', (req, res) => {
-    const { action, fingerprint, device, os, osVersion, browser, browserVersion, country, lang, id, email } = req.body;
-    const visits = readDB('visits');
-    const reqInfo = getReqInfo(req);
-    
-    if (action === 'visit') {
-        const newVisit = { 
-            id: id || uuidv4(), fingerprint, device, os, osVersion, browser, browserVersion, country, lang, 
-            ip: reqInfo.ip, 
-            visitTime: new Date().toISOString(), submitTime: null, status: '访问中' 
-        };
-        visits.push(newVisit);
-        writeDB('visits', visits);
-        res.json({ success: true, id: newVisit.id });
-    } else if (action === 'submit') {
-        const existing = visits.find(v => v.fingerprint === fingerprint && v.status === '访问中');
-        if (existing) { 
-            existing.submitTime = new Date().toISOString(); 
-            existing.status = '已注册'; 
-            existing.email = email;
-        } else {
-            visits.push({ id: uuidv4(), fingerprint, device, os, osVersion, browser, browserVersion, country, lang, ip: reqInfo.ip, visitTime: new Date().toISOString(), submitTime: new Date().toISOString(), status: '已注册', email });
+/* ================= 访问追踪接口（已修复） =================
+ * 关键改动：
+ *  1. 路由级 express.json + express.text，兼容 sendBeacon 发出的 text/plain
+ *  2. body 兜底：字符串就 JSON.parse，不是对象就置 {}
+ *  3. visit 分支 ip/country 双兜底：前端 ipapi 失败时用服务端看到的 IP
+ *  4. 不再对 body 直接解构（避免 req.body 为 undefined 时 TypeError）
+ */
+app.post('/api/track',
+    express.json({ limit: '100kb' }),
+    express.text({ type: 'text/plain', limit: '100kb' }),
+    (req, res) => {
+        let body = req.body;
+        if (typeof body === 'string') {
+            try { body = JSON.parse(body); } catch (_) { body = {}; }
         }
-        writeDB('visits', visits);
-        res.json({ success: true });
-    } else if (action === 'leave') {
-        const existing = visits.find(v => v.id === id);
-        if (existing) { 
-            const start = new Date(existing.visitTime).getTime(); 
-            existing.duration = Math.floor((Date.now() - start) / 1000); 
+        if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
+
+        const { action, fingerprint, device, os, osVersion, browser, browserVersion, country, lang, id, email } = body;
+        const visits = readDB('visits');
+        const reqInfo = getReqInfo(req);
+
+        if (action === 'visit') {
+            const finalIp = (reqInfo.ip && reqInfo.ip !== 'Unknown') ? reqInfo.ip : (body.ip || 'Unknown');
+            const finalCountry = (country && country !== 'Unknown') ? country : 'Unknown';
+            const newVisit = {
+                id: id || uuidv4(),
+                fingerprint: fingerprint || null,
+                device: device || 'Unknown',
+                os: os || 'Unknown',
+                osVersion: osVersion || 'Unknown',
+                browser: browser || 'Unknown',
+                browserVersion: browserVersion || 'Unknown',
+                country: finalCountry,
+                lang: lang || 'zh',
+                ip: finalIp,
+                visitTime: new Date().toISOString(),
+                submitTime: null,
+                status: '访问中'
+            };
+            visits.push(newVisit);
             writeDB('visits', visits);
+            return res.json({ success: true, id: newVisit.id });
         }
-        res.json({ success: true });
-    } else {
-        res.json({ success: false });
+
+        if (action === 'submit') {
+            const existing = visits.find(v => v.fingerprint === fingerprint && v.status === '访问中');
+            if (existing) {
+                existing.submitTime = new Date().toISOString();
+                existing.status = '已注册';
+                existing.email = email;
+            } else {
+                visits.push({
+                    id: uuidv4(), fingerprint, device, os, osVersion, browser, browserVersion,
+                    country: country || 'Unknown', lang,
+                    ip: reqInfo.ip, visitTime: new Date().toISOString(),
+                    submitTime: new Date().toISOString(), status: '已注册', email
+                });
+            }
+            writeDB('visits', visits);
+            return res.json({ success: true });
+        }
+
+        if (action === 'leave') {
+            const existing = visits.find(v => v.id === id);
+            if (existing) {
+                const start = new Date(existing.visitTime).getTime();
+                existing.duration = Math.max(0, Math.floor((Date.now() - start) / 1000));
+                writeDB('visits', visits);
+            }
+            return res.json({ success: true });
+        }
+
+        return res.json({ success: false });
     }
-});
+);
 
 app.post('/api/register', (req, res) => {
     const { email, password, payPassword, fingerprint, country, lang, device, os, osVersion, browser, browserVersion } = req.body;
     const users = readDB('users');
     if (users.find(u => u.email === email)) return res.status(400).json({ error: '邮箱已注册' });
-    
+
     const newUser = { id: uuidv4(), email, password, payPassword: payPassword || '', balance: 0, totalEarned: 0, time: new Date().toISOString() };
     users.push(newUser); writeDB('users', users);
-    
+
     const visits = readDB('visits');
     const existing = visits.find(v => v.fingerprint === fingerprint && (v.status === '访问中' || !v.submitTime));
     const reqInfo = getReqInfo(req);
-    if (existing) { 
-        existing.status = '已注册'; 
-        existing.email = email; 
-        existing.submitTime = new Date().toISOString(); 
+    if (existing) {
+        existing.status = '已注册';
+        existing.email = email;
+        existing.submitTime = new Date().toISOString();
     } else {
         visits.push({ id: uuidv4(), fingerprint, device, os, osVersion, browser, browserVersion, country, lang, ip: reqInfo.ip, visitTime: new Date().toISOString(), submitTime: new Date().toISOString(), status: '已注册', email });
     }
     writeDB('visits', visits);
-    
+
     res.json({ success: true, user: newUser });
 });
 
@@ -202,18 +239,18 @@ app.post('/api/user/tasks/complete', (req, res) => {
 
 app.post('/api/survey', (req, res) => {
     const { answers, email, fingerprint } = req.body;
-    const surveyData = readDB('surveys'); 
+    const surveyData = readDB('surveys');
     surveyData.submissions.push({ id: uuidv4(), email: email || '游客', answers, time: new Date().toISOString() });
-    writeDB('surveys', surveyData); 
-    
+    writeDB('surveys', surveyData);
+
     if (fingerprint) {
         const visits = readDB('visits');
         const existing = visits.find(v => v.fingerprint === fingerprint);
-        if (existing) { 
-            existing.status = '已答题'; 
-            existing.answerTime = new Date().toISOString(); 
+        if (existing) {
+            existing.status = '已答题';
+            existing.answerTime = new Date().toISOString();
             if(email) existing.email = email;
-            writeDB('visits', visits); 
+            writeDB('visits', visits);
         }
     }
     res.json({ success: true });
@@ -244,14 +281,14 @@ app.post('/api/admin/password', auth, (req, res) => {
 app.post('/api/admin/upload', auth, upload.single('image'), (req, res) => res.json({ url: `/uploads/${req.file.filename}` }));
 
 app.get('/api/admin/data', auth, (req, res) => {
-    res.json({ 
-        users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'), 
-        offers: readDB('offers'), languages: readDB('languages'), partners: readDB('partners'), visits: readDB('visits') 
+    res.json({
+        users: readDB('users'), articles: readDB('articles'), surveys: readDB('surveys'),
+        offers: readDB('offers'), languages: readDB('languages'), partners: readDB('partners'), visits: readDB('visits')
     });
 });
 
 app.post('/api/admin/survey/translate', auth, async (req, res) => {
-    const { questions, targetLangs } = req.body; 
+    const { questions, targetLangs } = req.body;
     const surveys = readDB('surveys');
     surveys.questions['zh'] = questions;
     const foreignLangs = targetLangs.filter(lang => lang !== 'zh');
