@@ -105,17 +105,27 @@ function getReqInfo(req) {
 app.get('/api/languages', (req, res) => res.json(readDB('languages').filter(l => l.active)));
 app.get('/api/partners', (req, res) => res.json(readDB('partners')));
 
-// 获取评论：结合 settings 中的 reviewMode 判断是否按语言过滤
+//改动：/api/reviews 增加语言降级匹配 + reviewMode 兜底
 app.get('/api/reviews', (req, res) => {
     const reviews = readDB('reviews');
-    const settings = readDB('settings');
+    const settings = readDB('settings') || {};
+    const reviewMode = settings.reviewMode || 'all';
     const lang = req.query.lang;
-    
-    if (settings.reviewMode === 'match' && lang) {
-        return res.json(reviews.filter(r => r.lang === lang));
+
+    if (reviewMode === 'match' && lang) {
+        // 1) 精确匹配
+        let filtered = reviews.filter(r => r.lang === lang);
+        // 2) 主语言降级：en-GB / en-US -> en；zh-CN -> zh 等
+        if (filtered.length === 0) {
+            const mainLang = String(lang).split('-')[0];
+            filtered = reviews.filter(r => String(r.lang || '').split('-')[0] === mainLang);
+        }
+        return res.json(filtered);
     }
+    // 全部随机 / 未指定语言 → 返回全量
     res.json(reviews);
 });
+
 
 app.get('/api/marquee', (req, res) => {
     const users = readDB('users').slice(-10).reverse();
