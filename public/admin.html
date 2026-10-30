@@ -732,25 +732,64 @@
 
         renderVisitList();
 
-        // 问卷列表渲染
+        /* ===================== 问卷列表渲染（折叠版） ===================== */
+        const surveyQuestions = data.surveys.questions || {};
+        const availableSurveyLangs = Object.keys(surveyQuestions);
         let pubHtml = '';
-        Object.keys(data.surveys.questions || {}).forEach(lang => {
-            const langObj = data.languages.find(l => l.code === lang) || { name: lang, flag: '🌐' };
-            const count = data.surveys.questions[lang].length;
+
+        if (availableSurveyLangs.length === 0) {
+            pubHtml = '<div class="text-center text-gray-500 py-4">暂无发布的问卷</div>';
+        } else {
+            // 确定主语言（优先 zh，否则取第一个）
+            const mainLang = availableSurveyLangs.includes('zh') ? 'zh' : availableSurveyLangs[0];
+            const otherLangs = availableSurveyLangs.filter(l => l !== mainLang);
+
+            const mainLangObj = data.languages.find(l => l.code === mainLang) || { name: mainLang, flag: '🌐' };
+            const mainCount = surveyQuestions[mainLang].length;
+
             pubHtml += `
-                <div class="border border-gray-200 dark:border-slate-700 p-3 rounded mb-2 bg-white dark:bg-[#0f172a] flex justify-between items-center">
-                    <div>
-                        <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded font-bold uppercase">${lang}</span>
-                        <span class="text-sm ml-2">${langObj.flag} ${langObj.name}</span>
-                        <div class="text-xs text-gray-500 mt-1">${count} 道题目</div>
+                <div class="border border-gray-200 dark:border-slate-700 p-3 rounded mb-2 bg-white dark:bg-[#0f172a]">
+                    <!-- 主语言展示 -->
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded font-bold uppercase">${mainLang}</span>
+                            <span class="text-sm ml-2">${mainLangObj.flag} ${mainLangObj.name}</span>
+                            <div class="text-xs text-gray-500 mt-1">${mainCount} 道题目</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editSurveyLang('${mainLang}')" class="text-blue-500 text-xs hover:underline">编辑</button>
+                        </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="editSurveyLang('${lang}')" class="text-blue-500 text-xs hover:underline">编辑</button>
-                    </div>
+                    
+                    <!-- 其他语言折叠展示 -->
+                    ${otherLangs.length > 0 ? `
+                        <details class="mt-2">
+                            <summary class="text-xs text-gray-500 cursor-pointer">其他语言版本 (${otherLangs.length})</summary>
+                            <div class="mt-2 space-y-1 pl-2 border-l-2 border-gray-200 dark:border-slate-700">
+                                ${otherLangs.map(lang => {
+                                    const langObj = data.languages.find(l => l.code === lang) || { name: lang, flag: '🌐' };
+                                    const count = surveyQuestions[lang].length;
+                                    return `
+                                        <div class="flex justify-between bg-gray-50 dark:bg-slate-800 p-2 rounded items-center">
+                                            <div>
+                                                <span class="text-[10px] bg-gray-200 dark:bg-slate-700 px-1.5 py-0.5 rounded uppercase">${lang}</span>
+                                                <span class="text-sm ml-1">${langObj.flag} ${langObj.name}</span>
+                                                <span class="text-xs text-gray-500 ml-2">${count} 道题目</span>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button onclick="editSurveyLang('${lang}')" class="text-blue-500 text-xs hover:underline">编辑</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </details>
+                    ` : ''}
                 </div>
             `;
-        });
-        document.getElementById('surveyPublishedList').innerHTML = pubHtml || '<div class="text-center text-gray-500 py-4">暂无发布的问卷</div>';
+        }
+        document.getElementById('surveyPublishedList').innerHTML = pubHtml;
+        /* ===================== 问卷渲染结束 ===================== */
 
         // 用户提交记录
         document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `<tr><td class="p-3 font-medium">${s.email || '游客'}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${JSON.stringify(s.answers)}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${new Date(s.time).toLocaleString()}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-500">暂无记录</td></tr>';
@@ -785,9 +824,8 @@
         document.getElementById('languageList').innerHTML = data.languages.map(l => `<tr><td class="p-4 font-bold">${l.code}</td><td class="p-4">${l.flag} ${l.name}</td><td class="p-4"><button onclick="toggleLangStatus('${l.code}', ${l.active})" class="px-3 py-1 rounded text-xs font-bold ${l.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300'}">${l.active ? '启用中' : '已禁用'}</button></td><td class="p-4"><button onclick="openEditLang('${l.code}')" class="text-blue-500 hover:underline">编辑字典</button></td></tr>`).join('');
     }
 
-    /* ================= 评论管理（改造版） ================= */
+    /* ================= 评论管理 ================= */
     function populateReviewLangSelects(languages) {
-        // 1. 复选框（创建模式）
         const cbContainer = document.getElementById('reviewLangCheckboxes');
         if (cbContainer) {
             cbContainer.innerHTML = languages.filter(l => l.active).map(l => `
@@ -798,7 +836,6 @@
             `).join('');
         }
 
-        // 2. 单语言下拉（编辑模式）
         const langSel = document.getElementById('revLang');
         if (langSel) {
             const prev = langSel.value;
@@ -807,7 +844,6 @@
             if (prev) langSel.value = prev;
         }
 
-        // 3. 列表筛选下拉
         const filterSel = document.getElementById('reviewFilterLang');
         if (filterSel) {
             const prevFilter = filterSel.value;
@@ -827,7 +863,6 @@
         let filtered = reviews;
         if (filterLang !== 'all') filtered = filtered.filter(r => r.lang === filterLang);
 
-        // 条数展示
         const countEl = document.getElementById('reviewCount');
         if (countEl) {
             countEl.innerText = filterLang === 'all'
@@ -879,7 +914,6 @@
         document.getElementById('reviewSubmitBtn').innerText = '保存修改';
         document.getElementById('reviewCancelBtn').classList.remove('hidden');
 
-        // 切换到单语言模式
         document.getElementById('reviewLangCheckboxBox').classList.add('hidden');
         document.getElementById('reviewLangSelectBox').classList.remove('hidden');
 
@@ -895,7 +929,6 @@
         document.getElementById('reviewSubmitBtn').innerText = '智能翻译并发布';
         document.getElementById('reviewCancelBtn').classList.add('hidden');
 
-        // 切回多语言模式
         document.getElementById('reviewLangCheckboxBox').classList.remove('hidden');
         document.getElementById('reviewLangSelectBox').classList.add('hidden');
     }
@@ -909,7 +942,6 @@
         if (!text) return alert('请填写评论内容');
 
         if (id) {
-            // 编辑模式：单条更新
             const lang = document.getElementById('revLang').value;
             if (!lang) return alert('请选择语言');
             const res = await fetch(`/api/admin/reviews/${id}`, {
@@ -920,7 +952,6 @@
             if (res.ok) { resetReviewForm(); fetchData(); }
             else alert('操作失败');
         } else {
-            // 创建模式：多语言翻译发布
             const checkedLangs = Array.from(document.querySelectorAll('#reviewLangCheckboxes input:checked')).map(cb => cb.value);
             if (!checkedLangs.includes('zh')) checkedLangs.push('zh');
 
@@ -955,7 +986,6 @@
         fetchData();
     }
 
-    /* ====== 评论展示模式切换 ====== */
     function updateReviewModeButtons(mode) {
         const allBtn = document.getElementById('modeBtn-all');
         const matchBtn = document.getElementById('modeBtn-match');
