@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const { translateWithPolling, describeError } = require('./translator');
 
 // ==========================================
-// 强制注入的问卷多语言字典 (防止后台字典缺失)
+// 强制注入的问卷及弹窗多语言字典 (防止后台字典缺失)
 // ==========================================
 const forcedDicts = {
   zh: {
@@ -17,7 +17,20 @@ const forcedDicts = {
     surveyWalletTitle: "奖励接收钱包地址 (无需连接钱包)",
     surveyWalletDesc: "支持 Ethereum 或 Tron 链地址，奖励将在 24 小时内全自动统派发。",
     surveyWalletPlaceholder: "例如: 0x... 或 T...",
-    surveySubmitBtn: "提交问卷并领取奖励"
+    surveySubmitBtn: "提交问卷并领取奖励",
+    msgFillAll: "请填写完整",
+    msgPwdMismatch: "两次输入的密码不一致",
+    msgRegSuccess: "注册成功",
+    msgAnswerAll: "请回答所有问题",
+    msgSurveyPreparing: "问卷准备中，请稍后再试。",
+    msgSurveyFailed: "问卷加载失败",
+    msgEnterWallet: "请输入钱包地址才能领取奖励",
+    msgSubmitSuccess: "提交成功，奖励将尽快发放！",
+    msgNetError: "网络异常，请稍后再试",
+    msgNoReviews: "暂无评价",
+    msgNoPartners: "暂无品牌",
+    "邮箱已注册": "邮箱已注册",
+    "邮箱或密码错误": "邮箱或密码错误"
   },
   en: {
     surveyStep1Title: "Cryptocurrency User Habits Survey",
@@ -27,7 +40,20 @@ const forcedDicts = {
     surveyWalletTitle: "Reward Wallet Address (No Connection Required)",
     surveyWalletDesc: "Supports Ethereum or Tron addresses. Rewards will be distributed automatically within 24 hours.",
     surveyWalletPlaceholder: "E.g. 0x... or T...",
-    surveySubmitBtn: "Submit Survey & Claim Reward"
+    surveySubmitBtn: "Submit Survey & Claim Reward",
+    msgFillAll: "Please fill in all fields",
+    msgPwdMismatch: "Passwords do not match",
+    msgRegSuccess: "Registration successful",
+    msgAnswerAll: "Please answer all questions",
+    msgSurveyPreparing: "Survey is preparing, please try again later.",
+    msgSurveyFailed: "Failed to load survey",
+    msgEnterWallet: "Please enter a wallet address to claim rewards",
+    msgSubmitSuccess: "Submitted successfully, rewards will be distributed soon!",
+    msgNetError: "Network error, please try again later",
+    msgNoReviews: "No reviews yet",
+    msgNoPartners: "No partners yet",
+    "邮箱已注册": "Email already registered",
+    "邮箱或密码错误": "Invalid email or password"
   },
   vi: {
     surveyStep1Title: "Khảo sát thói quen người dùng tiền mã hóa",
@@ -37,7 +63,20 @@ const forcedDicts = {
     surveyWalletTitle: "Địa chỉ ví nhận thưởng (Không cần kết nối ví)",
     surveyWalletDesc: "Hỗ trợ địa chỉ chuỗi Ethereum hoặc Tron, phần thưởng sẽ được tự động phân phối trong vòng 24 giờ.",
     surveyWalletPlaceholder: "Ví dụ: 0x... hoặc T...",
-    surveySubmitBtn: "Gửi khảo sát & Nhận thưởng"
+    surveySubmitBtn: "Gửi khảo sát & Nhận thưởng",
+    msgFillAll: "Vui lòng điền đầy đủ thông tin",
+    msgPwdMismatch: "Mật khẩu không khớp",
+    msgRegSuccess: "Đăng ký thành công",
+    msgAnswerAll: "Vui lòng trả lời tất cả các câu hỏi",
+    msgSurveyPreparing: "Khảo sát đang chuẩn bị, vui lòng thử lại sau.",
+    msgSurveyFailed: "Tải khảo sát thất bại",
+    msgEnterWallet: "Vui lòng nhập địa chỉ ví để nhận thưởng",
+    msgSubmitSuccess: "Gửi thành công, phần thưởng sẽ sớm được phân phối!",
+    msgNetError: "Lỗi mạng, vui lòng thử lại sau",
+    msgNoReviews: "Chưa có đánh giá",
+    msgNoPartners: "Chưa có đối tác",
+    "邮箱已注册": "Email đã được đăng ký",
+    "邮箱或密码错误": "Sai email hoặc mật khẩu"
   },
   de: {
     surveyStep1Title: "Umfrage zu Krypto-Gewohnheiten",
@@ -47,7 +86,20 @@ const forcedDicts = {
     surveyWalletTitle: "Wallet-Adresse für Belohnungen (Keine Verbindung erforderlich)",
     surveyWalletDesc: "Unterstützt Ethereum- oder Tron-Adressen. Belohnungen werden innerhalb von 24 Stunden automatisch verteilt.",
     surveyWalletPlaceholder: "Z.B. 0x... oder T...",
-    surveySubmitBtn: "Umfrage absenden & Belohnung erhalten"
+    surveySubmitBtn: "Umfrage absenden & Belohnung erhalten",
+    msgFillAll: "Bitte füllen Sie alle Felder aus",
+    msgPwdMismatch: "Passwörter stimmen nicht überein",
+    msgRegSuccess: "Registrierung erfolgreich",
+    msgAnswerAll: "Bitte beantworten Sie alle Fragen",
+    msgSurveyPreparing: "Umfrage wird vorbereitet, bitte versuchen Sie es später noch einmal.",
+    msgSurveyFailed: "Umfrage konnte nicht geladen werden",
+    msgEnterWallet: "Bitte geben Sie eine Wallet-Adresse ein, um Belohnungen zu erhalten",
+    msgSubmitSuccess: "Erfolgreich übermittelt, Belohnungen werden in Kürze verteilt!",
+    msgNetError: "Netzwerkfehler, bitte versuchen Sie es später noch einmal",
+    msgNoReviews: "Noch keine Bewertungen",
+    msgNoPartners: "Noch keine Partner",
+    "邮箱已注册": "E-Mail bereits registriert",
+    "邮箱或密码错误": "Ungültige E-Mail oder Passwort"
   },
   ar: {
     surveyStep1Title: "استبيان عادات مستخدمي العملات المشفرة",
@@ -57,7 +109,20 @@ const forcedDicts = {
     surveyWalletTitle: "عنوان محفظة المكافآت (لا حاجة للاتصال)",
     surveyWalletDesc: "يدعم عناوين شبكة إيثيريوم أو ترون، وسيتم توزيع المكافآت تلقائياً خلال 24 ساعة.",
     surveyWalletPlaceholder: "مثال: 0x... أو T...",
-    surveySubmitBtn: "إرسال الاستبيان واستلام المكافأة"
+    surveySubmitBtn: "إرسال الاستبيان واستلام المكافأة",
+    msgFillAll: "يرجى ملء جميع الحقول",
+    msgPwdMismatch: "كلمات المرور غير متطابقة",
+    msgRegSuccess: "تم التسجيل بنجاح",
+    msgAnswerAll: "يرجى الإجابة على جميع الأسئلة",
+    msgSurveyPreparing: "الاستبيان قيد الإعداد، يرجى المحاولة لاحقاً.",
+    msgSurveyFailed: "فشل تحميل الاستبيان",
+    msgEnterWallet: "يرجى إدخال عنوان المحفظة للمطالبة بالمكافآت",
+    msgSubmitSuccess: "تم الإرسال بنجاح، سيتم توزيع المكافآت قريباً!",
+    msgNetError: "خطأ في الشبكة، يرجى المحاولة لاحقاً",
+    msgNoReviews: "لا توجد تقييمات بعد",
+    msgNoPartners: "لا يوجد شركاء بعد",
+    "邮箱已注册": "البريد الإلكتروني مسجل بالفعل",
+    "邮箱或密码错误": "البريد الإلكتروني أو كلمة المرور غير صحيحة"
   },
   es: {
     surveyStep1Title: "Encuesta de hábitos de usuarios de criptomonedas",
@@ -67,7 +132,20 @@ const forcedDicts = {
     surveyWalletTitle: "Dirección de billetera para recompensas (Sin conexión)",
     surveyWalletDesc: "Compatible con direcciones de Ethereum o Tron. Las recompensas se distribuirán automáticamente en 24 horas.",
     surveyWalletPlaceholder: "Ej: 0x... o T...",
-    surveySubmitBtn: "Enviar encuesta y reclamar recompensa"
+    surveySubmitBtn: "Enviar encuesta y reclamar recompensa",
+    msgFillAll: "Por favor complete todos los campos",
+    msgPwdMismatch: "Las contraseñas no coinciden",
+    msgRegSuccess: "Registro exitoso",
+    msgAnswerAll: "Por favor responda todas las preguntas",
+    msgSurveyPreparing: "La encuesta se está preparando, por favor intente más tarde.",
+    msgSurveyFailed: "Error al cargar la encuesta",
+    msgEnterWallet: "Por favor ingrese una dirección de billetera para reclamar recompensas",
+    msgSubmitSuccess: "¡Enviado con éxito, las recompensas se distribuirán pronto!",
+    msgNetError: "Error de red, por favor intente más tarde",
+    msgNoReviews: "Aún no hay reseñas",
+    msgNoPartners: "Aún no hay socios",
+    "邮箱已注册": "Correo electrónico ya registrado",
+    "邮箱或密码错误": "Correo electrónico o contraseña incorrectos"
   },
   pt: {
     surveyStep1Title: "Pesquisa de hábitos de usuários de criptomoedas",
@@ -77,7 +155,20 @@ const forcedDicts = {
     surveyWalletTitle: "Endereço da Carteira de Recompensas (Sem Conexão)",
     surveyWalletDesc: "Suporta endereços Ethereum ou Tron. As recompensas serão distribuídas automaticamente em 24 horas.",
     surveyWalletPlaceholder: "Ex: 0x... ou T...",
-    surveySubmitBtn: "Enviar questionário e resgatar recompensa"
+    surveySubmitBtn: "Enviar questionário e resgatar recompensa",
+    msgFillAll: "Por favor preencha todos os campos",
+    msgPwdMismatch: "As senhas não coincidem",
+    msgRegSuccess: "Registro bem-sucedido",
+    msgAnswerAll: "Por favor responda todas as perguntas",
+    msgSurveyPreparing: "A pesquisa está sendo preparada, tente novamente mais tarde.",
+    msgSurveyFailed: "Falha ao carregar a pesquisa",
+    msgEnterWallet: "Por favor insira um endereço de carteira para receber recompensas",
+    msgSubmitSuccess: "Enviado com sucesso, as recompensas serão distribuídas em breve!",
+    msgNetError: "Erro de rede, tente novamente mais tarde",
+    msgNoReviews: "Ainda não há avaliações",
+    msgNoPartners: "Ainda não há parceiros",
+    "邮箱已注册": "Email já registrado",
+    "邮箱或密码错误": "Email ou senha inválidos"
   },
   ko: {
     surveyStep1Title: "암호화폐 사용자 습관 설문조사",
@@ -87,7 +178,20 @@ const forcedDicts = {
     surveyWalletTitle: "보상 지갑 주소 (연결 불필요)",
     surveyWalletDesc: "이더리움 또는 트론 주소를 지원하며, 보상은 24시간 이내에 자동으로 지급됩니다.",
     surveyWalletPlaceholder: "예: 0x... 또는 T...",
-    surveySubmitBtn: "설문 제출 및 보상 받기"
+    surveySubmitBtn: "설문 제출 및 보상 받기",
+    msgFillAll: "모든 필드를 작성해주세요",
+    msgPwdMismatch: "비밀번호가 일치하지 않습니다",
+    msgRegSuccess: "회원가입 성공",
+    msgAnswerAll: "모든 질문에 답변해주세요",
+    msgSurveyPreparing: "설문조사를 준비 중입니다. 나중에 다시 시도해주세요.",
+    msgSurveyFailed: "설문조사 로드 실패",
+    msgEnterWallet: "보상을 받으려면 지갑 주소를 입력하세요",
+    msgSubmitSuccess: "성공적으로 제출되었습니다. 보상이 곧 지급됩니다!",
+    msgNetError: "네트워크 오류, 나중에 다시 시도해주세요",
+    msgNoReviews: "아직 리뷰가 없습니다",
+    msgNoPartners: "아직 파트너가 없습니다",
+    "邮箱已注册": "이미 등록된 이메일입니다",
+    "邮箱或密码错误": "이메일 또는 비밀번호가 잘못되었습니다"
   },
   uk: {
     surveyStep1Title: "Опитування щодо звичок користувачів криптовалют",
@@ -97,7 +201,20 @@ const forcedDicts = {
     surveyWalletTitle: "Адреса гаманця для винагород (Без підключення)",
     surveyWalletDesc: "Підтримуються адреси Ethereum або Tron. Винагороди будуть розподілені автоматично протягом 24 годин.",
     surveyWalletPlaceholder: "Напр.: 0x... або T...",
-    surveySubmitBtn: "Надіслати опитування та отримати винагороду"
+    surveySubmitBtn: "Надіслати опитування та отримати винагороду",
+    msgFillAll: "Будь ласка, заповніть усі поля",
+    msgPwdMismatch: "Паролі не збігаються",
+    msgRegSuccess: "Реєстрація успішна",
+    msgAnswerAll: "Будь ласка, дайте відповідь на всі запитання",
+    msgSurveyPreparing: "Опитування готується, будь ласка, спробуйте пізніше.",
+    msgSurveyFailed: "Не вдалося завантажити опитування",
+    msgEnterWallet: "Будь ласка, введіть адресу гаманця, щоб отримати винагороду",
+    msgSubmitSuccess: "Успішно надіслано, винагороди будуть розподілені найближчим часом!",
+    msgNetError: "Помилка мережі, будь ласка, спробуйте пізніше",
+    msgNoReviews: "Ще немає відгуків",
+    msgNoPartners: "Ще немає партнерів",
+    "邮箱已注册": "Електронна пошта вже зареєстрована",
+    "邮箱或密码错误": "Невірна електронна пошта або пароль"
   },
   tr: {
     surveyStep1Title: "Kripto Para Kullanıcı Alışkanlıkları Anketi",
@@ -107,7 +224,20 @@ const forcedDicts = {
     surveyWalletTitle: "Ödül Cüzdan Adresi (Bağlantı Gerekmez)",
     surveyWalletDesc: "Ethereum veya Tron adreslerini destekler, ödüller 24 saat içinde otomatik olarak dağıtılacaktır.",
     surveyWalletPlaceholder: "Örn: 0x... veya T...",
-    surveySubmitBtn: "Anketi Gönder ve Ödülü Al"
+    surveySubmitBtn: "Anketi Gönder ve Ödülü Al",
+    msgFillAll: "Lütfen tüm alanları doldurun",
+    msgPwdMismatch: "Şifreler eşleşmiyor",
+    msgRegSuccess: "Kayıt başarılı",
+    msgAnswerAll: "Lütfen tüm soruları cevaplayın",
+    msgSurveyPreparing: "Anket hazırlanıyor, lütfen daha sonra tekrar deneyin.",
+    msgSurveyFailed: "Anket yüklenemedi",
+    msgEnterWallet: "Ödülleri almak için lütfen bir cüzdan adresi girin",
+    msgSubmitSuccess: "Başarıyla gönderildi, ödüller yakında dağıtılacak!",
+    msgNetError: "Ağ hatası, lütfen daha sonra tekrar deneyin",
+    msgNoReviews: "Henüz yorum yok",
+    msgNoPartners: "Henüz ortak yok",
+    "邮箱已注册": "E-posta zaten kayıtlı",
+    "邮箱或密码错误": "Geçersiz e-posta veya şifre"
   }
 };
 // ==========================================
@@ -134,7 +264,6 @@ const DB_FILES = {
 };
 
 // ================= 完整全量多语言字典 =================
-// 已根据要求修改文案：去除了"8家"，修改了safari提示、hero文案和footer文案
 const dictZh = { 
     realtime: "实时", login: "登录", logout: "退出", registerTitle: "注册账号", registerBtn: "注册", registerDesc: "加入 W-Airdrop，几分钟即可免费领取。", 
     heroTitle: "参与钱包安全填表 全球顶级公司联合打造 免费空投发送333ETH奖励", 
