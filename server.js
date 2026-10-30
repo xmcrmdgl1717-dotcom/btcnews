@@ -330,33 +330,36 @@ app.put('/api/admin/article/group/:groupId', auth, async (req, res) => {
     const foreignLangs = targetLangs.filter(l => l !== sourceLang);
     
     try {
-        for (let lang of foreignLangs) {
-            const googleLang = lang.split('-')[0];
-            const [tTitle, tSummary, tContent] = await Promise.all([
-                translate(title, { to: googleLang }), 
-                translate(summary, { to: googleLang }), 
-                translate(content, { to: googleLang })
-            ]);
-            
-            let existing = groupArticles.find(a => a.lang === lang);
-            if (existing) {
-                existing.title = tTitle.text;
-                existing.summary = tSummary.text;
-                existing.content = tContent.text;
-                existing.coverUrl = coverUrl;
-                existing.time = new Date().toISOString();
-            } else {
-                articles.push({ id: uuidv4(), groupId, lang, title: tTitle.text, summary: tSummary.text, content: tContent.text, coverUrl, time: new Date().toISOString() });
-            }
-            await new Promise(r => setTimeout(r, 500));
+    for (let lang of foreignLangs) {
+        const googleLang = lang.split('-')[0];
+        const [tTitle, tSummary, tContent] = await Promise.all([
+            translateWithPolling(title, googleLang, sourceLang),
+            translateWithPolling(summary, googleLang, sourceLang),
+            translateWithPolling(content, googleLang, sourceLang)
+        ]);
+        
+        let existing = groupArticles.find(a => a.lang === lang);
+        if (existing) {
+            existing.title = tTitle;
+            existing.summary = tSummary;
+            existing.content = tContent;
+            existing.coverUrl = coverUrl;
+            existing.time = new Date().toISOString();
+        } else {
+            articles.push({ id: uuidv4(), groupId, lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });
         }
-        writeDB('articles', articles);
-        res.json({ success: true });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: '翻译失败' });
+        await new Promise(r => setTimeout(r, 500));
     }
-});
+    writeDB('articles', articles);
+    res.json({ success: true });
+} catch (e) {
+    console.error('[文章整组] 翻译失败:', e);
+    res.status(502).json({
+        error: '翻译失败',
+        reason: describeError(e),
+        details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
+    });
+}
 
 // 新增：问卷删除整组接口
 app.delete('/api/admin/survey/group', auth, (req, res) => {
