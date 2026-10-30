@@ -253,21 +253,23 @@ function getReqInfo(req) {
 // ================= 前台 API =================
 app.get('/api/languages', async (req, res) => {
     try {
-        // 1. 获取原本的语言数据
-        let languages = await db.getLanguages(); // <-- 这里保留你原本获取数据的代码
+        // 1. 【重要】这里必须换成你原本读取数据的代码！
+        // 例如：如果你原本是用 fs 读取文件，就保留你原来的写法
+        // 如果你原本就是直接用 require('./languages.json') 读的，就写你原来的。
+        // 假设你的变量名叫 languagesData：
+        let languages = ... ; // <-- 这里填你原本的获取逻辑，不要用 db.getLanguages()
 
-        // 2. 强制注入逻辑：遍历语言，覆盖对应字段
+        // 2. 强制注入逻辑（保持原样）
         if (Array.isArray(languages)) {
             languages = languages.map(lang => {
                 if (forcedDicts[lang.code]) {
-                    // 确保原本就有 dict 对象，然后强行把 forcedDicts 里的数据合并进去（覆盖同名键）
                     lang.dict = Object.assign({}, lang.dict || {}, forcedDicts[lang.code]);
                 }
                 return lang;
             });
         }
 
-        // 3. 返回覆盖后的数据
+        // 3. 返回数据
         res.json(languages);
 
     } catch (error) {
