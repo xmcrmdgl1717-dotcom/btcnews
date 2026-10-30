@@ -118,6 +118,12 @@
         <div class="space-y-3" id="topUsersList"></div>
     </div>
 
+    <!-- 新增：用户怎么说 -->
+    <div id="reviews" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
+        <h2 class="text-2xl font-bold mb-6" data-i18n="reviewsTitle"></h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="reviewsList"></div>
+    </div>
+
     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold mb-2" data-i18n="faqTitle"></h2>
         <p class="text-sm text-gray-500 mb-6" data-i18n="faqDesc"></p>
@@ -159,12 +165,52 @@
     let countryCode = 'CN';
     let browserLang = navigator.language || navigator.userLanguage;
 
-    // ⚠️ 原代码缺失：轮播相关状态
     let carouselArticles = [];
     let carouselIndex = 0;
     let carouselInterval = null;
 
-    /* ================= 指纹 & UA & IP ================= */
+    // ================= 用户评价多语言数据 =================
+    const reviewsData = {
+        'zh': [
+            { text: "毫无疑问是最好的 GPT 网站。我已经使用了大约 2 个月，它是我寻找被动收入报价的首选起点。甚至在其中一个报价墙试图对我的账户进行退款后，他们也兑现了我赚到的现金。", name: "Matthew Betancourt" },
+            { text: "Gain.gg 是一个通过做调查和看视频等简单任务赚取小额奖励的好网站。该网站易于使用，付款很快就能到达 PayPal 或加密货币。对于学生或任何想在业余时间赚点外快的人来说，这是一个不错的选择。", name: "Parvez Shah" },
+            { text: "Gain 是一个很棒的网站。我没有遇到任何问题，管理员总是很积极，聊天通常很有趣，而且他们收集了大量不同的资源供你赚取。我只是在休息时间被动地在这个月赚了超过 350 美元！强烈推荐给任何人。", name: "Joe" },
+            { text: "我见过的最好的 GPT 网站，他们甚至不要求验证就可以提现。樱桃是最好的赚钱方式，因为即使你的调查被拒绝，他们仍然会付钱给你并让你完成调查。强烈推荐。", name: "Cristiano Raimondo" }
+        ],
+        'en-US': [
+            { text: "The Best GPT site without question. I've been using it for about 2 months and it is my go-to starting point for figuring what offers I'll work on as passive income. They even honored cash I earned after one of the offerwalls attempted a chargeback on my account.", name: "Matthew Betancourt" },
+            { text: "Gain.gg is a good website for earning small rewards by doing simple tasks like surveys and watching videos. The site is easy to use and payments come quickly to PayPal or crypto. It's a nice option for students or anyone looking to earn a little extra in their free time.", name: "Parvez Shah" },
+            { text: "Gain is a fantastic website. I haven't had any issues, mods are always responsive, chat is usually pretty funny, and they collect a ton of different resources for you to earn. I've made over $350 this month just passively in my downtime! Would highly recommend to anyone.", name: "Joe" },
+            { text: "Best GPT website i've ever seen, they don't even ask for verification to withdraw money. Cherries is the best way to earn because even if you are rejected by surveys they still pay you and let you finish the survey. Very recommended.", name: "Cristiano Raimondo" }
+        ]
+    };
+
+    function renderReviews() {
+        const listEl = document.getElementById('reviewsList');
+        if (!listEl) return;
+        
+        // 默认取英文，如果有当前语言的翻译就用当前语言，其他语言统一用英文
+        let data = reviewsData[currentLang] || reviewsData['en-US'];
+        let html = '';
+        
+        data.forEach(item => {
+            html += `
+                <div class="border border-gray-100 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="text-yellow-400 text-sm mb-3 tracking-widest">★★★★★</div>
+                        <p class="text-gray-600 text-sm mb-4 leading-relaxed italic">"${item.text}"</p>
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-900 text-sm">${item.name}</div>
+                        <div class="text-xs text-gray-500 mt-1" data-i18n="activeUser">${currentDict.activeUser || '活跃用户'}</div>
+                    </div>
+                </div>
+            `;
+        });
+        listEl.innerHTML = html;
+    }
+
+    // ================= 基础功能 =================
 
     function generateFingerprint() {
         let fp = null;
@@ -204,7 +250,6 @@
         return { device, os, osVersion, browser, browserVersion };
     }
 
-    // ⚠️ 修复：加 3 秒超时 + 状态码判断
     async function getIPInfo() {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 3000);
@@ -220,7 +265,6 @@
         }
     }
 
-    // ⚠️ 修复：整段 try 包裹，generateFingerprint 不再让链路断掉
     async function recordVisit() {
         try {
             const uaInfo = getUAInfo();
@@ -250,7 +294,6 @@
         }
     }
 
-    // ⚠️ 修复：sendBeacon 用 Blob 保证 Content-Type: application/json
     window.addEventListener('beforeunload', () => {
         if (!trackId) return;
         try {
@@ -310,6 +353,7 @@
         document.getElementById('currentLangText').innerText = name;
         applyLanguage();
         loadAllData();
+        renderReviews(); // 切换语言时更新评价
     }
 
     function applyLanguage() {
@@ -524,13 +568,11 @@
     }
 
     function loadAllData() {
-        loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners();
+        loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners(); renderReviews();
     }
 
-    /* ================= 初始化 ================= */
     updateAuthUI();
     checkUrlParams();
-    // ⚠️ 修复：等语言字典就绪后再上报，lang 字段才准确；且 .finally 兜底
     initLanguages().finally(recordVisit);
 </script>
 </body>
