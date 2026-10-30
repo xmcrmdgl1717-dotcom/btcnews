@@ -11,7 +11,7 @@ const { translateWithPolling, describeError } = require('./translator');
 const forcedDicts = {
   zh: {
     surveyStep1Title: "用户习惯请您认真填写",
-    surveyStep2Title: "加密货币市场交易调查",
+    surveyStep2Title: "用户习惯请您认真填写",
     surveyDesc: "预计耗时: 2 分钟 | 提交即具空投资格",
     surveyNextBtn: "下一步",
     surveyWalletTitle: "奖励接收钱包地址 (无需连接钱包)",
@@ -34,7 +34,7 @@ const forcedDicts = {
   },
   en: {
     surveyStep1Title: "Please fill out the user habits survey carefully",
-    surveyStep2Title: "Crypto Market Trading Survey",
+    surveyStep2Title: "Please fill out the user habits survey carefully",
     surveyDesc: "Estimated time: 2 minutes | Submit to qualify for airdrop",
     surveyNextBtn: "Next Step",
     surveyWalletTitle: "Reward Wallet Address (No Connection Required)",
@@ -57,7 +57,7 @@ const forcedDicts = {
   },
   vi: {
     surveyStep1Title: "Vui lòng điền cẩn thận thói quen người dùng",
-    surveyStep2Title: "Khảo sát giao dịch thị trường tiền mã hóa",
+    surveyStep2Title: "Vui lòng điền cẩn thận thói quen người dùng",
     surveyDesc: "Thời gian ước tính: 2 phút | Gửi để đủ điều kiện nhận airdrop",
     surveyNextBtn: "Bước tiếp theo",
     surveyWalletTitle: "Địa chỉ ví nhận thưởng (Không cần kết nối ví)",
@@ -80,7 +80,7 @@ const forcedDicts = {
   },
   de: {
     surveyStep1Title: "Bitte füllen Sie die Umfrage zu Benutzergewohnheiten sorgfältig aus",
-    surveyStep2Title: "Umfrage zum Krypto-Markthandel",
+    surveyStep2Title: "Bitte füllen Sie die Umfrage zu Benutzergewohnheiten sorgfältig aus",
     surveyDesc: "Geschätzte Zeit: 2 Minuten | Absenden, um sich für den Airdrop zu qualifizieren",
     surveyNextBtn: "Nächster Schritt",
     surveyWalletTitle: "Wallet-Adresse für Belohnungen (Keine Verbindung erforderlich)",
@@ -103,7 +103,7 @@ const forcedDicts = {
   },
   ar: {
     surveyStep1Title: "يرجى ملء عادات المستخدم بعناية",
-    surveyStep2Title: "استبيان تداول سوق العملات المشفرة",
+    surveyStep2Title: "يرجى ملء عادات المستخدم بعناية",
     surveyDesc: "الوقت المقدر: دقيقتان | أرسل لتكون مؤهلاً للإيردروب",
     surveyNextBtn: "الخطوة التالية",
     surveyWalletTitle: "عنوان محفظة المكافآت (لا حاجة للاتصال)",
@@ -126,7 +126,7 @@ const forcedDicts = {
   },
   es: {
     surveyStep1Title: "Por favor complete cuidadosamente los hábitos de usuario",
-    surveyStep2Title: "Encuesta de comercio en el mercado cripto",
+    surveyStep2Title: "Por favor complete cuidadosamente los hábitos de usuario",
     surveyDesc: "Tiempo estimado: 2 minutos | Envía para calificar para el airdrop",
     surveyNextBtn: "Siguiente paso",
     surveyWalletTitle: "Dirección de billetera para recompensas (Sin conexión)",
@@ -149,7 +149,7 @@ const forcedDicts = {
   },
   pt: {
     surveyStep1Title: "Por favor preencha os hábitos do usuário com atenção",
-    surveyStep2Title: "Pesquisa de negociação no mercado cripto",
+    surveyStep2Title: "Por favor preencha os hábitos do usuário com atenção",
     surveyDesc: "Tempo estimado: 2 minutos | Envie para se qualificar para o airdrop",
     surveyNextBtn: "Próximo passo",
     surveyWalletTitle: "Endereço da Carteira de Recompensas (Sem Conexão)",
@@ -172,7 +172,7 @@ const forcedDicts = {
   },
   ko: {
     surveyStep1Title: "사용자 습관을 주의 깊게 작성해주세요",
-    surveyStep2Title: "암호화폐 시장 거래 설문조사",
+    surveyStep2Title: "사용자 습관을 주의 깊게 작성해주세요",
     surveyDesc: "예상 소요 시간: 2분 | 제출 시 에어드롭 자격 부여",
     surveyNextBtn: "다음 단계",
     surveyWalletTitle: "보상 지갑 주소 (연결 불필요)",
@@ -195,7 +195,7 @@ const forcedDicts = {
   },
   uk: {
     surveyStep1Title: "Будь ласка, уважно заповніть звички користувача",
-    surveyStep2Title: "Опитування щодо торгівлі на крипторинку",
+    surveyStep2Title: "Будь ласка, уважно заповніть звички користувача",
     surveyDesc: "Орієнтовний час: 2 хвилини | Надішліть, щоб отримати право на аірдроп",
     surveyNextBtn: "Наступний крок",
     surveyWalletTitle: "Адреса гаманця для винагород (Без підключення)",
@@ -218,7 +218,7 @@ const forcedDicts = {
   },
   tr: {
     surveyStep1Title: "Lütfen kullanıcı alışkanlıklarını dikkatlice doldurun",
-    surveyStep2Title: "Kripto Pazarı İşlem Anketi",
+    surveyStep2Title: "Lütfen kullanıcı alışkanlıklarını dikkatlice doldurun",
     surveyDesc: "Tahmini süre: 2 dakika | Airdrop için gönderin",
     surveyNextBtn: "Sonraki Adım",
     surveyWalletTitle: "Ödül Cüzdan Adresi (Bağlantı Gerekmez)",
