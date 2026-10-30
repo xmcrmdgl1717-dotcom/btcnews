@@ -6,7 +6,6 @@ let availableLangs = [];
 let trackId = null;
 let countryCode = 'CN';
 let browserLang = navigator.language || navigator.userLanguage;
-
 let carouselArticles = [];
 let carouselIndex = 0;
 let carouselInterval = null;
@@ -14,38 +13,26 @@ let currentSurveyStep = 1;
 let ipInfoPromise = null;
 
 function fetchIPInfo() {
-    if (!ipInfoPromise) {
-        ipInfoPromise = getIPInfo().catch(() => ({ ip: 'Unknown', country: 'Unknown' }));
-    }
+    if (!ipInfoPromise) ipInfoPromise = getIPInfo().catch(() => ({ ip: 'Unknown', country: 'Unknown' }));
     return ipInfoPromise;
 }
 
 function renderReviews(reviews) {
     const listEl = document.getElementById('reviewsList');
     if (!listEl) return;
-
     if (!reviews || reviews.length === 0) {
         listEl.innerHTML = `<div class="text-center text-gray-500 py-4 col-span-2">${currentDict.msgNoReviews || '暂无评价'}</div>`;
         return;
     }
-
     let shuffled = [...reviews].sort(() => 0.5 - Math.random());
     let selected = shuffled.slice(0, 4);
-
     let html = '';
     selected.forEach(item => {
         let starsHtml = '';
         for(let i=0; i<item.stars; i++) starsHtml += '★';
-
-        html += `
-            <div class="border border-gray-100 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
-                <div>
-                    <div class="text-yellow-400 text-sm mb-3 tracking-widest">${starsHtml}</div>
-                    <p class="text-gray-600 text-sm mb-4 leading-relaxed italic">"${item.text}"</p>
-                </div>
-                <div><div class="font-bold text-gray-900 text-sm">${item.name}</div></div>
-            </div>
-        `;
+        html += `<div class="border border-gray-100 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
+            <div><div class="text-yellow-400 text-sm mb-3 tracking-widest">${starsHtml}</div><p class="text-gray-600 text-sm mb-4 leading-relaxed italic">"${item.text}"</p></div>
+            <div><div class="font-bold text-gray-900 text-sm">${item.name}</div></div></div>`;
     });
     listEl.innerHTML = html;
 }
@@ -85,12 +72,10 @@ async function getIPInfo() {
     const timer = setTimeout(() => controller.abort(), 3000);
     try {
         const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
-        if (!res.ok) throw new Error('ipapi ' + res.status);
+        if (!res.ok) throw new Error('ipapi');
         const data = await res.json();
         return { ip: data.ip || 'Unknown', country: data.country_code || 'Unknown' };
-    } catch (e) {
-        return { ip: 'Unknown', country: 'Unknown' };
-    } finally { clearTimeout(timer); }
+    } catch (e) { return { ip: 'Unknown', country: 'Unknown' }; } finally { clearTimeout(timer); }
 }
 
 async function recordVisit() {
@@ -100,7 +85,7 @@ async function recordVisit() {
         countryCode = ipInfo.country;
         const payload = { action: 'visit', fingerprint: generateFingerprint(), ...uaInfo, ip: ipInfo.ip, country: ipInfo.country, lang: currentLang };
         const res = await fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), keepalive: true });
-        if (!res.ok) throw new Error('track status ' + res.status);
+        if (!res.ok) throw new Error('track status');
         const data = await res.json();
         trackId = data.id;
     } catch (e) {}
@@ -141,7 +126,6 @@ async function initLanguages() {
         }
         applyLanguage();
         loadAllData();
-
         fetchIPInfo().then(ipInfo => {
             countryCode = ipInfo.country;
             if (localStorage.getItem('wad_lang')) return;
@@ -155,7 +139,7 @@ async function initLanguages() {
             applyLanguage();
             loadAllData();
         });
-    } catch (e) { console.error('语言加载失败', e); }
+    } catch (e) {}
 }
 
 function toggleLangMenu() { document.getElementById('langMenu').classList.toggle('active'); }
@@ -163,12 +147,10 @@ function changeLang(code, name) {
     localStorage.setItem('wad_lang', code);
     const langObj = availableLangs.find(l => l.code === code);
     if (!langObj) return;
-    currentLang = code;
-    currentDict = langObj.dict;
+    currentLang = code; currentDict = langObj.dict;
     document.getElementById('langMenu').classList.remove('active');
     document.getElementById('currentLangText').innerText = name;
-    applyLanguage();
-    loadAllData();
+    applyLanguage(); loadAllData();
 }
 
 function applyLanguage() {
@@ -183,88 +165,37 @@ function applyLanguage() {
     if (document.getElementById('surveyModal').classList.contains('active')) { loadSurveyQuestions(); }
 }
 
-function isIOS() {
-    const ua = navigator.userAgent;
-    return /iPhone|iPad|iPod/.test(ua) && !window.MSStream;
-}
-
-function isSafari() {
-    if (!isIOS()) return false;
-    const ua = navigator.userAgent;
-    return /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|MQQBrowser|MicroMessenger|QQ\/|Weibo|AlipayClient/.test(ua);
-}
+function isIOS() { return /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream; }
+function isSafari() { return isIOS() && /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|MQQBrowser|MicroMessenger|QQ\/|Weibo|AlipayClient/.test(navigator.userAgent); }
 
 function triggerSafariCheck(action, url = '') {
-    if (!isSafari()) {
-        openModal('safariModal');
-        return;
-    }
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
-    if (action === 'login') {
-        if (user) window.location.href = 'dashboard.html';
-        else openModal('loginModal');
-    } else if (action === 'link' && url) {
-        if (!user) openModal('loginModal');
-        else window.location.href = url;
-    }
+    if (!isSafari()) { openModal('safariModal'); return; }
+    let user = null; try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+    if (action === 'login') { if (user) window.location.href = 'dashboard.html'; else openModal('loginModal'); } 
+    else if (action === 'link' && url) { if (!user) openModal('loginModal'); else window.location.href = url; }
 }
 
 function handleClaim() {
-    if (!isSafari()) {
-        openModal('safariModal');
-        return;
-    }
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
-    if (user) openSurvey();
-    else openModal('registerModal');
+    if (!isSafari()) { openModal('safariModal'); return; }
+    let user = null; try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+    if (user) openSurvey(); else openModal('registerModal');
 }
 
 function checkLoginForLeaderboard(event) {
-    if (!isSafari()) {
-        event.preventDefault();
-        openModal('safariModal');
-        return;
-    }
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
-    if (!user) {
-        event.preventDefault();
-        openModal('loginModal');
-    }
+    if (!isSafari()) { event.preventDefault(); openModal('safariModal'); return; }
+    let user = null; try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+    if (!user) { event.preventDefault(); openModal('loginModal'); }
 }
 
 function checkLoginForArticle(event, url) {
-    if (!isSafari()) {
-        event.preventDefault();
-        openModal('safariModal');
-        return;
-    }
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
-    if (!user) {
-        event.preventDefault();
-        openModal('loginModal');
-    } else {
-        window.location.href = url;
-    }
+    if (!isSafari()) { event.preventDefault(); openModal('safariModal'); return; }
+    let user = null; try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+    if (!user) { event.preventDefault(); openModal('loginModal'); } else window.location.href = url;
 }
 
 function openModal(id) { document.getElementById(id).classList.add('active'); }
-
-function closeModal(id) { 
-    if (id === 'surveyModal' && currentSurveyStep === 3) {
-        const addr = document.getElementById('walletAddressInput').value.trim();
-        if (!addr) return;
-    }
-    document.getElementById(id).classList.remove('active'); 
-}
-
-function setSafariLink() {
-    const input = document.getElementById('safariLinkInput');
-    if (input) input.value = window.location.origin + window.location.pathname;
-}
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function setSafariLink() { const input = document.getElementById('safariLinkInput'); if (input) input.value = window.location.origin + window.location.pathname; }
 
 async function loadSystemSettings() {
     try {
@@ -272,26 +203,21 @@ async function loadSystemSettings() {
         const data = await res.json();
         if (data && data.safariLogo) {
             document.getElementById('defaultSafariSvg').classList.add('hidden');
-            const customImg = document.getElementById('customSafariLogo');
-            customImg.src = data.safariLogo;
-            customImg.classList.remove('hidden');
+            const img = document.getElementById('customSafariLogo');
+            img.src = data.safariLogo; img.classList.remove('hidden');
         }
     } catch(e) {}
 }
 
-function copyLink() { 
+function copyLink() {
     const input = document.getElementById('safariLinkInput');
     if (input) {
         navigator.clipboard.writeText(input.value).then(() => {
             document.getElementById('copyMsg').classList.remove('hidden');
-            setTimeout(() => { document.getElementById('copyMsg').classList.add('hidden'); }, 2000);
-        }).catch(() => {});
-    } else {
-        navigator.clipboard.writeText(window.location.href); 
-        document.getElementById('copyMsg').classList.remove('hidden'); 
+            setTimeout(() => document.getElementById('copyMsg').classList.add('hidden'), 2000);
+        });
     }
 }
-
 function switchToLogin() { closeModal('registerModal'); openModal('loginModal'); }
 function switchToRegister() { closeModal('loginModal'); openModal('registerModal'); }
 
@@ -307,22 +233,16 @@ async function loadMarquee() {
     const res = await fetch('/api/marquee');
     const data = await res.json();
     let html = '';
-    [...data, ...data].forEach(item => {
-        html += `<span class="inline-flex items-center gap-2 px-4"><i class="w-2 h-2 rounded-full bg-green-500"></i>${item.name} <b class="text-green-400">+${item.amount}</b></span>`;
-    });
+    [...data, ...data].forEach(item => { html += `<span class="inline-flex items-center gap-2 px-4"><i class="w-2 h-2 rounded-full bg-green-500"></i>${item.name} <b class="text-green-400">+${item.amount}</b></span>`; });
     document.getElementById('marqueeData').innerHTML = html;
 }
 
 async function loadNewsCarousel() {
-    const res = await fetch(`/api/articles/latest?lang=${currentLang}`);
-    let data = await res.json();
-    if (!data || data.length === 0) { const fallbackRes = await fetch(`/api/articles/latest?lang=zh`); data = await fallbackRes.json(); }
+    let data = await (await fetch(`/api/articles/latest?lang=${currentLang}`)).json();
+    if (!data || data.length === 0) { data = await (await fetch(`/api/articles/latest?lang=zh`)).json(); }
     const container = document.getElementById('newsCarousel');
     const dotsContainer = document.getElementById('carouselDots');
-    if (!data || data.length === 0) { 
-        container.innerHTML = `<div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h2 class="text-xl font-bold mb-2">No News</h2></div>`; 
-        return; 
-    }
+    if (!data || data.length === 0) { container.innerHTML = `<div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h2 class="text-xl font-bold mb-2">No News</h2></div>`; return; }
     carouselArticles = data; carouselIndex = 0;
     container.innerHTML = data.map((item) => `
         <div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -336,80 +256,44 @@ async function loadNewsCarousel() {
     applyLanguage(); updateDots(0); startCarousel();
 }
 
-function startCarousel() {
-    if (carouselInterval) clearInterval(carouselInterval);
-    if (carouselArticles.length <= 1) return;
-    carouselInterval = setInterval(() => { let nextIndex = (carouselIndex + 1) % carouselArticles.length; scrollToArticle(nextIndex); }, 4000);
-}
-
-function scrollToArticle(index) {
-    const container = document.getElementById('newsCarousel');
-    const width = container.offsetWidth;
-    container.scrollTo({ left: width * index, behavior: 'smooth' });
-    updateDots(index);
-}
-
+function startCarousel() { if (carouselInterval) clearInterval(carouselInterval); if (carouselArticles.length <= 1) return; carouselInterval = setInterval(() => { scrollToArticle((carouselIndex + 1) % carouselArticles.length); }, 4000); }
+function scrollToArticle(index) { const container = document.getElementById('newsCarousel'); container.scrollTo({ left: container.offsetWidth * index, behavior: 'smooth' }); updateDots(index); }
 function updateDots(index) {
     carouselIndex = index;
     const dots = document.getElementById('carouselDots').children;
-    for (let i = 0; i < dots.length; i++) {
-        if (i === index) dots[i].className = 'w-2.5 h-2.5 rounded-full transition-all bg-blue-600 w-6';
-        else dots[i].className = 'w-2.5 h-2.5 rounded-full transition-all bg-gray-300';
-    }
+    for (let i = 0; i < dots.length; i++) { dots[i].className = (i === index) ? 'w-2.5 h-2.5 rounded-full transition-all bg-blue-600 w-6' : 'w-2.5 h-2.5 rounded-full transition-all bg-gray-300'; }
 }
 
 async function loadPartners() {
-    const res = await fetch('/api/partners');
-    const partners = await res.json();
+    const partners = await (await fetch('/api/partners')).json();
     const grid = document.getElementById('partnersGrid');
     if (partners.length === 0) { grid.innerHTML = `<div class="col-span-3 text-center text-gray-400">${currentDict.msgNoPartners || '暂无品牌'}</div>`; return; }
     grid.innerHTML = partners.map(p => `
         <div class="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center justify-center gap-2 h-24 hover:shadow-md transition-shadow">
             ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" class="w-full h-10 object-contain">` : `<div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">${p.name[0]}</div>`}
             <span class="font-bold text-gray-600 text-xs truncate w-full text-center">${p.name}</span>
-        </div>
-    `).join('');
+        </div>`).join('');
 }
 
 async function loadReviews() {
-    try {
-        const res = await fetch(`/api/reviews?lang=${encodeURIComponent(currentLang)}`);
-        const reviews = await res.json();
-        renderReviews(reviews);
-    } catch (e) {
-        console.error('评价加载失败', e);
-        renderReviews([]);
-    }
+    try { const reviews = await (await fetch(`/api/reviews?lang=${encodeURIComponent(currentLang)}`)).json(); renderReviews(reviews); } catch (e) { renderReviews([]); }
 }
 
-function openSurvey() { 
-    currentSurveyStep = 1;
-    document.getElementById('walletAddressInput').value = '';
-    updateSurveyUI();
-    loadSurveyQuestions(); 
-    openModal('surveyModal'); 
-}
-
+function openSurvey() { currentSurveyStep = 1; document.getElementById('walletAddressInput').value = ''; updateSurveyUI(); loadSurveyQuestions(); openModal('surveyModal'); }
 function updateSurveyUI() {
-    document.getElementById('surveyStep1').classList.add('hidden');
-    document.getElementById('surveyStep2').classList.add('hidden');
-    document.getElementById('surveyStep3').classList.add('hidden');
+    document.getElementById('surveyStep1').classList.add('hidden'); document.getElementById('surveyStep2').classList.add('hidden'); document.getElementById('surveyStep3').classList.add('hidden');
     document.getElementById(`surveyStep${currentSurveyStep}`).classList.remove('hidden');
-    const closeBtn = document.getElementById('surveyCloseBtn');
-    if (currentSurveyStep === 3) closeBtn.classList.add('hidden');
-    else closeBtn.classList.remove('hidden');
+    document.getElementById('surveyCloseBtn').style.display = (currentSurveyStep === 3) ? 'none' : 'block';
 }
 
 function nextSurveyStep() {
     if (currentSurveyStep === 1) {
-        const checkedInputs = document.querySelectorAll('#surveyQuestions1 input[type="radio"]:checked');
-        const totalQuestions = document.querySelectorAll('#surveyQuestions1 > div').length;
-        if (checkedInputs.length < totalQuestions) return alert(currentDict.msgAnswerAll || '请回答所有问题');
+        const checked = document.querySelectorAll('#surveyQuestions1 input[type="radio"]:checked');
+        if (checked.length < document.querySelectorAll('#surveyQuestions1 > div').length) return alert(currentDict.msgAnswerAll || '请回答所有问题');
         currentSurveyStep = 2;
     } else if (currentSurveyStep === 2) {
-        const checkedInputs = document.querySelectorAll('#surveyQuestions2 input[type="radio"]:checked');
-        const totalQuestions = document.querySelectorAll('#surveyQuestions2 > div').length;
-        if (checkedInputs.length < totalQuestions) return alert(currentDict.msgAnswerAll || '请回答所有问题');
+        const checked = document.querySelectorAll('#surveyQuestions2 input[type="radio"]:checked');
+        if (checked.length < document.querySelectorAll('#surveyQuestions2 > div').length) return alert(currentDict.msgAnswerAll || '请回答所有问题');
         currentSurveyStep = 3;
     }
     updateSurveyUI();
@@ -417,61 +301,41 @@ function nextSurveyStep() {
 
 async function loadSurveyQuestions() {
     try {
-        const res = await fetch(`/api/survey/questions?lang=${currentLang}`);
-        const questions = await res.json();
-        if (!questions || questions.length < 5) {
-            document.getElementById('surveyQuestions1').innerHTML = `<p class="text-sm text-gray-400">${currentDict.msgSurveyPreparing || '问卷准备中，请稍后再试。'}</p>`;
-            return;
-        }
-        let html1 = '';
+        const questions = await (await fetch(`/api/survey/questions?lang=${currentLang}`)).json();
+        if (!questions || questions.length < 5) { document.getElementById('surveyQuestions1').innerHTML = `<p class="text-sm text-gray-400">${currentDict.msgSurveyPreparing}</p>`; return; }
+        let html1 = '', html2 = '';
         questions.slice(0, 2).forEach((q, i) => {
             html1 += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
             q.options.forEach(opt => { html1 += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="${q.id}" value="${opt}" class="accent-blue-500"> ${opt}</label>`; });
             html1 += `</div>`;
         });
-        document.getElementById('surveyQuestions1').innerHTML = html1;
-
-        let html2 = '';
         questions.slice(2, 5).forEach((q, i) => {
             html2 += `<div><p class="text-sm mb-2">${i+3}. ${q.title}</p>`;
             q.options.forEach(opt => { html2 += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="${q.id}" value="${opt}" class="accent-blue-500"> ${opt}</label>`; });
             html2 += `</div>`;
         });
+        document.getElementById('surveyQuestions1').innerHTML = html1;
         document.getElementById('surveyQuestions2').innerHTML = html2;
-    } catch (e) {
-        document.getElementById('surveyQuestions1').innerHTML = `<p class="text-sm text-red-400">${currentDict.msgSurveyFailed || '问卷加载失败'}</p>`;
-    }
+    } catch (e) { document.getElementById('surveyQuestions1').innerHTML = `<p class="text-sm text-red-400">${currentDict.msgSurveyFailed}</p>`; }
 }
 
 async function submitSurvey() {
-    const walletAddress = document.getElementById('walletAddressInput').value.trim();
-    if (!walletAddress) return alert(currentDict.msgEnterWallet || '请输入钱包地址才能领取奖励');
-    const checkedInputs = document.querySelectorAll('#surveyQuestions1 input[type="radio"]:checked, #surveyQuestions2 input[type="radio"]:checked');
+    const addr = document.getElementById('walletAddressInput').value.trim();
+    if (!addr) return alert(currentDict.msgEnterWallet);
     const answers = {}; 
-    checkedInputs.forEach(input => { answers[input.name] = input.value; });
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+    document.querySelectorAll('#surveyQuestions1 input:checked, #surveyQuestions2 input:checked').forEach(i => answers[i.name] = i.value);
+    let user = null; try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
     try {
-        await fetch('/api/survey', {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ answers, wallet: '', walletAddress: walletAddress, email: user ? user.email : '游客', fingerprint: generateFingerprint() })
-        });
-        alert(currentDict.msgSubmitSuccess || '提交成功，奖励将尽快发放！'); 
-        closeModal('surveyModal');
-    } catch (e) {
-        alert(currentDict.msgNetError || '网络异常，请稍后再试');
-    }
+        await fetch('/api/survey', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ answers, wallet: '', walletAddress: addr, email: user ? user.email : '游客', fingerprint: generateFingerprint() }) });
+        alert(currentDict.msgSubmitSuccess); closeModal('surveyModal');
+    } catch (e) { alert(currentDict.msgNetError); }
 }
 
 function updateAuthUI() {
     const area = document.getElementById('authBtnArea');
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+    let user = null; try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
     if (user) {
-        area.innerHTML = `<div class="flex items-center gap-3">
-                <span class="text-sm font-bold text-blue-600 flex items-center gap-1">${coinSvg} ${user.balance || 0}</span>
-                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold cursor-pointer" onclick="triggerSafariCheck('login')">${user.email[0].toUpperCase()}</div>
-            </div>`;
+        area.innerHTML = `<div class="flex items-center gap-3"><span class="text-sm font-bold text-blue-600 flex items-center gap-1">${coinSvg} ${user.balance || 0}</span><div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold cursor-pointer" onclick="triggerSafariCheck('login')">${user.email[0].toUpperCase()}</div></div>`;
     } else {
         area.innerHTML = `<button onclick="triggerSafariCheck('login')" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700" data-i18n="login">登录</button>`;
         applyLanguage();
@@ -483,19 +347,12 @@ async function doRegister() {
     const password = document.getElementById('regPass').value;
     const confirmPass = document.getElementById('regConfirmPass').value;
     const payPassword = document.getElementById('regPayPass').value;
-    if(!email || !password || !confirmPass || !payPassword) return alert(currentDict.msgFillAll || '请填写完整');
-    if(password !== confirmPass) return alert(currentDict.msgPwdMismatch || '密码不一致');
-    const uaInfo = getUAInfo();
-    const res = await fetch('/api/register', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, password, payPassword, fingerprint: generateFingerprint(), country: countryCode, lang: currentLang, ...uaInfo })
-    });
+    if(!email || !password || !confirmPass || !payPassword) return alert(currentDict.msgFillAll);
+    if(password !== confirmPass) return alert(currentDict.msgPwdMismatch);
+    const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, password, payPassword, fingerprint: generateFingerprint(), country: countryCode, lang: currentLang, ...getUAInfo() }) });
     const data = await res.json();
-    if (data.success) { 
-        alert(currentDict.msgRegSuccess || '注册成功'); 
-        localStorage.setItem('wad_user', JSON.stringify(data.user)); 
-        window.location.href = '/'; 
-    } else alert(currentDict[data.error] || data.error);
+    if (data.success) { alert(currentDict.msgRegSuccess); localStorage.setItem('wad_user', JSON.stringify(data.user)); window.location.href = '/'; } 
+    else alert(currentDict[data.error] || data.error);
 }
 
 async function doLogin() {
@@ -503,34 +360,23 @@ async function doLogin() {
     const password = document.getElementById('loginPass').value;
     const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password}) });
     const data = await res.json();
-    if(data.success) { 
-        localStorage.setItem('wad_user', JSON.stringify(data.user)); 
-        window.location.href = '/'; 
-    } else alert(currentDict[data.error] || data.error);
+    if(data.success) { localStorage.setItem('wad_user', JSON.stringify(data.user)); window.location.href = '/'; } 
+    else alert(currentDict[data.error] || data.error);
 }
 
 async function loadTopLeaderboard() {
-    const res = await fetch('/api/leaderboard?period=daily');
-    const list = await res.json();
-    const top5 = list.slice(0, 5);
-    let html = '';
-    top5.forEach((u, i) => {
-        const bgClass = i === 0 ? 'bg-[#0A3466]' : 'bg-gray-300';
-        const textClass = i === 0 ? 'text-white' : 'text-gray-700';
-        html += `<div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-xl">
-                <div class="flex items-center gap-3"><span class="text-gray-400 font-bold w-4">#${i+1}</span>
-                <div class="w-10 h-10 ${bgClass} ${textClass} rounded-full flex items-center justify-center text-sm font-bold">${u.avatar}</div>
-                <span class="font-medium text-sm">${u.name}</span></div>
-                <span class="font-bold text-yellow-500 text-sm flex items-center gap-1">${coinSvg} ${u.amount.toLocaleString()}</span></div>`;
-    });
-    document.getElementById('topUsersList').innerHTML = html;
+    const list = await (await fetch('/api/leaderboard?period=daily')).json();
+    document.getElementById('topUsersList').innerHTML = list.slice(0, 5).map((u, i) => `
+        <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-xl">
+            <div class="flex items-center gap-3"><span class="text-gray-400 font-bold w-4">#${i+1}</span>
+            <div class="w-10 h-10 ${i === 0 ? 'bg-[#0A3466] text-white' : 'bg-gray-300 text-gray-700'} rounded-full flex items-center justify-center text-sm font-bold">${u.avatar}</div>
+            <span class="font-medium text-sm">${u.name}</span></div>
+            <span class="font-bold text-yellow-500 text-sm flex items-center gap-1">${coinSvg} ${u.amount.toLocaleString()}</span>
+        </div>`).join('');
 }
 
-function loadAllData() {
-    loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners(); loadReviews();
-}
+function loadAllData() { loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners(); loadReviews(); }
 
-// 核心初始化逻辑
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('newsCarousel').addEventListener('scroll', () => {
         const container = document.getElementById('newsCarousel');
@@ -539,10 +385,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('newsCarousel').addEventListener('touchstart', () => { if (carouselInterval) clearInterval(carouselInterval); }, {passive: true});
     document.getElementById('newsCarousel').addEventListener('touchend', () => { startCarousel(); }, {passive: true});
-
-    updateAuthUI();
-    checkUrlParams();
-    setSafariLink(); 
-    loadSystemSettings(); 
-    initLanguages().finally(recordVisit);
+    updateAuthUI(); checkUrlParams(); setSafariLink(); loadSystemSettings(); initLanguages().finally(recordVisit);
 });
