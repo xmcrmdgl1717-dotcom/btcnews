@@ -681,7 +681,11 @@
             body: JSON.stringify({ email, password, payPassword, fingerprint: generateFingerprint(), country: countryCode, lang: currentLang, ...uaInfo })
         });
         const data = await res.json();
-        if (data.success) { alert('注册成功'); localStorage.setItem('wad_user', JSON.stringify(data.user)); triggerSafariCheck('link', 'dashboard.html'); } else alert(data.error);
+        if (data.success) { 
+            alert('注册成功'); 
+            localStorage.setItem('wad_user', JSON.stringify(data.user)); 
+            window.location.href = '/'; // 修改：注册成功跳转首页
+        } else alert(data.error);
     }
 
     async function doLogin() {
@@ -689,7 +693,10 @@
         const password = document.getElementById('loginPass').value;
         const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password}) });
         const data = await res.json();
-        if(data.success) { localStorage.setItem('wad_user', JSON.stringify(data.user)); triggerSafariCheck('link', 'dashboard.html'); } else alert(data.error);
+        if(data.success) { 
+            localStorage.setItem('wad_user', JSON.stringify(data.user)); 
+            window.location.href = '/'; // 修改：登录成功跳转首页
+        } else alert(data.error);
     }
 
     async function loadTopLeaderboard() {
