@@ -18,7 +18,7 @@ const ERROR_TYPES = {
 const ERROR_DESCRIPTIONS = {
   NETWORK: '网络连接失败或请求超时',
   RATE_LIMIT: '请求过于频繁，被服务商限流',
-  QUOTA: '该服务商免费额度已耗尽',
+  QUOTA: '该服务商免费额度已耗尽或需要API Key',
   TEXT_TOO_LONG: '文本过长，分段后仍无法翻译',
   EMPTY_RESULT: '服务商返回空结果',
   PARSE_ERROR: '服务商响应无法解析',
@@ -94,11 +94,14 @@ function splitByUtf8Bytes(text, maxBytes) {
  * 各服务商适配器
  * ============================================================ */
 
-// 1) Google（现有）
+// 1) Google（修复了 zh 不支持的问题）
 async function googleTranslate(text, targetLang, sourceLang = 'auto') {
   try {
     const opts = { to: targetLang };
-    if (sourceLang && sourceLang !== 'auto') opts.from = sourceLang;
+    if (sourceLang && sourceLang !== 'auto') {
+      opts.from = sourceLang;
+      opts.forceFrom = true; // 关键修复：强制使用指定的源语言，绕过库的校验
+    }
     const res = await googleApiTranslate(text, opts);
     const out = (res && res.text) || '';
     if (!String(out).trim()) {
@@ -121,11 +124,17 @@ async function googleTranslate(text, targetLang, sourceLang = 'auto') {
   }
 }
 
-// 2) MyMemory（匿名 5000 字符/天，单次约 500 字节）
+// 2) MyMemory（修复了中文源语言导致的空结果问题）
 const MYMEMORY_MAX_BYTES = 480;
 
 async function mymemoryTranslate(text, targetLang, sourceLang = 'auto') {
   const src = (!sourceLang || sourceLang === 'auto') ? 'Autodetect' : sourceLang;
+  
+  // 关键修复：MyMemory 对中文源语言支持极差，直接拦截，让轮询器跳过它
+  if (src.startsWith('zh') || (src === 'Autodetect' && /[\u4e00-\u9fa5]/.test(text))) {
+    throw new TranslationError(ERROR_TYPES.UNSUPPORTED_LANG, 'mymemory', 'MyMemory 不支持中文源语言');
+  }
+
   const chunks = splitByUtf8Bytes(String(text), MYMEMORY_MAX_BYTES);
   const parts = [];
   for (const chunk of chunks) {
@@ -146,7 +155,6 @@ async function mymemoryTranslate(text, targetLang, sourceLang = 'auto') {
     } catch (_) {
       throw new TranslationError(ERROR_TYPES.PARSE_ERROR, 'mymemory', '响应不是合法 JSON');
     }
-    // MyMemory 用 responseStatus 表示业务状态
     if (String(data.responseStatus) !== '200') {
       const details = String(data.responseDetails || '');
       if (/quota|limit|exceed|too many|invalid.*lang/i.test(details)) {
@@ -164,63 +172,85 @@ async function mymemoryTranslate(text, targetLang, sourceLang = 'auto') {
   return parts.join('');
 }
 
-// 3) LibreTranslate（建议自托管；这里默认公共实例）
-const LIBRE_ENDPOINT = process.env.LIBRE_ENDPOINT || 'https://libretranslate.com';
+// 3) LibreTranslate（修复了官方接口需要 API Key 的问题，增加多节点轮询）
+const LIBRE_ENDPOINTS = [
+  'https://translate.argosopentech.com', // 社区维护的免费实例
+  'https://libretranslate.de',           // 历史公共实例
+  'https://libretranslate.com'           // 官方（目前可能强制要求 Key）
+];
 
 async function libreTranslate(text, targetLang, sourceLang = 'auto') {
   const src = (!sourceLang || sourceLang === 'auto') ? 'auto' : sourceLang;
-  const res = await fetchWithTimeout(LIBRE_ENDPOINT + '/translate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ q: String(text), source: src, target: targetLang, format: 'html' })
-  });
-  if (res.status === 429) {
-    throw new TranslationError(ERROR_TYPES.RATE_LIMIT, 'libretranslate', 'LibreTranslate 限流 (429)');
+  let lastErr = null;
+
+  for (const base of LIBRE_ENDPOINTS) {
+    try {
+      const res = await fetchWithTimeout(base + '/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: String(text), source: src, target: targetLang, format: 'html' })
+      });
+
+      if (res.status === 400) {
+        const errorText = await res.text();
+        if (errorText.includes('api key') || errorText.includes('portal.libretranslate.com')) {
+          lastErr = new TranslationError(ERROR_TYPES.QUOTA, 'libretranslate', `${base} 需要 API Key`);
+          continue;
+        }
+      }
+      if (res.status === 429) {
+        lastErr = new TranslationError(ERROR_TYPES.RATE_LIMIT, 'libretranslate', `${base} 限流`);
+        continue;
+      }
+      if (res.status === 403 || res.status === 402) {
+        lastErr = new TranslationError(ERROR_TYPES.QUOTA, 'libretranslate', `${base} 配额/鉴权失败`);
+        continue;
+      }
+      if (!res.ok) {
+        lastErr = new TranslationError(ERROR_TYPES.UNKNOWN, 'libretranslate', `${base} HTTP ${res.status}`);
+        continue;
+      }
+
+      const data = await res.json();
+      if (data.error) {
+        lastErr = new TranslationError(ERROR_TYPES.UNKNOWN, 'libretranslate', `${base} 返回错误: ${data.error}`);
+        continue;
+      }
+      const out = data.translatedText;
+      if (!out || !String(out).trim()) {
+        lastErr = new TranslationError(ERROR_TYPES.EMPTY_RESULT, 'libretranslate', `${base} 返回空结果`);
+        continue;
+      }
+      return out;
+    } catch (e) {
+      lastErr = e;
+    }
   }
-  if (res.status === 403 || res.status === 402) {
-    throw new TranslationError(ERROR_TYPES.QUOTA, 'libretranslate', `LibreTranslate 鉴权/配额错误 (${res.status})`);
-  }
-  if (!res.ok) {
-    let bodyText = '';
-    try { bodyText = await res.text(); } catch (_) {}
-    throw new TranslationError(ERROR_TYPES.UNKNOWN, 'libretranslate', `HTTP ${res.status} ${bodyText.slice(0, 200)}`);
-  }
-  let data;
-  try {
-    data = await res.json();
-  } catch (_) {
-    throw new TranslationError(ERROR_TYPES.PARSE_ERROR, 'libretranslate', '响应不是合法 JSON');
-  }
-  if (data.error) {
-    const msg = String(data.error);
-    if (/rate|limit/i.test(msg)) throw new TranslationError(ERROR_TYPES.RATE_LIMIT, 'libretranslate', msg);
-    if (/quota|exceed/i.test(msg)) throw new TranslationError(ERROR_TYPES.QUOTA, 'libretranslate', msg);
-    if (/not supported|invalid.*lang/i.test(msg)) throw new TranslationError(ERROR_TYPES.UNSUPPORTED_LANG, 'libretranslate', msg);
-    throw new TranslationError(ERROR_TYPES.UNKNOWN, 'libretranslate', msg);
-  }
-  const out = data.translatedText;
-  if (!out || !String(out).trim()) {
-    throw new TranslationError(ERROR_TYPES.EMPTY_RESULT, 'libretranslate', '返回空结果');
-  }
-  return out;
+  throw lastErr || new TranslationError(ERROR_TYPES.UNKNOWN, 'libretranslate', '所有 LibreTranslate 实例均失败');
 }
 
-// 4) Lingva（Google 前端代理，多实例随机）
+// 4) Lingva（扩充了可用实例列表，增加容错）
 const LINGVA_INSTANCES = [
   'https://lingva.ml',
   'https://translate.plausibility.cloud',
   'https://lingva.lunar.icu',
-  'https://translate.igna.wtf'
+  'https://translate.igna.wtf',
+  'https://translate.projectsegfau.lt',
+  'https://translate.dr460nf1r3.org',
+  'https://lingva.garudalinux.org',
+  'https://translate.jae.fi'
 ];
 
 async function lingvaTranslate(text, targetLang, sourceLang = 'auto') {
   const src = (!sourceLang || sourceLang === 'auto') ? 'auto' : sourceLang;
   const shuffled = [...LINGVA_INSTANCES].sort(() => Math.random() - 0.5);
   let lastErr = null;
+  
   for (const base of shuffled) {
     try {
       const url = `${base}/api/v1/${src}/${targetLang}/${encodeURIComponent(String(text))}`;
       const res = await fetchWithTimeout(url, {}, 6000);
+      
       if (res.status === 429) {
         lastErr = new TranslationError(ERROR_TYPES.RATE_LIMIT, 'lingva', `${base} 限流`);
         continue;
