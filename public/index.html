@@ -169,10 +169,19 @@
     let carouselIndex = 0;
     let carouselInterval = null;
 
+    // ===== 改动：IP 信息缓存（语言/评论国家匹配 + 访问追踪共用一次请求） =====
+    let ipInfoPromise = null;
+    function fetchIPInfo() {
+        if (!ipInfoPromise) {
+            ipInfoPromise = getIPInfo().catch(() => ({ ip: 'Unknown', country: 'Unknown' }));
+        }
+        return ipInfoPromise;
+    }
+
     function renderReviews(reviews) {
         const listEl = document.getElementById('reviewsList');
         if (!listEl) return;
-        
+
         if (!reviews || reviews.length === 0) {
             listEl.innerHTML = '<div class="text-center text-gray-500 py-4 col-span-2">暂无评价</div>';
             return;
@@ -181,12 +190,12 @@
         // 打乱数组，随机选取最多 4 条
         let shuffled = [...reviews].sort(() => 0.5 - Math.random());
         let selected = shuffled.slice(0, 4);
-        
+
         let html = '';
         selected.forEach(item => {
             let starsHtml = '';
             for(let i=0; i<item.stars; i++) starsHtml += '★';
-            
+
             html += `
                 <div class="border border-gray-100 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
                     <div>
@@ -248,7 +257,7 @@
     async function recordVisit() {
         try {
             const uaInfo = getUAInfo();
-            const ipInfo = await getIPInfo();
+            const ipInfo = await fetchIPInfo();
             countryCode = ipInfo.country;
             const payload = { action: 'visit', fingerprint: generateFingerprint(), ...uaInfo, ip: ipInfo.ip, country: ipInfo.country, lang: currentLang };
             const res = await fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), keepalive: true });
@@ -293,6 +302,21 @@
             }
             applyLanguage();
             loadAllData();
+
+            // ===== 改动：拿到 IP 国家后再按国家校准一次语言（用户未手动选择语言时） =====
+            fetchIPInfo().then(ipInfo => {
+                countryCode = ipInfo.country;
+                if (localStorage.getItem('wad_lang')) return; // 用户手动选过语言，不覆盖
+                const better = autoMatchLanguage(availableLangs);
+                if (!better || better === currentLang) return;
+                const betterObj = availableLangs.find(l => l.code === better);
+                if (!betterObj) return;
+                currentLang = betterObj.code;
+                currentDict = betterObj.dict;
+                document.getElementById('currentLangText').innerText = betterObj.name;
+                applyLanguage();
+                loadAllData(); // 重新拉取数据以刷新「按国家匹配的评论」
+            });
         } catch (e) { console.error('语言加载失败', e); }
     }
 
@@ -420,10 +444,16 @@
         `).join('');
     }
 
+    // ===== 改动：请求评论时带上当前语言（= 当前国家），由后台 reviewMode 决定是否按语言过滤 =====
     async function loadReviews() {
         try {
-            const res = await fetch('/api/reviews');
-            const reviews = await res.json();
+            let res = await fetch(`/api/reviews?lang=${encodeURIComponent(currentLang)}`);
+            let reviews = await res.json();
+            if (!Array.isArray(reviews) || reviews.length === 0) {
+                // 兜底：没有匹配数据时退回全量随机
+                res = await fetch('/api/reviews');
+                reviews = await res.json();
+            }
             renderReviews(reviews);
         } catch (e) {
             console.error('评价加载失败', e);
