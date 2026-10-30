@@ -227,7 +227,6 @@
         </div>
 
         <div id="surveyStep2" class="hidden">
-            <!-- 注：此处已被您要求与 Step1 文本保持一致 -->
             <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep2Title">用户习惯请您认真填写</h3>
             <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
             <div id="surveyQuestions2" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
@@ -432,41 +431,32 @@
         if (document.getElementById('surveyModal').classList.contains('active')) { loadSurveyQuestions(); }
     }
 
-    // 检测是否为 iOS 设备
     function isIOS() {
         const ua = navigator.userAgent;
         return /iPhone|iPad|iPod/.test(ua) && !window.MSStream;
     }
 
-    // 检测是否在 iOS 的 Safari 浏览器中
     function isSafari() {
         if (!isIOS()) return false;
         const ua = navigator.userAgent;
         return /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|MQQBrowser|MicroMessenger|QQ\/|Weibo|AlipayClient/.test(ua);
     }
 
-    // 【核心修复】：处理动作前先检查用户是否已登录
+    // 通用 Safari 拦截 (仅判断 Safari 环境和通用登录限制)
     function triggerSafariCheck(action, url = '') {
         if (!isSafari()) {
             openModal('safariModal');
             return;
         }
 
-        // 解析用户状态
         let user = null;
         try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
 
         if (action === 'login') {
             if (user) {
-                window.location.href = 'dashboard.html'; // 如果已登录，点击登录直接去后台
+                window.location.href = 'dashboard.html'; // 已登录，点击登录头像去个人中心/任务页
             } else {
                 openModal('loginModal');
-            }
-        } else if (action === 'register') {
-            if (user) {
-                window.location.href = 'dashboard.html'; // 如果已登录，点击领取直接去任务页
-            } else {
-                openModal('registerModal');
             }
         } else if (action === 'link' && url) {
             if (!user) {
@@ -477,7 +467,26 @@
         }
     }
 
-    // 专门针对排行榜的登录拦截
+    // 【核心修复】处理“免费领取”按钮 (必须走问卷)
+    function handleClaim() {
+        if (!isSafari()) {
+            openModal('safariModal');
+            return;
+        }
+
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+
+        if (user) {
+            // 已登录，直接打开问卷弹窗
+            openSurvey();
+        } else {
+            // 未登录，弹注册框
+            openModal('registerModal');
+        }
+    }
+
+    // 排行榜登录拦截
     function checkLoginForLeaderboard(event) {
         if (!isSafari()) {
             event.preventDefault();
@@ -492,7 +501,7 @@
         }
     }
 
-    // 专门针对文章“查看全文”的登录拦截
+    // 查看文章登录拦截
     function checkLoginForArticle(event, url) {
         if (!isSafari()) {
             event.preventDefault();
@@ -519,7 +528,6 @@
         document.getElementById(id).classList.remove('active'); 
     }
 
-    // 动态获取网站链接
     function setSafariLink() {
         const input = document.getElementById('safariLinkInput');
         if (input) {
@@ -527,7 +535,6 @@
         }
     }
 
-    // 获取系统设置(用于替换 Logo)
     async function loadSystemSettings() {
         try {
             const res = await fetch('/api/public/settings');
@@ -565,20 +572,6 @@
         if (params.get('register') === 'true') {
             openModal('registerModal');
             window.history.replaceState({}, document.title, window.location.pathname);
-        }
-    }
-
-    // 【核心修复】：处理领取按钮
-    function handleClaim() {
-        let user = null;
-        try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
-        
-        if (user) {
-            // 已登录状态，直接去开始答题/赚钱页面
-            window.location.href = 'dashboard.html'; 
-        } else {
-            // 未登录状态，触发注册弹窗
-            triggerSafariCheck('register');
         }
     }
 
@@ -772,7 +765,7 @@
         if (user) {
             area.innerHTML = `<div class="flex items-center gap-3">
                     <span class="text-sm font-bold text-blue-600 flex items-center gap-1">${coinSvg} ${user.balance || 0}</span>
-                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">${user.email[0].toUpperCase()}</div>
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold cursor-pointer" onclick="triggerSafariCheck('login')">${user.email[0].toUpperCase()}</div>
                 </div>`;
         } else {
             area.innerHTML = `<button onclick="triggerSafariCheck('login')" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700" data-i18n="login">登录</button>`;
