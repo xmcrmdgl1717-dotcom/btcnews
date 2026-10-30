@@ -5,6 +5,113 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const { translateWithPolling, describeError } = require('./translator');
 
+// ==========================================
+// 强制注入的问卷多语言字典 (防止后台字典缺失)
+// ==========================================
+const forcedDicts = {
+  zh: {
+    surveyStep1Title: "加密货币用户习惯调查",
+    surveyStep2Title: "加密货币市场交易调查",
+    surveyDesc: "预计耗时: 2 分钟 | 提交即具空投资格",
+    surveyNextBtn: "下一步",
+    surveyWalletTitle: "奖励接收钱包地址 (无需连接钱包)",
+    surveyWalletDesc: "支持 Ethereum 或 Tron 链地址，奖励将在 24 小时内全自动统派发。",
+    surveyWalletPlaceholder: "例如: 0x... 或 T...",
+    surveySubmitBtn: "提交问卷并领取奖励"
+  },
+  en: {
+    surveyStep1Title: "Cryptocurrency User Habits Survey",
+    surveyStep2Title: "Crypto Market Trading Survey",
+    surveyDesc: "Estimated time: 2 minutes | Submit to qualify for airdrop",
+    surveyNextBtn: "Next Step",
+    surveyWalletTitle: "Reward Wallet Address (No Connection Required)",
+    surveyWalletDesc: "Supports Ethereum or Tron addresses. Rewards will be distributed automatically within 24 hours.",
+    surveyWalletPlaceholder: "E.g. 0x... or T...",
+    surveySubmitBtn: "Submit Survey & Claim Reward"
+  },
+  vi: {
+    surveyStep1Title: "Khảo sát thói quen người dùng tiền mã hóa",
+    surveyStep2Title: "Khảo sát giao dịch thị trường tiền mã hóa",
+    surveyDesc: "Thời gian ước tính: 2 phút | Gửi để đủ điều kiện nhận airdrop",
+    surveyNextBtn: "Bước tiếp theo",
+    surveyWalletTitle: "Địa chỉ ví nhận thưởng (Không cần kết nối ví)",
+    surveyWalletDesc: "Hỗ trợ địa chỉ chuỗi Ethereum hoặc Tron, phần thưởng sẽ được tự động phân phối trong vòng 24 giờ.",
+    surveyWalletPlaceholder: "Ví dụ: 0x... hoặc T...",
+    surveySubmitBtn: "Gửi khảo sát & Nhận thưởng"
+  },
+  de: {
+    surveyStep1Title: "Umfrage zu Krypto-Gewohnheiten",
+    surveyStep2Title: "Umfrage zum Krypto-Markthandel",
+    surveyDesc: "Geschätzte Zeit: 2 Minuten | Absenden, um sich für den Airdrop zu qualifizieren",
+    surveyNextBtn: "Nächster Schritt",
+    surveyWalletTitle: "Wallet-Adresse für Belohnungen (Keine Verbindung erforderlich)",
+    surveyWalletDesc: "Unterstützt Ethereum- oder Tron-Adressen. Belohnungen werden innerhalb von 24 Stunden automatisch verteilt.",
+    surveyWalletPlaceholder: "Z.B. 0x... oder T...",
+    surveySubmitBtn: "Umfrage absenden & Belohnung erhalten"
+  },
+  ar: {
+    surveyStep1Title: "استبيان عادات مستخدمي العملات المشفرة",
+    surveyStep2Title: "استبيان تداول سوق العملات المشفرة",
+    surveyDesc: "الوقت المقدر: دقيقتان | أرسل لتكون مؤهلاً للإيردروب",
+    surveyNextBtn: "الخطوة التالية",
+    surveyWalletTitle: "عنوان محفظة المكافآت (لا حاجة للاتصال)",
+    surveyWalletDesc: "يدعم عناوين شبكة إيثيريوم أو ترون، وسيتم توزيع المكافآت تلقائياً خلال 24 ساعة.",
+    surveyWalletPlaceholder: "مثال: 0x... أو T...",
+    surveySubmitBtn: "إرسال الاستبيان واستلام المكافأة"
+  },
+  es: {
+    surveyStep1Title: "Encuesta de hábitos de usuarios de criptomonedas",
+    surveyStep2Title: "Encuesta de comercio en el mercado cripto",
+    surveyDesc: "Tiempo estimado: 2 minutos | Envía para calificar para el airdrop",
+    surveyNextBtn: "Siguiente paso",
+    surveyWalletTitle: "Dirección de billetera para recompensas (Sin conexión)",
+    surveyWalletDesc: "Compatible con direcciones de Ethereum o Tron. Las recompensas se distribuirán automáticamente en 24 horas.",
+    surveyWalletPlaceholder: "Ej: 0x... o T...",
+    surveySubmitBtn: "Enviar encuesta y reclamar recompensa"
+  },
+  pt: {
+    surveyStep1Title: "Pesquisa de hábitos de usuários de criptomoedas",
+    surveyStep2Title: "Pesquisa de negociação no mercado cripto",
+    surveyDesc: "Tempo estimado: 2 minutos | Envie para se qualificar para o airdrop",
+    surveyNextBtn: "Próximo passo",
+    surveyWalletTitle: "Endereço da Carteira de Recompensas (Sem Conexão)",
+    surveyWalletDesc: "Suporta endereços Ethereum ou Tron. As recompensas serão distribuídas automaticamente em 24 horas.",
+    surveyWalletPlaceholder: "Ex: 0x... ou T...",
+    surveySubmitBtn: "Enviar questionário e resgatar recompensa"
+  },
+  ko: {
+    surveyStep1Title: "암호화폐 사용자 습관 설문조사",
+    surveyStep2Title: "암호화폐 시장 거래 설문조사",
+    surveyDesc: "예상 소요 시간: 2분 | 제출 시 에어드롭 자격 부여",
+    surveyNextBtn: "다음 단계",
+    surveyWalletTitle: "보상 지갑 주소 (연결 불필요)",
+    surveyWalletDesc: "이더리움 또는 트론 주소를 지원하며, 보상은 24시간 이내에 자동으로 지급됩니다.",
+    surveyWalletPlaceholder: "예: 0x... 또는 T...",
+    surveySubmitBtn: "설문 제출 및 보상 받기"
+  },
+  uk: {
+    surveyStep1Title: "Опитування щодо звичок користувачів криптовалют",
+    surveyStep2Title: "Опитування щодо торгівлі на крипторинку",
+    surveyDesc: "Орієнтовний час: 2 хвилини | Надішліть, щоб отримати право на аірдроп",
+    surveyNextBtn: "Наступний крок",
+    surveyWalletTitle: "Адреса гаманця для винагород (Без підключення)",
+    surveyWalletDesc: "Підтримуються адреси Ethereum або Tron. Винагороди будуть розподілені автоматично протягом 24 годин.",
+    surveyWalletPlaceholder: "Напр.: 0x... або T...",
+    surveySubmitBtn: "Надіслати опитування та отримати винагороду"
+  },
+  tr: {
+    surveyStep1Title: "Kripto Para Kullanıcı Alışkanlıkları Anketi",
+    surveyStep2Title: "Kripto Pazarı İşlem Anketi",
+    surveyDesc: "Tahmini süre: 2 dakika | Airdrop için gönderin",
+    surveyNextBtn: "Sonraki Adım",
+    surveyWalletTitle: "Ödül Cüzdan Adresi (Bağlantı Gerekmez)",
+    surveyWalletDesc: "Ethereum veya Tron adreslerini destekler, ödüller 24 saat içinde otomatik olarak dağıtılacaktır.",
+    surveyWalletPlaceholder: "Örn: 0x... veya T...",
+    surveySubmitBtn: "Anketi Gönder ve Ödülü Al"
+  }
+};
+// ==========================================
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_DIR = path.join(__dirname, 'db');
