@@ -138,10 +138,15 @@
                         <option value="Windows">Windows</option>
                         <option value="macOS">macOS</option>
                     </select>
+                    <!-- 新增：系统版本筛选 -->
+                    <select class="input text-sm p-2 rounded" id="filterOSVersion">
+                        <option value="all">全部系统版本</option>
+                    </select>
                     <select class="input text-sm p-2 rounded" id="filterLang">
                         <option value="all">全部语言</option>
                     </select>
-                    <input type="text" id="searchInput" placeholder="搜索 IP / 邮箱" class="input text-sm p-2 rounded flex-1 min-w-[200px]">
+                    <!-- 更新：placeholder 提示支持指纹 -->
+                    <input type="text" id="searchInput" placeholder="搜索 IP / 邮箱 / 指纹" class="input text-sm p-2 rounded flex-1 min-w-[200px]">
                     <button onclick="renderVisitList()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">搜索</button>
                     <button onclick="resetFilters()" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-2 rounded text-sm hover:bg-gray-300 dark:hover:bg-slate-600">重置</button>
                 </div>
@@ -173,7 +178,7 @@
                         <div class="space-y-3 mb-4">
                             <input type="hidden" id="editArticleId">
                             <div class="border border-gray-200 dark:border-slate-700 p-3 rounded bg-gray-50 dark:bg-[#0f172a] mb-2">
-                                <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言：</p>
+                                <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言（勾选后源内容将机翻为其他语言）：</p>
                                 <div class="flex flex-wrap gap-3" id="articleLangCheckboxes"></div>
                             </div>
                             <input type="text" id="artTitle" placeholder="源标题" class="input w-full p-2 rounded">
@@ -385,6 +390,10 @@
     let currentSurveySourceLang = 'zh';
     let currentReviewMode = 'all';
 
+    // 记录文章正在编辑的整组ID和源语言
+    let currentEditArticleGroupId = null;
+    let currentEditArticleMainLang = 'zh';
+
     const ADMIN_I18N = {
         zh: {
             navDashboard: '📊 数据汇总', navUsers: '👥 用户管理', navArticles: '📝 文章管理',
@@ -553,24 +562,29 @@
         area.appendChild(div);
     }
 
-    function editSurveyLang(lang) {
-        if (!window.allSurveys || !window.allSurveys.questions[lang]) return;
-        const questions = window.allSurveys.questions[lang];
+    // 【改动】问卷编辑整组
+    function editSurveyGroup(sourceLang) {
+        if (!window.allSurveys || !window.allSurveys.questions[sourceLang]) return;
+        const questions = window.allSurveys.questions[sourceLang];
         renderSurveyEditor(questions);
-        currentSurveySourceLang = lang;
+        currentSurveySourceLang = sourceLang;
 
-        document.getElementById('surveyFormTitle').innerText = '编辑问卷 (' + lang + ')';
+        document.getElementById('surveyFormTitle').innerText = '编辑问卷整组 (源语言: ' + sourceLang + ')';
         document.getElementById('surveyResetBtn').classList.remove('hidden');
 
         const langBox = document.getElementById('surveyLangBox');
         langBox.innerHTML = `
-            <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">当前编辑源语言: <span class="text-blue-500 uppercase">${lang}</span>，勾选其他语言将进行机器翻译覆盖:</p>
+            <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">当前编辑源语言: <span class="text-blue-500 uppercase">${sourceLang}</span>，勾选其他语言将进行机器翻译覆盖:</p>
             <div class="flex flex-wrap gap-3" id="surveyLangCheckboxes"></div>
         `;
         const cbContainer = document.getElementById('surveyLangCheckboxes');
+        const existingLangs = Object.keys(window.allSurveys.questions);
+        
         cbContainer.innerHTML = (window.allLangs || []).filter(l => l.active).map(l => `
             <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === lang ? 'checked disabled' : ''}> 
+                <input type="checkbox" value="${l.code}" class="accent-blue-500" 
+                    ${l.code === sourceLang ? 'checked disabled' : ''} 
+                    ${existingLangs.includes(l.code) ? 'checked' : ''}> 
                 ${l.flag} ${l.name}
             </label>
         `).join('');
@@ -630,11 +644,18 @@
         }
     }
 
+    async function deleteSurveyGroup() {
+        if (!confirm('确认删除该问卷的所有语言版本吗？')) return;
+        await fetch('/api/admin/survey/group', { method: 'DELETE', headers: { 'x-admin-pwd': adminPwd } });
+        fetchData();
+    }
+
     /* ================= 数据看板渲染 ================= */
     function renderVisitList() {
         const fStatus = document.getElementById('filterStatus').value;
         const fDevice = document.getElementById('filterDevice').value;
         const fOS = document.getElementById('filterOS').value;
+        const fOSVersion = document.getElementById('filterOSVersion').value;
         const fLang = document.getElementById('filterLang').value;
         const keyword = document.getElementById('searchInput').value.toLowerCase();
 
@@ -642,8 +663,16 @@
             if (fStatus !== 'all' && v.status !== fStatus) return false;
             if (fDevice !== 'all' && v.device !== fDevice) return false;
             if (fOS !== 'all' && v.os !== fOS) return false;
+            if (fOSVersion !== 'all' && v.osVersion !== fOSVersion) return false;
             if (fLang !== 'all' && v.lang !== fLang) return false;
-            if (keyword && !(v.ip?.toLowerCase().includes(keyword) || v.email?.toLowerCase().includes(keyword))) return false;
+            
+            // 增加指纹搜索匹配
+            if (keyword) {
+                const ipMatch = v.ip?.toLowerCase().includes(keyword);
+                const emailMatch = v.email?.toLowerCase().includes(keyword);
+                const fpMatch = v.fingerprint?.toLowerCase().includes(keyword);
+                if (!ipMatch && !emailMatch && !fpMatch) return false;
+            }
             return true;
         });
 
@@ -683,15 +712,16 @@
         document.getElementById('filterStatus').value = 'all';
         document.getElementById('filterDevice').value = 'all';
         document.getElementById('filterOS').value = 'all';
+        document.getElementById('filterOSVersion').value = 'all';
         document.getElementById('filterLang').value = 'all';
         document.getElementById('searchInput').value = '';
         renderVisitList();
     }
 
     function exportCSV() {
-        const rows = [['状态', '邮箱', '国家', 'IP', '系统', '浏览器', '语言', '进入时间', '停留(s)', '指纹']];
+        const rows = [['状态', '邮箱', '国家', 'IP', '系统', '版本', '浏览器', '语言', '进入时间', '停留(s)', '指纹']];
         allVisits.forEach(v => {
-            rows.push([v.status, v.email || '', v.country || '', v.ip || '', `${v.os} ${v.osVersion}`, `${v.browser} ${v.browserVersion}`, v.lang, v.visitTime, v.duration || '', v.fingerprint]);
+            rows.push([v.status, v.email || '', v.country || '', v.ip || '', v.os, v.osVersion, `${v.browser} ${v.browserVersion}`, v.lang, v.visitTime, v.duration || '', v.fingerprint]);
         });
         let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map(e => e.join(",")).join("\n");
         const encodedUri = encodeURI(csvContent);
@@ -730,9 +760,16 @@
         langFilter.innerHTML = '<option value="all">全部语言</option>' + uniqueLangs.map(l => `<option value="${l}">${l}</option>`).join('');
         if (uniqueLangs.includes(prevLang)) langFilter.value = prevLang;
 
+        // 系统版本筛选（新增）
+        const verFilter = document.getElementById('filterOSVersion');
+        const prevVer = verFilter.value;
+        const uniqueVers = [...new Set(allVisits.map(v => v.osVersion).filter(Boolean))];
+        verFilter.innerHTML = '<option value="all">全部系统版本</option>' + uniqueVers.map(v => `<option value="${v}">${v}</option>`).join('');
+        if (uniqueVers.includes(prevVer)) verFilter.value = prevVer;
+
         renderVisitList();
 
-        /* ===================== 问卷列表渲染（折叠版） ===================== */
+        /* ===================== 问卷列表渲染（折叠版、整组编辑） ===================== */
         const surveyQuestions = data.surveys.questions || {};
         const availableSurveyLangs = Object.keys(surveyQuestions);
         let pubHtml = '';
@@ -740,7 +777,6 @@
         if (availableSurveyLangs.length === 0) {
             pubHtml = '<div class="text-center text-gray-500 py-4">暂无发布的问卷</div>';
         } else {
-            // 确定主语言（优先 zh，否则取第一个）
             const mainLang = availableSurveyLangs.includes('zh') ? 'zh' : availableSurveyLangs[0];
             const otherLangs = availableSurveyLangs.filter(l => l !== mainLang);
 
@@ -749,7 +785,6 @@
 
             pubHtml += `
                 <div class="border border-gray-200 dark:border-slate-700 p-3 rounded mb-2 bg-white dark:bg-[#0f172a]">
-                    <!-- 主语言展示 -->
                     <div class="flex justify-between items-start mb-2">
                         <div>
                             <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded font-bold uppercase">${mainLang}</span>
@@ -757,11 +792,11 @@
                             <div class="text-xs text-gray-500 mt-1">${mainCount} 道题目</div>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="editSurveyLang('${mainLang}')" class="text-blue-500 text-xs hover:underline">编辑</button>
+                            <button onclick="editSurveyGroup('${mainLang}')" class="text-blue-500 text-xs hover:underline">编辑整组</button>
+                            <button onclick="deleteSurveyGroup()" class="text-red-500 text-xs hover:underline">删除整组</button>
                         </div>
                     </div>
                     
-                    <!-- 其他语言折叠展示 -->
                     ${otherLangs.length > 0 ? `
                         <details class="mt-2">
                             <summary class="text-xs text-gray-500 cursor-pointer">其他语言版本 (${otherLangs.length})</summary>
@@ -776,8 +811,8 @@
                                                 <span class="text-sm ml-1">${langObj.flag} ${langObj.name}</span>
                                                 <span class="text-xs text-gray-500 ml-2">${count} 道题目</span>
                                             </div>
-                                            <div class="flex gap-2">
-                                                <button onclick="editSurveyLang('${lang}')" class="text-blue-500 text-xs hover:underline">编辑</button>
+                                            <div>
+                                                <span class="text-[10px] text-gray-400">只读(点击上方编辑整组)</span>
                                             </div>
                                         </div>
                                     `;
@@ -800,6 +835,7 @@
         // 文章语言勾选
         document.getElementById('articleLangCheckboxes').innerHTML = data.languages.filter(l => l.active).map(l => `<label class="flex items-center gap-1 text-sm cursor-pointer"><input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}> ${l.flag} ${l.name}</label>`).join('');
 
+        // 文章列表（统一为“编辑整组”）
         const groups = {};
         data.articles.forEach(a => { const gid = a.groupId || a.id; if (!groups[gid]) groups[gid] = []; groups[gid].push(a); });
         let articleHtml = '';
@@ -807,11 +843,41 @@
             const mainArt = group.find(a => a.lang === 'zh') || group[0];
             const otherLangs = group.filter(a => a.id !== mainArt.id);
             const groupId = mainArt.groupId || mainArt.id;
-            articleHtml += `<div class="border border-gray-200 dark:border-slate-700 p-3 rounded mb-2 bg-white dark:bg-[#0f172a]"><div class="flex justify-between items-start mb-2"><div><span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded font-bold uppercase">${mainArt.lang}</span><h4 class="font-bold text-sm mt-1">${mainArt.title}</h4></div><div class="flex gap-2"><button onclick="editArticle('${mainArt.id}')" class="text-blue-500 text-xs hover:underline">编辑</button><button onclick="deleteArticleGroup('${groupId}')" class="text-red-500 text-xs hover:underline">删除整组</button></div></div>${otherLangs.length > 0 ? `<details class="mt-2"><summary class="text-xs text-gray-500 cursor-pointer">其他语言 (${otherLangs.length})</summary><div class="mt-2 space-y-1 pl-2 border-l-2 border-gray-200 dark:border-slate-700">${otherLangs.map(a => `<div class="flex justify-between bg-gray-50 dark:bg-slate-800 p-2 rounded"><div><span class="text-[10px] bg-gray-200 dark:bg-slate-700 px-1.5 py-0.5 rounded uppercase">${a.lang}</span> <span class="text-sm">${a.title}</span></div><div class="flex gap-2"><button onclick="editArticle('${a.id}')" class="text-blue-500 text-xs">编辑</button><button onclick="deleteArticle('${a.id}')" class="text-red-500 text-xs">删除</button></div></div>`).join('')}</div></details>` : ''}</div>`;
+            articleHtml += `
+            <div class="border border-gray-200 dark:border-slate-700 p-3 rounded mb-2 bg-white dark:bg-[#0f172a]">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded font-bold uppercase">${mainArt.lang}</span>
+                        <h4 class="font-bold text-sm mt-1">${mainArt.title}</h4>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editArticleGroup('${groupId}')" class="text-blue-500 text-xs hover:underline">编辑整组</button>
+                        <button onclick="deleteArticleGroup('${groupId}')" class="text-red-500 text-xs hover:underline">删除整组</button>
+                    </div>
+                </div>
+                ${otherLangs.length > 0 ? `
+                    <details class="mt-2">
+                        <summary class="text-xs text-gray-500 cursor-pointer">其他语言 (${otherLangs.length})</summary>
+                        <div class="mt-2 space-y-1 pl-2 border-l-2 border-gray-200 dark:border-slate-700">
+                            ${otherLangs.map(a => `
+                                <div class="flex justify-between bg-gray-50 dark:bg-slate-800 p-2 rounded">
+                                    <div>
+                                        <span class="text-[10px] bg-gray-200 dark:bg-slate-700 px-1.5 py-0.5 rounded uppercase">${a.lang}</span> 
+                                        <span class="text-sm">${a.title}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] text-gray-400">只读</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </details>
+                ` : ''}
+            </div>`;
         });
         document.getElementById('articleList').innerHTML = articleHtml || '<div class="text-center text-gray-500 py-4">暂无文章</div>';
 
-        // 评论管理：复选框 + 下拉 + 列表
+        // 评论管理
         populateReviewLangSelects(data.languages);
         renderReviewList();
         const settings = data.settings || { reviewMode: 'all' };
@@ -822,6 +888,98 @@
         document.getElementById('offerList').innerHTML = data.offers.map(o => `<tr><td class="p-4"><div class="w-6 h-6 rounded" style="background-color: ${o.color}"></div></td><td class="p-4">${o.category}</td><td class="p-4 font-bold">${o.title}</td><td class="p-4 text-yellow-600">${o.reward}</td><td class="p-4"><button onclick="deleteOffer('${o.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
         document.getElementById('partnerList').innerHTML = data.partners.map(p => `<tr><td class="p-4">${p.imageUrl ? `<img src="${p.imageUrl}" class="h-8 w-auto object-contain">` : '<span class="text-gray-400">无图</span>'}</td><td class="p-4 font-bold">${p.name}</td><td class="p-4"><button onclick="editPartner('${p.id}')" class="text-blue-500 hover:underline mr-2">编辑</button><button onclick="deletePartner('${p.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
         document.getElementById('languageList').innerHTML = data.languages.map(l => `<tr><td class="p-4 font-bold">${l.code}</td><td class="p-4">${l.flag} ${l.name}</td><td class="p-4"><button onclick="toggleLangStatus('${l.code}', ${l.active})" class="px-3 py-1 rounded text-xs font-bold ${l.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300'}">${l.active ? '启用中' : '已禁用'}</button></td><td class="p-4"><button onclick="openEditLang('${l.code}')" class="text-blue-500 hover:underline">编辑字典</button></td></tr>`).join('');
+    }
+
+    /* ================= 文章管理（整组） ================= */
+    function editArticleGroup(groupId) {
+        const group = window.allArticles.filter(a => (a.groupId || a.id) === groupId);
+        if (!group || group.length === 0) return;
+        const mainArt = group.find(a => a.lang === 'zh') || group[0];
+        
+        currentEditArticleGroupId = groupId;
+        currentEditArticleMainLang = mainArt.lang;
+        
+        document.getElementById('editArticleId').value = mainArt.id; 
+        document.getElementById('artTitle').value = mainArt.title;
+        document.getElementById('artSummary').value = mainArt.summary;
+        document.getElementById('artCoverUrl').value = mainArt.coverUrl || '';
+        quill.root.innerHTML = mainArt.content || '';
+        
+        document.getElementById('articleFormTitle').innerText = '编辑文章整组 (源语言: ' + mainArt.lang + ')';
+        document.getElementById('articleSubmitBtn').innerText = '保存并翻译整组';
+        document.getElementById('articleCancelBtn').classList.remove('hidden');
+        
+        const checkboxes = document.getElementById('articleLangCheckboxes').querySelectorAll('input');
+        const existingLangs = group.map(a => a.lang);
+        
+        checkboxes.forEach(cb => {
+            cb.checked = existingLangs.includes(cb.value);
+            cb.disabled = (cb.value === mainArt.lang); // 源语言不能取消
+        });
+        
+        document.querySelector('#tab-articles').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetArticleForm() {
+        currentEditArticleGroupId = null;
+        currentEditArticleMainLang = 'zh';
+        document.getElementById('editArticleId').value = '';
+        document.getElementById('artTitle').value = ''; document.getElementById('artSummary').value = ''; document.getElementById('artCoverUrl').value = '';
+        quill.setContents([]);
+        document.getElementById('articleFormTitle').innerText = '发布新文章';
+        document.getElementById('articleSubmitBtn').innerText = '智能翻译并发布';
+        document.getElementById('articleCancelBtn').classList.add('hidden');
+
+        const checkboxes = document.getElementById('articleLangCheckboxes').querySelectorAll('input');
+        checkboxes.forEach(cb => {
+            cb.disabled = (cb.value === 'zh');
+            cb.checked = (cb.value === 'zh');
+        });
+    }
+
+    async function submitArticle() {
+        const groupId = currentEditArticleGroupId;
+        const title = document.getElementById('artTitle').value;
+        const summary = document.getElementById('artSummary').value;
+        const coverUrl = document.getElementById('artCoverUrl').value;
+        const content = quill.root.innerHTML;
+        
+        if (!title) return alert('请输入标题');
+
+        const checkedLangs = Array.from(document.querySelectorAll('#articleLangCheckboxes input:checked')).map(cb => cb.value);
+        if (checkedLangs.length === 0) return alert('请至少勾选一个发布语言');
+
+        const btn = document.getElementById('articleSubmitBtn');
+        const originalText = btn.innerText;
+        btn.innerText = '正在处理...'; btn.disabled = true;
+
+        try {
+            if (groupId) {
+                const res = await fetch(`/api/admin/article/group/${groupId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
+                    body: JSON.stringify({ 
+                        sourceLang: currentEditArticleMainLang, 
+                        targetLangs: checkedLangs, 
+                        title, summary, content, coverUrl 
+                    })
+                });
+                const data = await res.json();
+                if (data.success) { alert('保存成功！'); resetArticleForm(); fetchData(); } else alert(data.error || '保存失败');
+            } else {
+                const res = await fetch('/api/admin/article/translate', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, 
+                    body: JSON.stringify({ title, summary, content, coverUrl, targetLangs: checkedLangs }) 
+                });
+                const data = await res.json();
+                if (data.success) { alert('发布成功！'); resetArticleForm(); fetchData(); } else alert(data.error);
+            }
+        } catch (e) {
+            alert('网络错误');
+        } finally {
+            btn.innerText = originalText; btn.disabled = false;
+        }
     }
 
     /* ================= 评论管理 ================= */
@@ -1011,71 +1169,6 @@
             updateReviewModeButtons(mode);
             alert(mode === 'match' ? '已切换：按用户当前语言随机展示评论' : '已切换：全部评论随机展示');
         } catch (e) { alert('设置失败'); }
-    }
-
-    // ====== 文章相关操作 ======
-    async function submitArticle() {
-        const id = document.getElementById('editArticleId').value;
-        const title = document.getElementById('artTitle').value;
-        const summary = document.getElementById('artSummary').value;
-        const coverUrl = document.getElementById('artCoverUrl').value;
-        const content = quill.root.innerHTML;
-        if (!title) return alert('请输入标题');
-
-        const btn = document.getElementById('articleSubmitBtn');
-        const originalText = btn.innerText;
-
-        if (id) {
-            const checkedLangs = Array.from(document.querySelectorAll('#articleLangCheckboxes input:checked')).map(cb => cb.value);
-            const targetLang = checkedLangs[0] || 'zh';
-            const payload = { lang: targetLang, title, summary, content, coverUrl };
-            await fetch(`/api/admin/article/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
-            alert('修改成功'); resetArticleForm(); fetchData();
-        } else {
-            const checkedLangs = Array.from(document.querySelectorAll('#articleLangCheckboxes input:checked')).map(cb => cb.value);
-            if (checkedLangs.length === 0) return alert('请至少勾选一个发布语言');
-
-            btn.innerText = '正在翻译发布...'; btn.disabled = true;
-            try {
-                const res = await fetch('/api/admin/article/translate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ title, summary, content, coverUrl, targetLangs: checkedLangs }) });
-                const data = await res.json();
-                if (data.success) { alert('发布成功！'); resetArticleForm(); fetchData(); } else alert(data.error);
-            } catch (e) { alert('网络错误'); } finally { btn.innerText = originalText; btn.disabled = false; }
-        }
-    }
-
-    function editArticle(id) {
-        const art = (window.allArticles || []).find(a => a.id === id); if (!art) return;
-        document.getElementById('editArticleId').value = art.id;
-        document.getElementById('artTitle').value = art.title;
-        document.getElementById('artSummary').value = art.summary;
-        document.getElementById('artCoverUrl').value = art.coverUrl || '';
-        quill.root.innerHTML = art.content || '';
-        document.getElementById('articleFormTitle').innerText = '编辑文章 (' + art.lang + ')';
-        document.getElementById('articleSubmitBtn').innerText = '保存修改';
-        document.getElementById('articleCancelBtn').classList.remove('hidden');
-
-        const checkboxes = document.getElementById('articleLangCheckboxes').querySelectorAll('input');
-        checkboxes.forEach(cb => {
-            cb.checked = (cb.value === art.lang);
-            cb.disabled = false;
-        });
-        document.querySelector('#tab-articles').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function resetArticleForm() {
-        document.getElementById('editArticleId').value = '';
-        document.getElementById('artTitle').value = ''; document.getElementById('artSummary').value = ''; document.getElementById('artCoverUrl').value = '';
-        quill.setContents([]);
-        document.getElementById('articleFormTitle').innerText = '发布新文章';
-        document.getElementById('articleSubmitBtn').innerText = '智能翻译并发布';
-        document.getElementById('articleCancelBtn').classList.add('hidden');
-
-        const checkboxes = document.getElementById('articleLangCheckboxes').querySelectorAll('input');
-        checkboxes.forEach(cb => {
-            cb.disabled = (cb.value === 'zh');
-            cb.checked = (cb.value === 'zh');
-        });
     }
 
     // ====== 其他操作 ======
