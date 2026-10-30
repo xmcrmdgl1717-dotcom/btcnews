@@ -251,7 +251,30 @@ function getReqInfo(req) {
 }
 
 // ================= 前台 API =================
-app.get('/api/languages', (req, res) => res.json(readDB('languages').filter(l => l.active)));
+app.get('/api/languages', async (req, res) => {
+    try {
+        // 1. 获取原本的语言数据
+        let languages = await db.getLanguages(); // <-- 这里保留你原本获取数据的代码
+
+        // 2. 强制注入逻辑：遍历语言，覆盖对应字段
+        if (Array.isArray(languages)) {
+            languages = languages.map(lang => {
+                if (forcedDicts[lang.code]) {
+                    // 确保原本就有 dict 对象，然后强行把 forcedDicts 里的数据合并进去（覆盖同名键）
+                    lang.dict = Object.assign({}, lang.dict || {}, forcedDicts[lang.code]);
+                }
+                return lang;
+            });
+        }
+
+        // 3. 返回覆盖后的数据
+        res.json(languages);
+
+    } catch (error) {
+        console.error("加载语言字典失败:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 app.get('/api/partners', (req, res) => res.json(readDB('partners')));
 
 app.get('/api/reviews', (req, res) => {
