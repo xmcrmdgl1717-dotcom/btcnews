@@ -5,26 +5,25 @@ let currentSurveySourceLang = 'zh';
 let currentReviewMode = 'all';
 let currentEditArticleGroupId = null;
 let currentEditArticleMainLang = 'zh';
-let aceEditor = null;
 
 const ADMIN_I18N = {
     zh: {
         navDashboard: '📊 数据汇总', navUsers: '👥 用户管理', navArticles: '📝 文章管理',
         navReviews: '💬 评论管理', navSurveys: '📋 问卷管理', navOffers: '🎁 优惠管理',
-        navPartners: '🤝 合作墙管理', navLanguages: '🌐 多语言管理', navSettings: '⚙️ 系统设置', navCodeEditor: '💻 代码编辑器',
+        navPartners: '🤝 合作墙管理', navLanguages: '🌐 多语言管理', navSettings: '⚙️ 系统设置',
         changePwd: '修改密码', logout: '退出登录', loginTitle: '后台登录', loginPlaceholder: '请输入后台密码', loginBtn: '登录',
         pageDashboard: '数据汇总', pageUsers: '用户管理', pageArticles: '文章管理', pageReviews: '评论管理',
         pageSurveys: '问卷管理', pageOffers: '优惠管理', pagePartners: '合作墙管理', pageLanguages: '多语言管理',
-        pageSettings: '系统设置', pageCodeEditor: '代码编辑器'
+        pageSettings: '系统设置'
     },
     en: {
         navDashboard: '📊 Dashboard', navUsers: '👥 Users', navArticles: '📝 Articles',
         navReviews: '💬 Reviews', navSurveys: '📋 Surveys', navOffers: '🎁 Offers',
-        navPartners: '🤝 Partners', navLanguages: '🌐 Languages', navSettings: '⚙️ Settings', navCodeEditor: '💻 Code Editor',
+        navPartners: '🤝 Partners', navLanguages: '🌐 Languages', navSettings: '⚙️ Settings',
         changePwd: 'Change Password', logout: 'Logout', loginTitle: 'Admin Login', loginPlaceholder: 'Enter admin password', loginBtn: 'Login',
         pageDashboard: 'Dashboard', pageUsers: 'Users', pageArticles: 'Articles', pageReviews: 'Reviews',
         pageSurveys: 'Surveys', pageOffers: 'Offers', pagePartners: 'Partners', pageLanguages: 'Languages',
-        pageSettings: 'Settings', pageCodeEditor: 'Code Editor'
+        pageSettings: 'Settings'
     }
 };
 let adminLang = localStorage.getItem('wad_admin_lang') || 'zh';
@@ -121,7 +120,6 @@ function switchTab(tabId, el) {
     const navKey = el.getAttribute('data-i18n');
     const pageKey = navKey ? navKey.replace(/^nav/, 'page') : '';
     document.getElementById('pageTitle').innerText = dict[pageKey] || el.innerText;
-    if (tabId === 'code') loadFileList();
 }
 
 function openChangePwd() { document.getElementById('changePwdModal').classList.add('active'); }
@@ -136,69 +134,6 @@ async function uploadImage(file) {
     const formData = new FormData(); formData.append('image', file);
     const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'x-admin-pwd': adminPwd }, body: formData });
     const data = await res.json(); return data.url;
-}
-
-/* ================= 代码编辑器逻辑 ================= */
-function initCodeEditor() {
-    if (!aceEditor) {
-        aceEditor = ace.edit("codeEditor");
-        aceEditor.setTheme("ace/theme/tomorrow_night");
-        aceEditor.session.setMode("ace/mode/javascript");
-        aceEditor.setOptions({ fontSize: "14px", showPrintMargin: false, wrap: true, enableBasicAutocompletion: true, enableLiveAutocompletion: true });
-    }
-}
-
-async function loadFileList() {
-    try {
-        const res = await fetch('/api/admin/files', { headers: { 'x-admin-pwd': adminPwd } });
-        const files = await res.json();
-        const select = document.getElementById('codeFileSelect');
-        select.innerHTML = files.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
-        if (files.length > 0) loadFileContent();
-    } catch(e) { alert('加载文件列表失败'); }
-}
-
-async function loadFileContent() {
-    const filename = document.getElementById('codeFileSelect').value;
-    if (!filename) return;
-    initCodeEditor();
-    const btn = document.getElementById('saveCodeBtn');
-    btn.disabled = true;
-    try {
-        const res = await fetch(`/api/admin/file-content?filename=${filename}`, { headers: { 'x-admin-pwd': adminPwd } });
-        const data = await res.json();
-        if (data.success) {
-            aceEditor.setValue(data.content, -1);
-            const ext = filename.split('.').pop();
-            if (ext === 'js') aceEditor.session.setMode("ace/mode/javascript");
-            else if (ext === 'html') aceEditor.session.setMode("ace/mode/html");
-            else if (ext === 'json') aceEditor.session.setMode("ace/mode/json");
-            else aceEditor.session.setMode("ace/mode/text");
-            btn.disabled = false;
-        } else alert(data.error);
-    } catch (e) { alert('读取文件失败'); }
-}
-
-async function saveFileContent() {
-    const filename = document.getElementById('codeFileSelect').value;
-    if (!filename) return;
-    const content = aceEditor.getValue();
-    const btn = document.getElementById('saveCodeBtn');
-    const originalText = btn.innerText;
-    btn.innerText = '保存中...'; btn.disabled = true;
-    try {
-        const res = await fetch('/api/admin/file-content', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
-            body: JSON.stringify({ filename, content })
-        });
-        const data = await res.json();
-        if (data.success) {
-            if (data.needsRestart) alert('代码已保存！注意：因为修改了后端文件，你需要去 Render 控制台手动重启一次服务才能生效。');
-            else alert('代码保存成功！刷新网页即可查看效果。');
-        } else alert(data.error);
-    } catch (e) { alert('网络异常，保存失败'); } 
-    finally { btn.innerText = originalText; btn.disabled = false; }
 }
 
 /* ================= 表单与渲染逻辑 ================= */
