@@ -376,27 +376,30 @@ app.post('/api/admin/survey/translate', auth, async (req, res) => {
     surveys.questions[sourceLang] = questions;
     const foreignLangs = targetLangs.filter(lang => lang !== sourceLang);
 
-    try {
-        for (let lang of foreignLangs) {
-            const googleLang = lang.split('-')[0];
-            const translated = [];
-            for (let q of questions) {
-                const tTitle = (await translate(q.title, { to: googleLang })).text;
-                const tOptions = [];
-                for (let opt of q.options) {
-                    tOptions.push((await translate(opt, { to: googleLang })).text);
-                }
-                translated.push({ id: q.id, title: tTitle, options: tOptions });
+   try {
+    for (let lang of foreignLangs) {
+        const googleLang = lang.split('-')[0];
+        const translated = [];
+        for (let q of questions) {
+            const tTitle = await translateWithPolling(q.title, googleLang, sourceLang);
+            const tOptions = [];
+            for (let opt of q.options) {
+                tOptions.push(await translateWithPolling(opt, googleLang, sourceLang));
             }
-            surveys.questions[lang] = translated;
+            translated.push({ id: q.id, title: tTitle, options: tOptions });
         }
-        writeDB('surveys', surveys);
-        res.json({ success: true });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: '翻译失败' });
+        surveys.questions[lang] = translated;
     }
-});
+    writeDB('surveys', surveys);
+    res.json({ success: true });
+} catch (e) {
+    console.error('[问卷] 翻译失败:', e);
+    res.status(502).json({
+        error: '翻译失败',
+        reason: describeError(e),
+        details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
+    });
+}
 
 app.post('/api/admin/languages', auth, (req, res) => {
     const { code, name, flag } = req.body;
@@ -426,16 +429,24 @@ app.post('/api/admin/article/translate', auth, async (req, res) => {
         for (let lang of foreignLangs) {
             const googleLang = lang.split('-')[0];
             const [tTitle, tSummary, tContent] = await Promise.all([
-                translate(title, { to: googleLang }), translate(summary, { to: googleLang }), translate(content, { to: googleLang })
-            ]);
-            translatedArticles.push({ id: uuidv4(), groupId, lang, title: tTitle.text, summary: tSummary.text, content: tContent.text, coverUrl, time: new Date().toISOString() });
+              translateWithPolling(title, googleLang, 'zh'),
+              translateWithPolling(summary, googleLang, 'zh'),
+              translateWithPolling(content, googleLang, 'zh')
+]);
+    translatedArticles.push({ id: uuidv4(), groupId, lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });});
             await new Promise(r => setTimeout(r, 500));
         }
         articles.push(...translatedArticles);
         writeDB('articles', articles);
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: '翻译失败' }); }
-});
+   } catch (e) {
+    console.error('[文章新建] 翻译失败:', e);
+    res.status(502).json({
+        error: '翻译失败',
+        reason: describeError(e),
+        details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
+    });
+}
 
 app.put('/api/admin/article/:id', auth, (req, res) => {
     const { lang, title, summary, content, coverUrl } = req.body;
@@ -482,20 +493,23 @@ app.post('/api/admin/reviews', auth, async (req, res) => {
 
         // 翻译并保存其他语言
         for (let lang of foreignLangs) {
-            const googleLang = lang.split('-')[0];
-            const tText = (await translate(text, { to: googleLang })).text;
-            const tName = (await translate(name, { to: googleLang })).text;
-            reviews.push({ id: uuidv4(), groupId, lang, stars: Number(stars) || 5, name: tName, text: tText });
-            await new Promise(r => setTimeout(r, 300));
-        }
+    const googleLang = lang.split('-')[0];
+    const tText = await translateWithPolling(text, googleLang, 'zh');
+    const tName = await translateWithPolling(name, googleLang, 'zh');
+    reviews.push({ id: uuidv4(), groupId, lang, stars: Number(stars) || 5, name: tName, text: tText });
+    await new Promise(r => setTimeout(r, 300));
+}
 
         writeDB('reviews', reviews);
         res.json({ success: true });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: '翻译失败' });
-    }
-});
+   } catch (e) {
+    console.error('[评论] 翻译失败:', e);
+    res.status(502).json({
+        error: '翻译失败',
+        reason: describeError(e),
+        details: e.errors || [{ provider: e.provider, type: e.type, message: e.message }]
+    });
+}
 
 app.put('/api/admin/reviews/:id', auth, (req, res) => {
     const { lang, stars, name, text } = req.body;
