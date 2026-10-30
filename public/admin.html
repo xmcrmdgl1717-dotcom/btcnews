@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>W-Airdrop CMS</title>
 <script>
-    /* 主题初始化：必须在 tailwind 之前，避免闪烁；同时保证 html 上只有一个主题类 */
     (function () {
         var t = localStorage.getItem('wad_theme') || 'dark';
         var html = document.documentElement;
@@ -30,7 +29,6 @@
     .modal.active { display: flex; }
     .tag { display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; border: 1px solid; }
 
-    /* Light/Dark 变量：统一挂在 <html> 上，body 不再切类 */
     html.light body { background-color: #f3f4f6; color: #1f2937; }
     html.dark  body { background-color: #0f172a; color: #e2e8f0; }
 
@@ -179,9 +177,12 @@
                             </div>
                             <input type="text" id="artTitle" placeholder="源标题" class="input w-full p-2 rounded">
                             <textarea id="artSummary" placeholder="源摘要" class="input w-full p-2 rounded" rows="2"></textarea>
-                            <div class="flex items-center gap-2">
-                                <input type="file" id="artCoverFile" accept="image/*" class="text-sm w-full text-gray-500 dark:text-slate-400">
-                                <input type="text" id="artCoverUrl" placeholder="封面图URL" class="input flex-1 p-2 rounded text-sm" readonly>
+                            <div>
+                                <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">封面图 (建议尺寸 1200x630 16:9，最大 2MB)</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="file" id="artCoverFile" accept="image/*" class="text-sm w-full text-gray-500 dark:text-slate-400">
+                                    <input type="text" id="artCoverUrl" placeholder="封面图URL" class="input flex-1 p-2 rounded text-sm" readonly>
+                                </div>
                             </div>
                             <div class="bg-white text-black"><div id="editor-container"></div></div>
                         </div>
@@ -200,24 +201,36 @@
             <!-- 4. 问卷管理 -->
             <div id="tab-surveys" class="content-section">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card p-6">
+                    <!-- 左侧：配置区 -->
+                    <div class="card p-6 flex flex-col">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold">问卷题目配置 (可视化)</h3>
-                            <button onclick="addSurveyQuestion()" class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50">添加题目</button>
+                            <h3 class="font-bold" id="surveyFormTitle">发布新问卷</h3>
+                            <div class="flex gap-2">
+                                <button onclick="resetSurveyForm()" id="surveyResetBtn" class="hidden bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-3 py-1 rounded text-sm hover:bg-gray-300 dark:hover:bg-slate-600">取消编辑</button>
+                                <button onclick="addSurveyQuestion()" class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50">+ 添加题目</button>
+                            </div>
                         </div>
-                        <div class="border border-gray-200 dark:border-slate-700 p-3 rounded bg-gray-50 dark:bg-[#0f172a] mb-4">
-                            <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布问卷语言 (后端自动翻译):</p>
+                        <div class="border border-gray-200 dark:border-slate-700 p-3 rounded bg-gray-50 dark:bg-[#0f172a] mb-4" id="surveyLangBox">
+                            <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言 (源语言固定为中文，勾选其他语言将进行机翻):</p>
                             <div class="flex flex-wrap gap-3" id="surveyLangCheckboxes"></div>
                         </div>
-                        <div id="surveyConfigArea" class="space-y-4 mb-4 max-h-[500px] overflow-y-auto pr-2"></div>
-                        <button onclick="saveSurvey(this)" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">保存并翻译问卷</button>
+                        <div id="surveyConfigArea" class="space-y-4 mb-4 max-h-[500px] overflow-y-auto pr-2 flex-1"></div>
+                        <button onclick="saveSurvey(this)" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 mt-2">保存并更新问卷</button>
                     </div>
-                    <div class="card p-6 overflow-y-auto" style="max-height: 800px;">
-                        <h3 class="font-bold mb-4">用户提交记录</h3>
-                        <table class="w-full text-left text-sm">
-                            <thead><tr><th class="p-3">用户</th><th class="p-3">答案</th><th class="p-3">时间</th></tr></thead>
-                            <tbody id="surveyList"></tbody>
-                        </table>
+                    
+                    <!-- 右侧：上下结构 -->
+                    <div class="flex flex-col gap-6" style="max-height: 800px;">
+                        <div class="card p-6 flex-1 overflow-y-auto">
+                            <h3 class="font-bold mb-4">已发布问卷列表</h3>
+                            <div id="surveyPublishedList" class="space-y-3"></div>
+                        </div>
+                        <div class="card p-6 flex-1 overflow-y-auto">
+                            <h3 class="font-bold mb-4">用户提交记录</h3>
+                            <table class="w-full text-left text-sm">
+                                <thead><tr><th class="p-3">用户</th><th class="p-3">答案</th><th class="p-3">时间</th></tr></thead>
+                                <tbody id="surveyList"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -306,50 +319,22 @@
     let adminPwd = '';
     let quill = null;
     let allVisits = [];
+    let currentSurveySourceLang = 'zh';
 
-    /* ================= 后台中英文 ================= */
     const ADMIN_I18N = {
         zh: {
-            navDashboard: '📊 数据汇总',
-            navUsers: '👥 用户管理',
-            navArticles: '📝 文章管理',
-            navSurveys: '📋 问卷管理',
-            navOffers: '🎁 优惠管理',
-            navPartners: '🤝 合作墙管理',
-            navLanguages: '🌐 多语言管理',
-            changePwd: '修改密码',
-            logout: '退出登录',
-            loginTitle: '后台登录',
-            loginPlaceholder: '请输入后台密码',
-            loginBtn: '登录',
-            pageDashboard: '数据汇总',
-            pageUsers: '用户管理',
-            pageArticles: '文章管理',
-            pageSurveys: '问卷管理',
-            pageOffers: '优惠管理',
-            pagePartners: '合作墙管理',
-            pageLanguages: '多语言管理'
+            navDashboard: '📊 数据汇总', navUsers: '👥 用户管理', navArticles: '📝 文章管理', navSurveys: '📋 问卷管理',
+            navOffers: '🎁 优惠管理', navPartners: '🤝 合作墙管理', navLanguages: '🌐 多语言管理', changePwd: '修改密码',
+            logout: '退出登录', loginTitle: '后台登录', loginPlaceholder: '请输入后台密码', loginBtn: '登录',
+            pageDashboard: '数据汇总', pageUsers: '用户管理', pageArticles: '文章管理', pageSurveys: '问卷管理',
+            pageOffers: '优惠管理', pagePartners: '合作墙管理', pageLanguages: '多语言管理'
         },
         en: {
-            navDashboard: '📊 Dashboard',
-            navUsers: '👥 Users',
-            navArticles: '📝 Articles',
-            navSurveys: '📋 Surveys',
-            navOffers: '🎁 Offers',
-            navPartners: '🤝 Partners',
-            navLanguages: '🌐 Languages',
-            changePwd: 'Change Password',
-            logout: 'Logout',
-            loginTitle: 'Admin Login',
-            loginPlaceholder: 'Enter admin password',
-            loginBtn: 'Login',
-            pageDashboard: 'Dashboard',
-            pageUsers: 'Users',
-            pageArticles: 'Articles',
-            pageSurveys: 'Surveys',
-            pageOffers: 'Offers',
-            pagePartners: 'Partners',
-            pageLanguages: 'Languages'
+            navDashboard: '📊 Dashboard', navUsers: '👥 Users', navArticles: '📝 Articles', navSurveys: '📋 Surveys',
+            navOffers: '🎁 Offers', navPartners: '🤝 Partners', navLanguages: '🌐 Languages', changePwd: 'Change Password',
+            logout: 'Logout', loginTitle: 'Admin Login', loginPlaceholder: 'Enter admin password', loginBtn: 'Login',
+            pageDashboard: 'Dashboard', pageUsers: 'Users', pageArticles: 'Articles', pageSurveys: 'Surveys',
+            pageOffers: 'Offers', pagePartners: 'Partners', pageLanguages: 'Languages'
         }
     };
     let adminLang = localStorage.getItem('wad_admin_lang') || 'zh';
@@ -364,7 +349,6 @@
             const key = el.getAttribute('data-i18n-placeholder');
             if (dict[key] !== undefined) el.placeholder = dict[key];
         });
-        // 同步当前页标题
         const activeMenu = document.querySelector('.menu-item.active');
         if (activeMenu) {
             const navKey = activeMenu.getAttribute('data-i18n');
@@ -385,21 +369,15 @@
         quill = new Quill('#editor-container', { theme: 'snow', modules: { toolbar: [ [{ header: [1, 2, false] }], ['bold', 'italic', 'underline'], ['image'], ['clean'] ] } });
     }
 
-    // 主题切换：只操作 <html>，避免 body / html 主题不一致
     function toggleTheme() {
         const html = document.documentElement;
         if (html.classList.contains('dark')) {
-            html.classList.remove('dark');
-            html.classList.add('light');
-            localStorage.setItem('wad_theme', 'light');
+            html.classList.remove('dark'); html.classList.add('light'); localStorage.setItem('wad_theme', 'light');
         } else {
-            html.classList.remove('light');
-            html.classList.add('dark');
-            localStorage.setItem('wad_theme', 'dark');
+            html.classList.remove('light'); html.classList.add('dark'); localStorage.setItem('wad_theme', 'dark');
         }
     }
 
-    // ===== 登录（刷新保留）=====
     async function doLogin() {
         adminPwd = document.getElementById('adminPwd').value;
         try {
@@ -421,18 +399,12 @@
                 document.getElementById('loginOverlay').classList.add('hidden');
                 fetchData();
             } else {
-                sessionStorage.removeItem('wad_admin_pwd');
-                adminPwd = '';
+                sessionStorage.removeItem('wad_admin_pwd'); adminPwd = '';
             }
-        } catch (e) {
-            // 网络异常：保留密码，留在登录页
-        }
+        } catch (e) {}
     }
 
-    function logout() {
-        sessionStorage.removeItem('wad_admin_pwd');
-        location.reload();
-    }
+    function logout() { sessionStorage.removeItem('wad_admin_pwd'); location.reload(); }
 
     function switchTab(tabId, el) {
         document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active'));
@@ -450,9 +422,7 @@
         const pwd = document.getElementById('newPwdInput').value;
         if (!pwd) return;
         await fetch('/api/admin/password', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify({ newPassword: pwd }) });
-        sessionStorage.removeItem('wad_admin_pwd');
-        alert('修改成功，请重新登录');
-        location.reload();
+        sessionStorage.removeItem('wad_admin_pwd'); alert('修改成功，请重新登录'); location.reload();
     }
 
     async function uploadImage(file) {
@@ -474,12 +444,12 @@
         document.getElementById('pImageUrl').value = await uploadImage(file);
     });
 
-    // 问卷可视化编辑
+    /* ================= 问卷可视化编辑 ================= */
     function renderSurveyEditor(questions) {
         const area = document.getElementById('surveyConfigArea');
         area.innerHTML = '';
         if (!questions || questions.length === 0) {
-            area.innerHTML = '<div class="text-center text-gray-500 py-4">暂无题目，请点击上方"添加题目"</div>';
+            area.innerHTML = '<div class="text-center text-gray-500 py-4">暂无题目，请点击右上角"添加题目"</div>';
             return;
         }
         questions.forEach((q, i) => {
@@ -488,9 +458,9 @@
             div.innerHTML = `
                 <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 text-xs hover:underline">删除</button>
                 <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">题目 ${i+1}</label>
-                <input type="text" class="q-title input w-full p-2 rounded mb-2 text-sm" value="${q.title}">
+                <input type="text" class="q-title input w-full p-2 rounded mb-2 text-sm" value="${q.title || ''}">
                 <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">选项 (每行一个)</label>
-                <textarea class="q-options input w-full p-2 rounded text-sm" rows="3">${q.options.join('\n')}</textarea>
+                <textarea class="q-options input w-full p-2 rounded text-sm" rows="3">${(q.options||[]).join('\n')}</textarea>
             `;
             area.appendChild(div);
         });
@@ -498,6 +468,7 @@
 
     function addSurveyQuestion() {
         const area = document.getElementById('surveyConfigArea');
+        if (area.innerHTML.includes('暂无题目')) area.innerHTML = '';
         const div = document.createElement('div');
         div.className = 'border border-gray-200 dark:border-slate-700 p-3 rounded bg-white dark:bg-[#0f172a] relative';
         div.innerHTML = `
@@ -510,11 +481,57 @@
         area.appendChild(div);
     }
 
+    function editSurveyLang(lang) {
+        if (!window.allSurveys || !window.allSurveys.questions[lang]) return;
+        const questions = window.allSurveys.questions[lang];
+        renderSurveyEditor(questions);
+        currentSurveySourceLang = lang;
+        
+        document.getElementById('surveyFormTitle').innerText = '编辑问卷 (' + lang + ')';
+        document.getElementById('surveyResetBtn').classList.remove('hidden');
+        
+        const langBox = document.getElementById('surveyLangBox');
+        langBox.innerHTML = `
+            <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">当前编辑源语言: <span class="text-blue-500 uppercase">${lang}</span>，勾选其他语言将进行机器翻译覆盖:</p>
+            <div class="flex flex-wrap gap-3" id="surveyLangCheckboxes"></div>
+        `;
+        const cbContainer = document.getElementById('surveyLangCheckboxes');
+        cbContainer.innerHTML = (window.allLangs || []).filter(l => l.active).map(l => `
+            <label class="flex items-center gap-1 text-sm cursor-pointer">
+                <input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === lang ? 'checked disabled' : ''}> 
+                ${l.flag} ${l.name}
+            </label>
+        `).join('');
+    }
+
+    function resetSurveyForm() {
+        currentSurveySourceLang = 'zh';
+        document.getElementById('surveyFormTitle').innerText = '发布新问卷';
+        document.getElementById('surveyResetBtn').classList.add('hidden');
+        
+        const langBox = document.getElementById('surveyLangBox');
+        langBox.innerHTML = `
+            <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言 (源语言固定为中文，勾选其他语言将进行机翻):</p>
+            <div class="flex flex-wrap gap-3" id="surveyLangCheckboxes"></div>
+        `;
+        renderSurveyEditor([]);
+        
+        document.getElementById('surveyLangCheckboxes').innerHTML = (window.allLangs || []).filter(l => l.active).map(l => `
+            <label class="flex items-center gap-1 text-sm cursor-pointer">
+                <input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}> 
+                ${l.flag} ${l.name}
+            </label>
+        `).join('');
+    }
+
     async function saveSurvey(btn) {
         const area = document.getElementById('surveyConfigArea');
         const questions = [];
-        for (let i = 0; i < area.children.length; i++) {
-            const el = area.children[i];
+        // 跳过"暂无题目"
+        const children = Array.from(area.children).filter(el => el.tagName === 'DIV' && el.querySelector('.q-title'));
+        
+        for (let i = 0; i < children.length; i++) {
+            const el = children[i];
             const title = el.querySelector('.q-title').value.trim();
             const optsText = el.querySelector('.q-options').value.trim();
             if (title && optsText) {
@@ -522,24 +539,27 @@
                 questions.push({ id: 'q' + (i + 1), title, options });
             }
         }
+        
         const checkedLangs = Array.from(document.querySelectorAll('#surveyLangCheckboxes input:checked')).map(cb => cb.value);
+        if (!checkedLangs.includes(currentSurveySourceLang)) checkedLangs.push(currentSurveySourceLang);
 
         const originalText = btn.innerText;
-        btn.innerText = '正在翻译并保存...'; btn.disabled = true;
+        btn.innerText = '正在保存处理...'; btn.disabled = true;
 
         try {
             await fetch('/api/admin/survey/translate', {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
-                body: JSON.stringify({ questions, targetLangs: checkedLangs })
+                body: JSON.stringify({ questions, targetLangs: checkedLangs, sourceLang: currentSurveySourceLang })
             });
-            alert('问卷已保存并翻译');
+            alert('问卷已保存并更新');
+            resetSurveyForm();
         } finally {
             btn.innerText = originalText; btn.disabled = false;
             fetchData();
         }
     }
 
-    // 数据看板渲染
+    /* ================= 数据看板渲染 ================= */
     function renderVisitList() {
         const fStatus = document.getElementById('filterStatus').value;
         const fDevice = document.getElementById('filterDevice').value;
@@ -620,6 +640,7 @@
         window.allPartners = data.partners;
         window.allUsers = data.users;
         window.allLangs = data.languages;
+        window.allSurveys = data.surveys;
         allVisits = data.visits || [];
 
         // 统计卡片
@@ -630,7 +651,7 @@
         document.getElementById('statAndroid').innerText = allVisits.filter(v => v.os === 'Android').length;
         document.getElementById('statIos').innerText = allVisits.filter(v => v.os === 'iOS').length;
 
-        // 语言筛选（保留当前选中值）
+        // 语言筛选
         const langFilter = document.getElementById('filterLang');
         const prevLang = langFilter.value;
         const uniqueLangs = [...new Set(allVisits.map(v => v.lang).filter(Boolean))];
@@ -639,13 +660,30 @@
 
         renderVisitList();
 
-        // 问卷配置
-        const zhQuestions = data.surveys.questions['zh'] || [];
-        renderSurveyEditor(zhQuestions);
-        document.getElementById('surveyLangCheckboxes').innerHTML = data.languages.filter(l => l.active).map(l => `<label class="flex items-center gap-1 text-sm cursor-pointer"><input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}> ${l.flag} ${l.name}</label>`).join('');
-        document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `<tr><td class="p-3 font-medium">${s.email || '游客'}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${JSON.stringify(s.answers)}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${new Date(s.time).toLocaleString()}</td></tr>`).join('');
+        // 问卷列表渲染
+        let pubHtml = '';
+        Object.keys(data.surveys.questions || {}).forEach(lang => {
+            const langObj = data.languages.find(l => l.code === lang) || { name: lang, flag: '🌐' };
+            const count = data.surveys.questions[lang].length;
+            pubHtml += `
+                <div class="border border-gray-200 dark:border-slate-700 p-3 rounded mb-2 bg-white dark:bg-[#0f172a] flex justify-between items-center">
+                    <div>
+                        <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded font-bold uppercase">${lang}</span>
+                        <span class="text-sm ml-2">${langObj.flag} ${langObj.name}</span>
+                        <div class="text-xs text-gray-500 mt-1">${count} 道题目</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editSurveyLang('${lang}')" class="text-blue-500 text-xs hover:underline">编辑</button>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('surveyPublishedList').innerHTML = pubHtml || '<div class="text-center text-gray-500 py-4">暂无发布的问卷</div>';
+        
+        // 用户提交记录
+        document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `<tr><td class="p-3 font-medium">${s.email || '游客'}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${JSON.stringify(s.answers)}</td><td class="p-3 text-xs text-gray-500 dark:text-slate-400">${new Date(s.time).toLocaleString()}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-500">暂无记录</td></tr>';
 
-        // 其他 Tab 数据
+        // 文章
         document.getElementById('userList').innerHTML = data.users.map(u => `<tr><td class="p-4">${u.email}</td><td class="p-4 text-gray-500">${u.password}</td><td class="p-4 font-bold text-blue-600">${u.balance || 0}</td><td class="p-4 text-gray-500">${new Date(u.time).toLocaleString()}</td></tr>`).join('');
         document.getElementById('articleLangCheckboxes').innerHTML = data.languages.filter(l => l.active).map(l => `<label class="flex items-center gap-1 text-sm cursor-pointer"><input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}> ${l.flag} ${l.name}</label>`).join('');
 
@@ -660,12 +698,13 @@
         });
         document.getElementById('articleList').innerHTML = articleHtml || '<div class="text-center text-gray-500 py-4">暂无文章</div>';
 
+        // 其他
         document.getElementById('offerList').innerHTML = data.offers.map(o => `<tr><td class="p-4"><div class="w-6 h-6 rounded" style="background-color: ${o.color}"></div></td><td class="p-4">${o.category}</td><td class="p-4 font-bold">${o.title}</td><td class="p-4 text-yellow-600">${o.reward}</td><td class="p-4"><button onclick="deleteOffer('${o.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
         document.getElementById('partnerList').innerHTML = data.partners.map(p => `<tr><td class="p-4">${p.imageUrl ? `<img src="${p.imageUrl}" class="h-8 w-auto object-contain">` : '<span class="text-gray-400">无图</span>'}</td><td class="p-4 font-bold">${p.name}</td><td class="p-4"><button onclick="editPartner('${p.id}')" class="text-blue-500 hover:underline mr-2">编辑</button><button onclick="deletePartner('${p.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
         document.getElementById('languageList').innerHTML = data.languages.map(l => `<tr><td class="p-4 font-bold">${l.code}</td><td class="p-4">${l.flag} ${l.name}</td><td class="p-4"><button onclick="toggleLangStatus('${l.code}', ${l.active})" class="px-3 py-1 rounded text-xs font-bold ${l.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300'}">${l.active ? '启用中' : '已禁用'}</button></td><td class="p-4"><button onclick="openEditLang('${l.code}')" class="text-blue-500 hover:underline">编辑字典</button></td></tr>`).join('');
     }
 
-    // 其他操作函数
+    // ====== 文章相关操作 ======
     async function submitArticle() {
         const id = document.getElementById('editArticleId').value;
         const title = document.getElementById('artTitle').value;
@@ -678,7 +717,9 @@
         const originalText = btn.innerText;
 
         if (id) {
-            const payload = { lang: 'zh', title, summary, content, coverUrl };
+            const checkedLangs = Array.from(document.querySelectorAll('#articleLangCheckboxes input:checked')).map(cb => cb.value);
+            const targetLang = checkedLangs[0] || 'zh';
+            const payload = { lang: targetLang, title, summary, content, coverUrl };
             await fetch(`/api/admin/article/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd }, body: JSON.stringify(payload) });
             alert('修改成功'); resetArticleForm(); fetchData();
         } else {
@@ -701,10 +742,15 @@
         document.getElementById('artSummary').value = art.summary;
         document.getElementById('artCoverUrl').value = art.coverUrl || '';
         quill.root.innerHTML = art.content || '';
-        document.getElementById('articleFormTitle').innerText = '编辑文章';
+        document.getElementById('articleFormTitle').innerText = '编辑文章 (' + art.lang + ')';
         document.getElementById('articleSubmitBtn').innerText = '保存修改';
         document.getElementById('articleCancelBtn').classList.remove('hidden');
-        document.getElementById('articleLangCheckboxes').parentElement.style.display = 'none';
+        
+        const checkboxes = document.getElementById('articleLangCheckboxes').querySelectorAll('input');
+        checkboxes.forEach(cb => {
+            cb.checked = (cb.value === art.lang);
+            cb.disabled = false; // 允许用户修改/切换语言
+        });
         document.querySelector('#tab-articles').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -715,9 +761,15 @@
         document.getElementById('articleFormTitle').innerText = '发布新文章';
         document.getElementById('articleSubmitBtn').innerText = '智能翻译并发布';
         document.getElementById('articleCancelBtn').classList.add('hidden');
-        document.getElementById('articleLangCheckboxes').parentElement.style.display = 'block';
+        
+        const checkboxes = document.getElementById('articleLangCheckboxes').querySelectorAll('input');
+        checkboxes.forEach(cb => {
+            cb.disabled = (cb.value === 'zh');
+            cb.checked = (cb.value === 'zh');
+        });
     }
 
+    // ====== 其他操作 ======
     async function savePartner() {
         const id = document.getElementById('editPartnerId').value;
         const name = document.getElementById('pName').value;
@@ -791,7 +843,6 @@
         } catch (e) { alert('JSON 格式错误'); }
     }
 
-    // 初始化
     applyAdminLang();
     tryAutoLogin();
 </script>
