@@ -150,14 +150,12 @@
     </div>
 </footer>
 
-<!-- Safari 拦截弹窗 (已按新样式重做) -->
+<!-- Safari 拦截弹窗 -->
 <div id="safariModal" class="modal">
     <div class="bg-[#1e293b] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-gray-700 relative shadow-2xl">
         <button onclick="closeModal('safariModal')" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-white">&times;</button>
         
-        <!-- Safari 图标区域 (支持后台配置替换) -->
         <div class="flex justify-center mb-4 mt-2">
-            <!-- 默认的高仿 Safari SVG 图标 -->
             <svg id="defaultSafariSvg" viewBox="0 0 100 100" class="w-16 h-16" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="50" cy="50" r="48" fill="#1B8EF2" stroke="#E5E7EB" stroke-width="2"/>
                 <g stroke="#FFFFFF" stroke-width="1.5" opacity="0.6">
@@ -171,14 +169,12 @@
                 <polygon points="50,50 62,50 50,75" fill="#EF4444" />
                 <circle cx="50" cy="50" r="3" fill="#1B8EF2" />
             </svg>
-            <!-- 后台自定义上传的图标 -->
             <img id="customSafariLogo" src="" class="w-16 h-16 hidden object-contain rounded-xl">
         </div>
 
         <h3 class="text-xl font-bold mb-2" data-i18n="safariTitle">请使用 Safari 浏览器打开</h3>
         <p class="text-sm text-gray-300 mb-6" data-i18n="safariDesc">请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。</p>
         
-        <!-- 红圈部分修改：去掉了文字，只留动态获取的链接 -->
         <div class="bg-[#0f172a] rounded-xl p-4 mb-6 border border-gray-700 text-left">
             <input type="text" id="safariLinkInput" readonly class="w-full bg-[#1e293b] border border-gray-700 rounded-lg p-3 text-blue-400 text-sm font-mono outline-none text-center select-all cursor-pointer">
         </div>
@@ -231,7 +227,8 @@
         </div>
 
         <div id="surveyStep2" class="hidden">
-            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep2Title">加密货币市场交易调查</h3>
+            <!-- 注：此处已被您要求与 Step1 文本保持一致 -->
+            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep2Title">用户习惯请您认真填写</h3>
             <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
             <div id="surveyQuestions2" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
             <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="surveyNextBtn">下一步</button>
@@ -445,24 +442,33 @@
     function isSafari() {
         if (!isIOS()) return false;
         const ua = navigator.userAgent;
-        // 排除 iOS 上的 Chrome, Firefox, Edge, Opera, 微信, QQ 等
         return /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|MQQBrowser|MicroMessenger|QQ\/|Weibo|AlipayClient/.test(ua);
     }
 
-    // 全局拦截：先判断 Safari，再判断登录状态
+    // 【核心修复】：处理动作前先检查用户是否已登录
     function triggerSafariCheck(action, url = '') {
         if (!isSafari()) {
             openModal('safariModal');
             return;
         }
-        // 如果是 Safari，继续后续逻辑
+
+        // 解析用户状态
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+
         if (action === 'login') {
-            openModal('loginModal');
+            if (user) {
+                window.location.href = 'dashboard.html'; // 如果已登录，点击登录直接去后台
+            } else {
+                openModal('loginModal');
+            }
         } else if (action === 'register') {
-            openModal('registerModal');
+            if (user) {
+                window.location.href = 'dashboard.html'; // 如果已登录，点击领取直接去任务页
+            } else {
+                openModal('registerModal');
+            }
         } else if (action === 'link' && url) {
-            // 检查是否需要登录（如果 action 是 link，通常也需要登录拦截）
-            const user = JSON.parse(localStorage.getItem('wad_user'));
             if (!user) {
                 openModal('loginModal');
             } else {
@@ -471,28 +477,30 @@
         }
     }
 
-    // 专门针对排行榜的登录拦截（已内置 Safari 检查）
+    // 专门针对排行榜的登录拦截
     function checkLoginForLeaderboard(event) {
         if (!isSafari()) {
             event.preventDefault();
             openModal('safariModal');
             return;
         }
-        const user = JSON.parse(localStorage.getItem('wad_user'));
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
         if (!user) {
             event.preventDefault();
             openModal('loginModal');
         }
     }
 
-    // 专门针对文章“查看全文”的登录拦截（已内置 Safari 检查）
+    // 专门针对文章“查看全文”的登录拦截
     function checkLoginForArticle(event, url) {
         if (!isSafari()) {
             event.preventDefault();
             openModal('safariModal');
             return;
         }
-        const user = JSON.parse(localStorage.getItem('wad_user'));
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
         if (!user) {
             event.preventDefault();
             openModal('loginModal');
@@ -511,7 +519,7 @@
         document.getElementById(id).classList.remove('active'); 
     }
 
-    // 动态获取网站链接并填充到输入框
+    // 动态获取网站链接
     function setSafariLink() {
         const input = document.getElementById('safariLinkInput');
         if (input) {
@@ -560,8 +568,18 @@
         }
     }
 
+    // 【核心修复】：处理领取按钮
     function handleClaim() {
-        triggerSafariCheck('register');
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+        
+        if (user) {
+            // 已登录状态，直接去开始答题/赚钱页面
+            window.location.href = 'dashboard.html'; 
+        } else {
+            // 未登录状态，触发注册弹窗
+            triggerSafariCheck('register');
+        }
     }
 
     async function loadMarquee() {
@@ -587,7 +605,6 @@
                 <h2 class="text-xl font-bold mb-2 leading-snug">${item.title}</h2>
                 <p class="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-3">${item.summary}</p>
                 ${item.coverUrl ? `<img src="${item.coverUrl}" class="w-full h-48 object-cover rounded-xl mb-4">` : ''}
-                <!-- 点击事件统一走 checkLoginForArticle -->
                 <div class="text-blue-600 font-medium text-sm text-center cursor-pointer" data-i18n="readMore" onclick="checkLoginForArticle(event, '/article.html?id=${item.id}')">查看全文</div>
             </div>
         `).join('');
@@ -726,7 +743,8 @@
         const answers = {}; 
         checkedInputs.forEach(input => { answers[input.name] = input.value; });
         
-        const user = JSON.parse(localStorage.getItem('wad_user'));
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
         
         try {
             await fetch('/api/survey', {
@@ -746,18 +764,17 @@
         }
     }
 
-    // 恢复余额和头像显示，但移除点击跳转功能
     function updateAuthUI() {
         const area = document.getElementById('authBtnArea');
-        const user = JSON.parse(localStorage.getItem('wad_user'));
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+
         if (user) {
-            // 已登录：显示余额和头像，但不绑定 onclick
             area.innerHTML = `<div class="flex items-center gap-3">
                     <span class="text-sm font-bold text-blue-600 flex items-center gap-1">${coinSvg} ${user.balance || 0}</span>
                     <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">${user.email[0].toUpperCase()}</div>
                 </div>`;
         } else {
-            // 未登录：保留登录按钮
             area.innerHTML = `<button onclick="triggerSafariCheck('login')" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700" data-i18n="login">登录</button>`;
             applyLanguage();
         }
@@ -818,8 +835,8 @@
     // 初始化执行
     updateAuthUI();
     checkUrlParams();
-    setSafariLink(); // 动态设置 Safari 链接
-    loadSystemSettings(); // 加载后台上传的 Safari 图标
+    setSafariLink(); 
+    loadSystemSettings(); 
     initLanguages().finally(recordVisit);
 </script>
 </body>
