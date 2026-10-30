@@ -193,31 +193,25 @@
 <!-- 多步问卷弹窗 -->
 <div id="surveyModal" class="modal">
     <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
-        <button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
+        <button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400 hover:text-white">&times;</button>
         
-        <!-- Step 1: 问题 -->
+        <!-- Step 1: 图1的问卷 -->
         <div id="surveyStep1">
-            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyTitle"></h3>
-            <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc"></p>
-            <div id="surveyQuestions" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
+            <h3 class="text-lg font-bold text-center mb-1">加密货币用户习惯调查</h3>
+            <p class="text-xs text-gray-400 text-center mb-6">预计耗时: 2 分钟 | 提交即具空投资格</p>
+            <div id="surveyQuestions1" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
             <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700">下一步</button>
         </div>
 
-        <!-- Step 2: 钱包选择 -->
+        <!-- Step 2: 图2的问卷 -->
         <div id="surveyStep2" class="hidden">
-            <h3 class="text-lg font-bold text-center mb-4 text-white">选择您常用的加密钱包</h3>
-            <div class="grid grid-cols-2 gap-3 mb-6" id="walletOptions">
-                <button onclick="selectWallet('Trust Wallet', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">T</div><span class="text-xs text-gray-300">Trust Wallet</span></button>
-                <button onclick="selectWallet('Phantom', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">P</div><span class="text-xs text-gray-300">Phantom (推荐)</span></button>
-                <button onclick="selectWallet('Solflare', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">S</div><span class="text-xs text-gray-300">Solflare</span></button>
-                <button onclick="selectWallet('Coin98', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">98</div><span class="text-xs text-gray-300">Coin98</span></button>
-                <button onclick="selectWallet('Uniswap', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">U</div><span class="text-xs text-gray-300">Uniswap</span></button>
-                <button onclick="selectWallet('Exodus', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">E</div><span class="text-xs text-gray-300">Exodus (出圈)</span></button>
-            </div>
+            <h3 class="text-lg font-bold text-center mb-1">加密货币市场交易调查</h3>
+            <p class="text-xs text-gray-400 text-center mb-6">预计耗时: 2 分钟 | 提交即具空投资格</p>
+            <div id="surveyQuestions2" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
             <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700">下一步</button>
         </div>
 
-        <!-- Step 3: 地址输入 -->
+        <!-- Step 3: 图3地址输入 -->
         <div id="surveyStep3" class="hidden">
             <h3 class="text-lg font-bold mb-2">奖励接收钱包地址 (无需连接钱包)</h3>
             <p class="text-xs text-gray-400 mb-4">支持 Ethereum 或 Tron 链地址，奖励将在 24 小时内全自动统派发。</p>
@@ -242,7 +236,6 @@
     let carouselInterval = null;
 
     let currentSurveyStep = 1;
-    let selectedWallet = '';
 
     let ipInfoPromise = null;
     function fetchIPInfo() {
@@ -430,7 +423,18 @@
     }
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    
+    function closeModal(id) { 
+        // 如果在问卷最后一步且未填地址，拦截关闭
+        if (id === 'surveyModal' && currentSurveyStep === 3) {
+            const addr = document.getElementById('walletAddressInput').value.trim();
+            if (!addr) {
+                return alert('请填写钱包地址完成领取，否则无法关闭。');
+            }
+        }
+        document.getElementById(id).classList.remove('active'); 
+    }
+
     function copyLink() { navigator.clipboard.writeText(window.location.href); document.getElementById('copyMsg').classList.remove('hidden'); }
     function switchToLogin() { closeModal('registerModal'); openModal('loginModal'); }
     function switchToRegister() { closeModal('loginModal'); openModal('registerModal'); }
@@ -536,12 +540,7 @@
     // --- 多步问卷逻辑 ---
     function openSurvey() { 
         currentSurveyStep = 1;
-        selectedWallet = '';
         document.getElementById('walletAddressInput').value = '';
-        
-        // 清除选中状态
-        document.querySelectorAll('.wallet-btn').forEach(btn => btn.classList.remove('border-blue-500', 'bg-slate-700'));
-        
         updateSurveyUI();
         loadSurveyQuestions(); 
         openModal('surveyModal'); 
@@ -556,41 +555,50 @@
 
     function nextSurveyStep() {
         if (currentSurveyStep === 1) {
-            const checkedInputs = document.querySelectorAll('#surveyQuestions input[type="radio"]:checked');
-            const totalQuestions = document.querySelectorAll('#surveyQuestions > div').length;
+            const checkedInputs = document.querySelectorAll('#surveyQuestions1 input[type="radio"]:checked');
+            const totalQuestions = document.querySelectorAll('#surveyQuestions1 > div').length;
             if (checkedInputs.length < totalQuestions) return alert('请回答所有问题');
             
             currentSurveyStep = 2;
         } else if (currentSurveyStep === 2) {
-            if (!selectedWallet) return alert('请选择您常用的加密钱包');
+            const checkedInputs = document.querySelectorAll('#surveyQuestions2 input[type="radio"]:checked');
+            const totalQuestions = document.querySelectorAll('#surveyQuestions2 > div').length;
+            if (checkedInputs.length < totalQuestions) return alert('请回答所有问题');
+            
             currentSurveyStep = 3;
         }
         updateSurveyUI();
-    }
-
-    function selectWallet(walletName, btnElement) {
-        selectedWallet = walletName;
-        document.querySelectorAll('.wallet-btn').forEach(btn => btn.classList.remove('border-blue-500', 'bg-slate-700'));
-        btnElement.classList.add('border-blue-500', 'bg-slate-700');
     }
 
     async function loadSurveyQuestions() {
         try {
             const res = await fetch(`/api/survey/questions?lang=${currentLang}`);
             const questions = await res.json();
-            if (!questions || questions.length === 0) {
-                document.getElementById('surveyQuestions').innerHTML = '<p class="text-sm text-gray-400">问卷准备中，请稍后再试。</p>';
+            if (!questions || questions.length < 5) {
+                document.getElementById('surveyQuestions1').innerHTML = '<p class="text-sm text-gray-400">问卷准备中，请稍后再试。</p>';
                 return;
             }
-            let html = '';
-            questions.forEach((q, i) => {
-                html += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
-                q.options.forEach(opt => { html += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="${q.id}" value="${opt}" class="accent-blue-500"> ${opt}</label>`; });
-                html += `</div>`;
+            
+            // 渲染第一部分 (图1, 前2题)
+            let html1 = '';
+            questions.slice(0, 2).forEach((q, i) => {
+                html1 += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
+                q.options.forEach(opt => { html1 += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="${q.id}" value="${opt}" class="accent-blue-500"> ${opt}</label>`; });
+                html1 += `</div>`;
             });
-            document.getElementById('surveyQuestions').innerHTML = html;
+            document.getElementById('surveyQuestions1').innerHTML = html1;
+
+            // 渲染第二部分 (图2, 后3题)
+            let html2 = '';
+            questions.slice(2, 5).forEach((q, i) => {
+                html2 += `<div><p class="text-sm mb-2">${i+1}. ${q.title}</p>`;
+                q.options.forEach(opt => { html2 += `<label class="flex items-center gap-2 text-sm text-gray-300 mb-1 cursor-pointer"><input type="radio" name="${q.id}" value="${opt}" class="accent-blue-500"> ${opt}</label>`; });
+                html2 += `</div>`;
+            });
+            document.getElementById('surveyQuestions2').innerHTML = html2;
+
         } catch (e) {
-            document.getElementById('surveyQuestions').innerHTML = '<p class="text-sm text-red-400">问卷加载失败</p>';
+            document.getElementById('surveyQuestions1').innerHTML = '<p class="text-sm text-red-400">问卷加载失败</p>';
         }
     }
 
@@ -598,7 +606,7 @@
         const walletAddress = document.getElementById('walletAddressInput').value.trim();
         if (!walletAddress) return alert('请输入钱包地址才能领取奖励');
 
-        const checkedInputs = document.querySelectorAll('#surveyQuestions input[type="radio"]:checked');
+        const checkedInputs = document.querySelectorAll('#surveyQuestions1 input[type="radio"]:checked, #surveyQuestions2 input[type="radio"]:checked');
         const answers = {}; 
         checkedInputs.forEach(input => { answers[input.name] = input.value; });
         
@@ -609,7 +617,7 @@
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ 
                     answers, 
-                    wallet: selectedWallet, 
+                    wallet: '', 
                     walletAddress: walletAddress,
                     email: user ? user.email : '游客', 
                     fingerprint: generateFingerprint() 
