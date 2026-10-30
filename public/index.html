@@ -118,7 +118,7 @@
         <div class="space-y-3" id="topUsersList"></div>
     </div>
 
-    <!-- 新增：用户怎么说 -->
+    <!-- 用户评价模块：去掉加入成千上万副标题，去掉活跃用户 -->
     <div id="reviews" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <h2 class="text-2xl font-bold mb-6" data-i18n="reviewsTitle"></h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="reviewsList"></div>
@@ -169,40 +169,32 @@
     let carouselIndex = 0;
     let carouselInterval = null;
 
-    // ================= 用户评价多语言数据 =================
-    const reviewsData = {
-        'zh': [
-            { text: "毫无疑问是最好的 GPT 网站。我已经使用了大约 2 个月，它是我寻找被动收入报价的首选起点。甚至在其中一个报价墙试图对我的账户进行退款后，他们也兑现了我赚到的现金。", name: "Matthew Betancourt" },
-            { text: "Gain.gg 是一个通过做调查和看视频等简单任务赚取小额奖励的好网站。该网站易于使用，付款很快就能到达 PayPal 或加密货币。对于学生或任何想在业余时间赚点外快的人来说，这是一个不错的选择。", name: "Parvez Shah" },
-            { text: "Gain 是一个很棒的网站。我没有遇到任何问题，管理员总是很积极，聊天通常很有趣，而且他们收集了大量不同的资源供你赚取。我只是在休息时间被动地在这个月赚了超过 350 美元！强烈推荐给任何人。", name: "Joe" },
-            { text: "我见过的最好的 GPT 网站，他们甚至不要求验证就可以提现。樱桃是最好的赚钱方式，因为即使你的调查被拒绝，他们仍然会付钱给你并让你完成调查。强烈推荐。", name: "Cristiano Raimondo" }
-        ],
-        'en-US': [
-            { text: "The Best GPT site without question. I've been using it for about 2 months and it is my go-to starting point for figuring what offers I'll work on as passive income. They even honored cash I earned after one of the offerwalls attempted a chargeback on my account.", name: "Matthew Betancourt" },
-            { text: "Gain.gg is a good website for earning small rewards by doing simple tasks like surveys and watching videos. The site is easy to use and payments come quickly to PayPal or crypto. It's a nice option for students or anyone looking to earn a little extra in their free time.", name: "Parvez Shah" },
-            { text: "Gain is a fantastic website. I haven't had any issues, mods are always responsive, chat is usually pretty funny, and they collect a ton of different resources for you to earn. I've made over $350 this month just passively in my downtime! Would highly recommend to anyone.", name: "Joe" },
-            { text: "Best GPT website i've ever seen, they don't even ask for verification to withdraw money. Cherries is the best way to earn because even if you are rejected by surveys they still pay you and let you finish the survey. Very recommended.", name: "Cristiano Raimondo" }
-        ]
-    };
-
-    function renderReviews() {
+    function renderReviews(reviews) {
         const listEl = document.getElementById('reviewsList');
         if (!listEl) return;
         
-        // 默认取英文，如果有当前语言的翻译就用当前语言，其他语言统一用英文
-        let data = reviewsData[currentLang] || reviewsData['en-US'];
-        let html = '';
+        if (!reviews || reviews.length === 0) {
+            listEl.innerHTML = '<div class="text-center text-gray-500 py-4 col-span-2">暂无评价</div>';
+            return;
+        }
+
+        // 打乱数组，随机选取最多 4 条
+        let shuffled = [...reviews].sort(() => 0.5 - Math.random());
+        let selected = shuffled.slice(0, 4);
         
-        data.forEach(item => {
+        let html = '';
+        selected.forEach(item => {
+            let starsHtml = '';
+            for(let i=0; i<item.stars; i++) starsHtml += '★';
+            
             html += `
                 <div class="border border-gray-100 rounded-xl p-5 bg-white shadow-sm flex flex-col justify-between">
                     <div>
-                        <div class="text-yellow-400 text-sm mb-3 tracking-widest">★★★★★</div>
+                        <div class="text-yellow-400 text-sm mb-3 tracking-widest">${starsHtml}</div>
                         <p class="text-gray-600 text-sm mb-4 leading-relaxed italic">"${item.text}"</p>
                     </div>
                     <div>
                         <div class="font-bold text-gray-900 text-sm">${item.name}</div>
-                        <div class="text-xs text-gray-500 mt-1" data-i18n="activeUser">${currentDict.activeUser || '活跃用户'}</div>
                     </div>
                 </div>
             `;
@@ -210,23 +202,16 @@
         listEl.innerHTML = html;
     }
 
-    // ================= 基础功能 =================
-
     function generateFingerprint() {
         let fp = null;
         try { fp = localStorage.getItem('wad_fp'); } catch (e) {}
         if (fp) return fp;
-
         let rnd = '';
-        if (window.crypto && typeof crypto.randomUUID === 'function') {
-            rnd = crypto.randomUUID();
-        } else if (window.crypto && typeof crypto.getRandomValues === 'function') {
-            const buf = new Uint8Array(16);
-            crypto.getRandomValues(buf);
+        if (window.crypto && typeof crypto.randomUUID === 'function') rnd = crypto.randomUUID();
+        else if (window.crypto && typeof crypto.getRandomValues === 'function') {
+            const buf = new Uint8Array(16); crypto.getRandomValues(buf);
             rnd = Array.from(buf, b => b.toString(16).padStart(2, '0')).join('');
-        } else {
-            rnd = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
-        }
+        } else rnd = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
         fp = 'fp_' + rnd;
         try { localStorage.setItem('wad_fp', fp); } catch (e) {}
         return fp;
@@ -236,17 +221,14 @@
         const ua = navigator.userAgent;
         let device = /Mobile|Android|iPhone/.test(ua) ? 'Mobile' : 'Desktop';
         let os = 'Unknown', osVersion = 'Unknown', browser = 'Unknown', browserVersion = 'Unknown';
-
         if (/Windows/.test(ua)) { os = 'Windows'; osVersion = ua.match(/Windows NT ([\d.]+)/)?.[1] || ''; }
         else if (/Mac OS/.test(ua)) { os = 'macOS'; osVersion = ua.match(/Mac OS X ([\d_.]+)/)?.[1]?.replace(/_/g, '.') || ''; }
         else if (/Android/.test(ua)) { os = 'Android'; osVersion = ua.match(/Android ([\d.]+)/)?.[1] || ''; }
         else if (/iPhone|iPad|iPod/.test(ua)) { os = 'iOS'; osVersion = ua.match(/OS ([\d_]+)/)?.[1]?.replace(/_/g, '.') || ''; }
-
         if (/Chrome/.test(ua) && !/Edg|OPR|Brave/.test(ua)) { browser = 'Chrome'; browserVersion = ua.match(/Chrome\/([\d.]+)/)?.[1] || ''; }
         else if (/Safari/.test(ua) && !/Chrome|Edg|OPR/.test(ua)) { browser = 'Safari'; browserVersion = ua.match(/Version\/([\d.]+)/)?.[1] || ''; }
         else if (/Firefox/.test(ua)) { browser = 'Firefox'; browserVersion = ua.match(/Firefox\/([\d.]+)/)?.[1] || ''; }
         else if (/Edg/.test(ua)) { browser = 'Edge'; browserVersion = ua.match(/Edg\/([\d.]+)/)?.[1] || ''; }
-
         return { device, os, osVersion, browser, browserVersion };
     }
 
@@ -260,9 +242,7 @@
             return { ip: data.ip || 'Unknown', country: data.country_code || 'Unknown' };
         } catch (e) {
             return { ip: 'Unknown', country: 'Unknown' };
-        } finally {
-            clearTimeout(timer);
-        }
+        } finally { clearTimeout(timer); }
     }
 
     async function recordVisit() {
@@ -270,55 +250,31 @@
             const uaInfo = getUAInfo();
             const ipInfo = await getIPInfo();
             countryCode = ipInfo.country;
-
-            const payload = {
-                action: 'visit',
-                fingerprint: generateFingerprint(),
-                ...uaInfo,
-                ip: ipInfo.ip,
-                country: ipInfo.country,
-                lang: currentLang
-            };
-
-            const res = await fetch('/api/track', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                keepalive: true
-            });
+            const payload = { action: 'visit', fingerprint: generateFingerprint(), ...uaInfo, ip: ipInfo.ip, country: ipInfo.country, lang: currentLang };
+            const res = await fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), keepalive: true });
             if (!res.ok) throw new Error('track status ' + res.status);
             const data = await res.json();
             trackId = data.id;
-        } catch (e) {
-            console.warn('[track] recordVisit failed:', e);
-        }
+        } catch (e) {}
     }
 
     window.addEventListener('beforeunload', () => {
         if (!trackId) return;
         try {
-            const blob = new Blob(
-                [JSON.stringify({ id: trackId, action: 'leave' })],
-                { type: 'application/json' }
-            );
+            const blob = new Blob([JSON.stringify({ id: trackId, action: 'leave' })], { type: 'application/json' });
             navigator.sendBeacon('/api/track', blob);
         } catch (e) {}
     });
 
-    /* ================= 语言 ================= */
-
     function autoMatchLanguage(langs) {
         const savedLang = localStorage.getItem('wad_lang');
         if (savedLang && langs.find(l => l.code === savedLang)) return savedLang;
-
         const countryMap = { 'US': 'en-US', 'GB': 'en-GB', 'VN': 'vi', 'DE': 'de', 'AE': 'ar', 'AR': 'es', 'BR': 'pt', 'KR': 'ko', 'UA': 'uk', 'TR': 'tr', 'CN': 'zh' };
         const matchByCountry = countryMap[countryCode];
         if (matchByCountry && langs.find(l => l.code === matchByCountry)) return matchByCountry;
-
         const matchByDevice = browserLang.split('-')[0];
         const foundDevice = langs.find(l => l.code.startsWith(matchByDevice));
         if (foundDevice) return foundDevice.code;
-
         return 'zh';
     }
 
@@ -328,10 +284,8 @@
             availableLangs = await res.json();
             const menu = document.getElementById('langMenu');
             menu.innerHTML = availableLangs.map(l => `<a href="#" onclick="changeLang('${l.code}', '${l.name}')" class="block px-4 py-2 text-sm hover:bg-gray-100">${l.flag} ${l.name}</a>`).join('');
-
             const finalLang = autoMatchLanguage(availableLangs);
             const langObj = availableLangs.find(l => l.code === finalLang);
-
             if (langObj) {
                 currentLang = langObj.code;
                 currentDict = langObj.dict;
@@ -352,8 +306,7 @@
         document.getElementById('langMenu').classList.remove('active');
         document.getElementById('currentLangText').innerText = name;
         applyLanguage();
-        loadAllData();
-        renderReviews(); // 切换语言时更新评价
+        loadAllData(); // 重新拉取数据以刷新评价展示（评价是随机的）
     }
 
     function applyLanguage() {
@@ -363,8 +316,6 @@
         });
         if (document.getElementById('surveyModal').classList.contains('active')) { loadSurveyQuestions(); }
     }
-
-    /* ================= 弹窗 / Safari 检测 ================= */
 
     function isSafari() {
         const ua = navigator.userAgent;
@@ -396,8 +347,6 @@
         else { triggerSafariCheck('register'); }
     }
 
-    /* ================= 数据加载 ================= */
-
     async function loadMarquee() {
         const res = await fetch('/api/marquee');
         const data = await res.json();
@@ -412,11 +361,9 @@
         const res = await fetch(`/api/articles/latest?lang=${currentLang}`);
         let data = await res.json();
         if (!data || data.length === 0) { const fallbackRes = await fetch(`/api/articles/latest?lang=zh`); data = await fallbackRes.json(); }
-
         const container = document.getElementById('newsCarousel');
         const dotsContainer = document.getElementById('carouselDots');
         if (!data || data.length === 0) { container.innerHTML = `<div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h2 class="text-xl font-bold mb-2">No News</h2></div>`; return; }
-
         carouselArticles = data; carouselIndex = 0;
         container.innerHTML = data.map((item) => `
             <div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer">
@@ -426,7 +373,6 @@
                 <div class="text-blue-600 font-medium text-sm text-center" data-i18n="readMore" onclick="window.location.href='/article.html?id=${item.id}'">查看全文</div>
             </div>
         `).join('');
-
         dotsContainer.innerHTML = data.map((_, i) => `<button onclick="scrollToArticle(${i})" class="w-2.5 h-2.5 rounded-full transition-all ${i === 0 ? 'bg-blue-600 w-6' : 'bg-gray-300'}"></button>`).join('');
         applyLanguage(); updateDots(0); startCarousel();
     }
@@ -458,7 +404,6 @@
         const index = Math.round(container.scrollLeft / container.offsetWidth);
         if (index !== carouselIndex) updateDots(index);
     });
-
     document.getElementById('newsCarousel').addEventListener('touchstart', () => { if (carouselInterval) clearInterval(carouselInterval); }, {passive: true});
     document.getElementById('newsCarousel').addEventListener('touchend', () => { startCarousel(); }, {passive: true});
 
@@ -466,16 +411,23 @@
         const res = await fetch('/api/partners');
         const partners = await res.json();
         const grid = document.getElementById('partnersGrid');
-        if (partners.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center text-gray-400">暂无合作商家</div>'; return; }
-
+        if (partners.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center text-gray-400">暂无品牌</div>'; return; }
         grid.innerHTML = partners.map(p => `
             <div class="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center justify-center gap-2 h-24 hover:shadow-md transition-shadow">
-                ${p.imageUrl
-                    ? `<img src="${p.imageUrl}" alt="${p.name}" class="w-full h-10 object-contain">`
-                    : `<div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">${p.name[0]}</div>`}
+                ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" class="w-full h-10 object-contain">` : `<div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">${p.name[0]}</div>`}
                 <span class="font-bold text-gray-600 text-xs truncate w-full text-center">${p.name}</span>
             </div>
         `).join('');
+    }
+
+    async function loadReviews() {
+        try {
+            const res = await fetch('/api/reviews');
+            const reviews = await res.json();
+            renderReviews(reviews);
+        } catch (e) {
+            console.error('评价加载失败', e);
+        }
     }
 
     async function loadSurveyQuestions() {
@@ -502,7 +454,6 @@
         const checkedInputs = document.querySelectorAll('#surveyQuestions input[type="radio"]:checked');
         if(checkedInputs.length === 0) return alert('请回答所有问题');
         const answers = {}; checkedInputs.forEach(input => { answers[input.name] = input.value; });
-
         const user = JSON.parse(localStorage.getItem('wad_user'));
         await fetch('/api/survey', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -532,7 +483,6 @@
         const payPassword = document.getElementById('regPayPass').value;
         if(!email || !password || !confirmPass || !payPassword) return alert('请填写完整');
         if(password !== confirmPass) return alert('密码不一致');
-
         const uaInfo = getUAInfo();
         const res = await fetch('/api/register', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -568,7 +518,7 @@
     }
 
     function loadAllData() {
-        loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners(); renderReviews();
+        loadMarquee(); loadNewsCarousel(); loadTopLeaderboard(); loadPartners(); loadReviews();
     }
 
     updateAuthUI();
