@@ -138,14 +138,12 @@
                         <option value="Windows">Windows</option>
                         <option value="macOS">macOS</option>
                     </select>
-                    <!-- 新增：系统版本筛选 -->
                     <select class="input text-sm p-2 rounded" id="filterOSVersion">
                         <option value="all">全部系统版本</option>
                     </select>
                     <select class="input text-sm p-2 rounded" id="filterLang">
                         <option value="all">全部语言</option>
                     </select>
-                    <!-- 更新：placeholder 提示支持指纹 -->
                     <input type="text" id="searchInput" placeholder="搜索 IP / 邮箱 / 指纹" class="input text-sm p-2 rounded flex-1 min-w-[200px]">
                     <button onclick="renderVisitList()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">搜索</button>
                     <button onclick="resetFilters()" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-2 rounded text-sm hover:bg-gray-300 dark:hover:bg-slate-600">重置</button>
@@ -211,12 +209,10 @@
                         <h3 class="font-bold mb-4" id="reviewFormTitle">发布评论</h3>
                         <input type="hidden" id="editReviewId">
                         <div class="space-y-3 mb-4">
-                            <!-- 创建模式：多语言勾选 -->
                             <div id="reviewLangCheckboxBox" class="border border-gray-200 dark:border-slate-700 p-3 rounded bg-gray-50 dark:bg-[#0f172a]">
                                 <p class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2">发布语言（源语言固定为中文，勾选其他语言将进行机翻）：</p>
                                 <div class="flex flex-wrap gap-3" id="reviewLangCheckboxes"></div>
                             </div>
-                            <!-- 编辑模式：单语言 -->
                             <div id="reviewLangSelectBox" class="hidden">
                                 <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">语言</label>
                                 <select id="revLang" class="input w-full p-2 rounded"></select>
@@ -253,7 +249,6 @@
                                 <option value="all">全部语言</option>
                             </select>
                         </div>
-                        <!-- 前台展示模式切换 -->
                         <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-slate-800 p-2.5 rounded border border-gray-200 dark:border-slate-700">
                             <span class="text-xs text-gray-600 dark:text-slate-400">前台展示模式：</span>
                             <div class="flex gap-2">
@@ -269,7 +264,6 @@
             <!-- 5. 问卷管理 -->
             <div id="tab-surveys" class="content-section">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- 左侧：配置区 -->
                     <div class="card p-6 flex flex-col">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold" id="surveyFormTitle">发布新问卷</h3>
@@ -286,7 +280,6 @@
                         <button onclick="saveSurvey(this)" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 mt-2">保存并更新问卷</button>
                     </div>
 
-                    <!-- 右侧：上下结构 -->
                     <div class="flex flex-col gap-6" style="max-height: 800px;">
                         <div class="card p-6 flex-1 overflow-y-auto">
                             <h3 class="font-bold mb-4">已发布问卷列表</h3>
@@ -359,7 +352,6 @@
         </div>
     </main>
 
-    <!-- 弹窗 -->
     <div id="changePwdModal" class="modal">
         <div class="card p-6 w-96">
             <h3 class="font-bold text-lg mb-4">修改后台密码</h3>
@@ -384,19 +376,16 @@
     </div>
 
 <script>
-    // 初始化时，优先读取 sessionStorage，其次读取 localStorage
     let adminPwd = sessionStorage.getItem('wad_admin_pwd') || localStorage.getItem('wad_admin_pwd') || '';
     let quill = null;
     let allVisits = [];
     let currentSurveySourceLang = 'zh';
     let currentReviewMode = 'all';
 
-    // 如果已有密码，先隐藏登录框，防止刷新闪烁
     if (adminPwd) {
         document.getElementById('loginOverlay').classList.add('hidden');
     }
 
-    // 记录文章正在编辑的整组ID和源语言
     let currentEditArticleGroupId = null;
     let currentEditArticleMainLang = 'zh';
 
@@ -407,7 +396,6 @@
         if (Array.isArray(data.details) && data.details.length) {
             msg += '\n\n各服务商失败明细:';
             data.details.forEach(d => {
-                // 将原始错误信息中的网址等精简掉，只保留核心原因
                 let shortMsg = d.message;
                 if (shortMsg.includes('portal.libretranslate.com') || shortMsg.includes('api key')) {
                     shortMsg = '官方接口需要 API Key，已自动切换其他节点';
@@ -418,7 +406,6 @@
                 } else if (shortMsg.includes('fetch failed') || shortMsg.includes('网络')) {
                     shortMsg = '网络连接失败';
                 }
-
                 msg += `\n- ${d.provider}: ${shortMsg}`;
             });
         }
@@ -428,24 +415,20 @@
     const ADMIN_I18N = {
         zh: {
             navDashboard: '📊 数据汇总', navUsers: '👥 用户管理', navArticles: '📝 文章管理',
-            navReviews: '💬 评论管理',
-            navSurveys: '📋 问卷管理',
+            navReviews: '💬 评论管理', navSurveys: '📋 问卷管理',
             navOffers: '🎁 优惠管理', navPartners: '🤝 合作墙管理', navLanguages: '🌐 多语言管理', changePwd: '修改密码',
             logout: '退出登录', loginTitle: '后台登录', loginPlaceholder: '请输入后台密码', loginBtn: '登录',
             pageDashboard: '数据汇总', pageUsers: '用户管理', pageArticles: '文章管理',
-            pageReviews: '评论管理',
-            pageSurveys: '问卷管理',
+            pageReviews: '评论管理', pageSurveys: '问卷管理',
             pageOffers: '优惠管理', pagePartners: '合作墙管理', pageLanguages: '多语言管理'
         },
         en: {
             navDashboard: '📊 Dashboard', navUsers: '👥 Users', navArticles: '📝 Articles',
-            navReviews: '💬 Reviews',
-            navSurveys: '📋 Surveys',
+            navReviews: '💬 Reviews', navSurveys: '📋 Surveys',
             navOffers: '🎁 Offers', navPartners: '🤝 Partners', navLanguages: '🌐 Languages', changePwd: 'Change Password',
             logout: 'Logout', loginTitle: 'Admin Login', loginPlaceholder: 'Enter admin password', loginBtn: 'Login',
             pageDashboard: 'Dashboard', pageUsers: 'Users', pageArticles: 'Articles',
-            pageReviews: 'Reviews',
-            pageSurveys: 'Surveys',
+            pageReviews: 'Reviews', pageSurveys: 'Surveys',
             pageOffers: 'Offers', pagePartners: 'Partners', pageLanguages: 'Languages'
         }
     };
@@ -495,11 +478,8 @@
         try {
             const res = await fetch('/api/admin/data', { headers: { 'x-admin-pwd': adminPwd } });
             if (res.status === 403) return alert(adminLang === 'zh' ? '密码错误' : 'Wrong password');
-            
-            // 同时存入 session 和 local
             sessionStorage.setItem('wad_admin_pwd', adminPwd);
             localStorage.setItem('wad_admin_pwd', adminPwd);
-            
             document.getElementById('loginOverlay').classList.add('hidden');
             fetchData();
         } catch (e) { alert(adminLang === 'zh' ? '登录失败' : 'Login failed'); }
@@ -513,15 +493,12 @@
                 document.getElementById('loginOverlay').classList.add('hidden');
                 fetchData();
             } else {
-                // 密码失效，清理状态并显示登录框
                 sessionStorage.removeItem('wad_admin_pwd'); 
                 localStorage.removeItem('wad_admin_pwd');
                 adminPwd = '';
                 document.getElementById('loginOverlay').classList.remove('hidden');
             }
-        } catch (e) {
-            // 网络异常时不退出，保持界面
-        }
+        } catch (e) {}
     }
 
     function logout() { 
@@ -605,7 +582,6 @@
         area.appendChild(div);
     }
 
-    // 【改动】问卷编辑整组
     function editSurveyGroup(sourceLang) {
         if (!window.allSurveys || !window.allSurveys.questions[sourceLang]) return;
         const questions = window.allSurveys.questions[sourceLang];
@@ -714,7 +690,6 @@
             if (fOSVersion !== 'all' && v.osVersion !== fOSVersion) return false;
             if (fLang !== 'all' && v.lang !== fLang) return false;
             
-            // 增加指纹搜索匹配
             if (keyword) {
                 const ipMatch = v.ip?.toLowerCase().includes(keyword);
                 const emailMatch = v.email?.toLowerCase().includes(keyword);
@@ -739,8 +714,9 @@
                             ${v.submitTime ? `<span class="text-xs text-blue-500 dark:text-blue-400">⏱️ 提交: ${new Date(v.submitTime).toLocaleString()}</span>` : ''}
                             ${v.duration ? `<span class="text-xs text-yellow-500 dark:text-yellow-400">⏳ 停留: ${v.duration}s</span>` : ''}
                         </div>
-                        <div class="text-sm font-bold text-gray-800 dark:text-slate-200 mb-1">
-                            ${v.email ? `📧 ${v.email}` : '游客访问'}
+                        <div class="text-sm font-bold text-gray-800 dark:text-slate-200 mb-1 flex flex-wrap items-center gap-2">
+                            <span>${v.email ? `📧 ${v.email}` : '游客访问'}</span>
+                            ${v.walletAddress ? `<span class="text-blue-600 dark:text-blue-400 font-mono text-xs bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">💼 ${v.walletAddress}</span>` : ''}
                         </div>
                         <div class="flex flex-wrap items-center gap-2 mt-2">
                             <span class="tag bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-700">📍 ${v.country || '未知'}</span>
@@ -767,9 +743,9 @@
     }
 
     function exportCSV() {
-        const rows = [['状态', '邮箱', '国家', 'IP', '系统', '版本', '浏览器', '语言', '进入时间', '停留(s)', '指纹']];
+        const rows = [['状态', '邮箱', '钱包地址', '国家', 'IP', '系统', '版本', '浏览器', '语言', '进入时间', '停留(s)', '指纹']];
         allVisits.forEach(v => {
-            rows.push([v.status, v.email || '', v.country || '', v.ip || '', v.os, v.osVersion, `${v.browser} ${v.browserVersion}`, v.lang, v.visitTime, v.duration || '', v.fingerprint]);
+            rows.push([v.status, v.email || '', v.walletAddress || '', v.country || '', v.ip || '', v.os, v.osVersion, `${v.browser} ${v.browserVersion}`, v.lang, v.visitTime, v.duration || '', v.fingerprint]);
         });
         let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map(e => e.join(",")).join("\n");
         const encodedUri = encodeURI(csvContent);
@@ -793,7 +769,6 @@
         window.allReviews = data.reviews || [];
         allVisits = data.visits || [];
 
-        // 统计卡片
         document.getElementById('statTotal').innerText = allVisits.length;
         document.getElementById('statVisiting').innerText = allVisits.filter(v => v.status === '访问中').length;
         document.getElementById('statRegistered').innerText = allVisits.filter(v => v.status === '已注册').length;
@@ -801,14 +776,12 @@
         document.getElementById('statAndroid').innerText = allVisits.filter(v => v.os === 'Android').length;
         document.getElementById('statIos').innerText = allVisits.filter(v => v.os === 'iOS').length;
 
-        // 语言筛选
         const langFilter = document.getElementById('filterLang');
         const prevLang = langFilter.value;
         const uniqueLangs = [...new Set(allVisits.map(v => v.lang).filter(Boolean))];
         langFilter.innerHTML = '<option value="all">全部语言</option>' + uniqueLangs.map(l => `<option value="${l}">${l}</option>`).join('');
         if (uniqueLangs.includes(prevLang)) langFilter.value = prevLang;
 
-        // 系统版本筛选（新增）
         const verFilter = document.getElementById('filterOSVersion');
         const prevVer = verFilter.value;
         const uniqueVers = [...new Set(allVisits.map(v => v.osVersion).filter(Boolean))];
@@ -817,7 +790,6 @@
 
         renderVisitList();
 
-        /* ===================== 问卷列表渲染（折叠版、整组编辑） ===================== */
         const surveyQuestions = data.surveys.questions || {};
         const availableSurveyLangs = Object.keys(surveyQuestions);
         let pubHtml = '';
@@ -872,9 +844,7 @@
             `;
         }
         document.getElementById('surveyPublishedList').innerHTML = pubHtml;
-        /* ===================== 问卷渲染结束 ===================== */
 
-        // 用户提交记录
         document.getElementById('surveyList').innerHTML = data.surveys.submissions.map(s => `
     <tr>
         <td class="p-3 font-medium">${s.email || '游客'}</td>
@@ -887,13 +857,10 @@
     </tr>
 `).join('') || '<tr><td colspan="4" class="text-center py-4 text-gray-500">暂无记录</td></tr>';
 
-        // 用户
         document.getElementById('userList').innerHTML = data.users.map(u => `<tr><td class="p-4">${u.email}</td><td class="p-4 text-gray-500">${u.password}</td><td class="p-4 font-bold text-blue-600">${u.balance || 0}</td><td class="p-4 text-gray-500">${new Date(u.time).toLocaleString()}</td></tr>`).join('');
 
-        // 文章语言勾选
         document.getElementById('articleLangCheckboxes').innerHTML = data.languages.filter(l => l.active).map(l => `<label class="flex items-center gap-1 text-sm cursor-pointer"><input type="checkbox" value="${l.code}" class="accent-blue-500" ${l.code === 'zh' ? 'checked disabled' : ''}> ${l.flag} ${l.name}</label>`).join('');
 
-        // 文章列表（统一为“编辑整组”）
         const groups = {};
         data.articles.forEach(a => { const gid = a.groupId || a.id; if (!groups[gid]) groups[gid] = []; groups[gid].push(a); });
         let articleHtml = '';
@@ -935,20 +902,17 @@
         });
         document.getElementById('articleList').innerHTML = articleHtml || '<div class="text-center text-gray-500 py-4">暂无文章</div>';
 
-        // 评论管理
         populateReviewLangSelects(data.languages);
         renderReviewList();
         const settings = data.settings || { reviewMode: 'all' };
         currentReviewMode = settings.reviewMode || 'all';
         updateReviewModeButtons(currentReviewMode);
 
-        // 其他
         document.getElementById('offerList').innerHTML = data.offers.map(o => `<tr><td class="p-4"><div class="w-6 h-6 rounded" style="background-color: ${o.color}"></div></td><td class="p-4">${o.category}</td><td class="p-4 font-bold">${o.title}</td><td class="p-4 text-yellow-600">${o.reward}</td><td class="p-4"><button onclick="deleteOffer('${o.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
         document.getElementById('partnerList').innerHTML = data.partners.map(p => `<tr><td class="p-4">${p.imageUrl ? `<img src="${p.imageUrl}" class="h-8 w-auto object-contain">` : '<span class="text-gray-400">无图</span>'}</td><td class="p-4 font-bold">${p.name}</td><td class="p-4"><button onclick="editPartner('${p.id}')" class="text-blue-500 hover:underline mr-2">编辑</button><button onclick="deletePartner('${p.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
         document.getElementById('languageList').innerHTML = data.languages.map(l => `<tr><td class="p-4 font-bold">${l.code}</td><td class="p-4">${l.flag} ${l.name}</td><td class="p-4"><button onclick="toggleLangStatus('${l.code}', ${l.active})" class="px-3 py-1 rounded text-xs font-bold ${l.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300'}">${l.active ? '启用中' : '已禁用'}</button></td><td class="p-4"><button onclick="openEditLang('${l.code}')" class="text-blue-500 hover:underline">编辑字典</button></td></tr>`).join('');
     }
 
-    /* ================= 文章管理（整组） ================= */
     function editArticleGroup(groupId) {
         const group = window.allArticles.filter(a => (a.groupId || a.id) === groupId);
         if (!group || group.length === 0) return;
@@ -972,7 +936,7 @@
         
         checkboxes.forEach(cb => {
             cb.checked = existingLangs.includes(cb.value);
-            cb.disabled = (cb.value === mainArt.lang); // 源语言不能取消
+            cb.disabled = (cb.value === mainArt.lang); 
         });
         
         document.querySelector('#tab-articles').scrollIntoView({ behavior: 'smooth' });
@@ -1040,7 +1004,6 @@
         }
     }
 
-    /* ================= 评论管理 ================= */
     function populateReviewLangSelects(languages) {
         const cbContainer = document.getElementById('reviewLangCheckboxes');
         if (cbContainer) {
@@ -1229,7 +1192,6 @@
         } catch (e) { alert('设置失败'); }
     }
 
-    // ====== 其他操作 ======
     async function savePartner() {
         const id = document.getElementById('editPartnerId').value;
         const name = document.getElementById('pName').value;
