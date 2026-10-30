@@ -333,9 +333,15 @@ async function submitSurvey() {
 
 function updateAuthUI() {
     const area = document.getElementById('authBtnArea');
-    let user = null; try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem('wad_user')); } catch(e) {}
+    
     if (user) {
-        area.innerHTML = `<div class="flex items-center gap-3"><span class="text-sm font-bold text-blue-600 flex items-center gap-1">${coinSvg} ${user.balance || 0}</span><div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold cursor-pointer" onclick="triggerSafariCheck('login')">${user.email[0].toUpperCase()}</div></div>`;
+        // 已登录状态下，头像和余额纯展示，不可点击
+        area.innerHTML = `<div class="flex items-center gap-3">
+                <span class="text-sm font-bold text-blue-600 flex items-center gap-1">${coinSvg} ${user.balance || 0}</span>
+                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">${user.email[0].toUpperCase()}</div>
+            </div>`;
     } else {
         area.innerHTML = `<button onclick="triggerSafariCheck('login')" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700" data-i18n="login">登录</button>`;
         applyLanguage();
