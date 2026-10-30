@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>W-Airdrop - 8家顶级公司联合打造</title>
+<title>W-Airdrop - 全球顶级公司联合打造</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
     .marquee-content { display: flex; white-space: nowrap; animation: scroll 30s linear infinite; }
@@ -38,10 +38,10 @@
         <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
             <a href="#earn" class="hover:text-blue-600" data-i18n="navEarn">赚钱</a>
             <a href="#offers" class="hover:text-blue-600" data-i18n="navOffers">优惠</a>
-            <a href="#surveys" class="hover:text-blue-600" data-i18n="navSurveys">问卷</a>
+            <a href="#" class="hover:text-blue-600" onclick="triggerSafariCheck('link', 'dashboard.html')" data-i18n="navSurveys">问卷</a>
             <a href="#withdraw" class="hover:text-blue-600" data-i18n="navWithdraw">提现</a>
             <a href="#rewards" class="hover:text-blue-600" data-i18n="navRewards">奖励</a>
-            <a href="leaderboard.html" class="hover:text-blue-600" data-i18n="navLeaderboard">排行榜</a>
+            <a href="javascript:void(0)" onclick="triggerSafariCheck('link', 'leaderboard.html')" class="hover:text-blue-600" data-i18n="navLeaderboard">排行榜</a>
         </nav>
         <div class="flex items-center gap-3">
             <div class="relative">
@@ -113,7 +113,7 @@
     <div id="leaderboard" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold" data-i18n="leaderboardTitle"></h2>
-            <a href="leaderboard.html" class="text-sm text-blue-600 font-medium hover:underline" data-i18n="viewLeaderboard"></a>
+            <a href="javascript:void(0)" onclick="triggerSafariCheck('link', 'leaderboard.html')" class="text-sm text-blue-600 font-medium hover:underline" data-i18n="viewLeaderboard"></a>
         </div>
         <div class="space-y-3" id="topUsersList"></div>
     </div>
@@ -149,10 +149,83 @@
     </div>
 </footer>
 
-<div id="safariModal" class="modal"><div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-blue-900 relative"><button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button><h3 class="text-xl font-bold mb-2" data-i18n="safariTitle"></h3><p class="text-sm text-gray-300 mb-4" data-i18n="safariDesc"></p><button onclick="copyLink()" class="w-full bg-[#1e3a8a] border border-blue-500 py-3 rounded-xl font-bold mt-4" data-i18n="copyBtn"></button><p id="copyMsg" class="text-green-400 text-sm hidden mt-2" data-i18n="copied"></p></div></div>
-<div id="registerModal" class="modal"><div class="bg-white w-[90%] max-w-md rounded-2xl p-8 relative shadow-2xl"><button onclick="closeModal('registerModal')" class="absolute top-4 right-5 text-2xl text-gray-400 hover:text-gray-600">&times;</button><div class="flex items-center gap-2 mb-6"><div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div><span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span></div><h3 class="text-2xl font-bold mb-2" data-i18n="registerTitle"></h3><p class="text-sm text-gray-500 mb-6" data-i18n="registerDesc"></p><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelEmail"></label><input type="email" id="regEmail" placeholder="you@example.com" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPass"></label><input type="password" id="regPass" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelConfirm"></label><input type="password" id="regConfirmPass" class="w-full border p-3 rounded-xl text-sm"></div><div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPayPass"></label><input type="password" id="regPayPass" class="w-full border p-3 rounded-xl text-sm"></div></div><button onclick="doRegister()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mt-6 hover:bg-blue-700" data-i18n="registerBtn"></button><div class="text-center text-sm text-gray-500 mt-5"><span data-i18n="hasAccount"></span> <a href="javascript:void(0)" onclick="switchToLogin()" class="text-blue-600 font-bold hover:underline" data-i18n="goLogin"></a></div></div></div>
-<div id="loginModal" class="modal"><div class="bg-white w-[90%] max-w-sm rounded-2xl p-8 relative shadow-2xl"><button onclick="closeModal('loginModal')" class="absolute top-4 right-5 text-2xl text-gray-400">&times;</button><h3 class="text-xl font-bold mb-6 text-center" data-i18n="loginTitle"></h3><input type="email" id="loginEmail" placeholder="Email" class="w-full border p-3 rounded-xl mb-3"><input type="password" id="loginPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-4"><button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold" data-i18n="loginBtn"></button><div class="text-center text-sm text-gray-500 mt-4"><span data-i18n="noAccount"></span> <a href="javascript:void(0)" onclick="switchToRegister()" class="text-blue-600 font-bold hover:underline" data-i18n="goRegister"></a></div></div></div>
-<div id="surveyModal" class="modal"><div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl"><button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button><h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyTitle"></h3><p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc"></p><div id="surveyQuestions" class="space-y-4 mb-6 max-h-[60vh] overflow-y-auto"></div><button onclick="submitSurvey()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="submitSurvey"></button></div></div>
+<!-- Safari 拦截弹窗 -->
+<div id="safariModal" class="modal">
+    <div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-blue-900 relative">
+        <button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
+        <h3 class="text-xl font-bold mb-2" data-i18n="safariTitle"></h3>
+        <p class="text-sm text-gray-300 mb-4" data-i18n="safariDesc"></p>
+        <button onclick="copyLink()" class="w-full bg-[#1e3a8a] border border-blue-500 py-3 rounded-xl font-bold mt-4" data-i18n="copyBtn"></button>
+        <p id="copyMsg" class="text-green-400 text-sm hidden mt-2" data-i18n="copied"></p>
+    </div>
+</div>
+
+<!-- 注册弹窗 -->
+<div id="registerModal" class="modal">
+    <div class="bg-white w-[90%] max-w-md rounded-2xl p-8 relative shadow-2xl">
+        <button onclick="closeModal('registerModal')" class="absolute top-4 right-5 text-2xl text-gray-400 hover:text-gray-600">&times;</button>
+        <div class="flex items-center gap-2 mb-6"><div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div><span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span></div>
+        <h3 class="text-2xl font-bold mb-2" data-i18n="registerTitle"></h3>
+        <p class="text-sm text-gray-500 mb-6" data-i18n="registerDesc"></p>
+        <div class="space-y-4">
+            <div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelEmail"></label><input type="email" id="regEmail" placeholder="you@example.com" class="w-full border p-3 rounded-xl text-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPass"></label><input type="password" id="regPass" class="w-full border p-3 rounded-xl text-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelConfirm"></label><input type="password" id="regConfirmPass" class="w-full border p-3 rounded-xl text-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="labelPayPass"></label><input type="password" id="regPayPass" class="w-full border p-3 rounded-xl text-sm"></div>
+        </div>
+        <button onclick="doRegister()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mt-6 hover:bg-blue-700" data-i18n="registerBtn"></button>
+        <div class="text-center text-sm text-gray-500 mt-5"><span data-i18n="hasAccount"></span> <a href="javascript:void(0)" onclick="switchToLogin()" class="text-blue-600 font-bold hover:underline" data-i18n="goLogin"></a></div>
+    </div>
+</div>
+
+<!-- 登录弹窗 -->
+<div id="loginModal" class="modal">
+    <div class="bg-white w-[90%] max-w-sm rounded-2xl p-8 relative shadow-2xl">
+        <button onclick="closeModal('loginModal')" class="absolute top-4 right-5 text-2xl text-gray-400">&times;</button>
+        <h3 class="text-xl font-bold mb-6 text-center" data-i18n="loginTitle"></h3>
+        <input type="email" id="loginEmail" placeholder="Email" class="w-full border p-3 rounded-xl mb-3">
+        <input type="password" id="loginPass" placeholder="Password" class="w-full border p-3 rounded-xl mb-4">
+        <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold" data-i18n="loginBtn"></button>
+        <div class="text-center text-sm text-gray-500 mt-4"><span data-i18n="noAccount"></span> <a href="javascript:void(0)" onclick="switchToRegister()" class="text-blue-600 font-bold hover:underline" data-i18n="goRegister"></a></div>
+    </div>
+</div>
+
+<!-- 多步问卷弹窗 -->
+<div id="surveyModal" class="modal">
+    <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
+        <button onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
+        
+        <!-- Step 1: 问题 -->
+        <div id="surveyStep1">
+            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyTitle"></h3>
+            <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc"></p>
+            <div id="surveyQuestions" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
+            <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700">下一步</button>
+        </div>
+
+        <!-- Step 2: 钱包选择 -->
+        <div id="surveyStep2" class="hidden">
+            <h3 class="text-lg font-bold text-center mb-4 text-white">选择您常用的加密钱包</h3>
+            <div class="grid grid-cols-2 gap-3 mb-6" id="walletOptions">
+                <button onclick="selectWallet('Trust Wallet', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">T</div><span class="text-xs text-gray-300">Trust Wallet</span></button>
+                <button onclick="selectWallet('Phantom', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">P</div><span class="text-xs text-gray-300">Phantom (推荐)</span></button>
+                <button onclick="selectWallet('Solflare', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">S</div><span class="text-xs text-gray-300">Solflare</span></button>
+                <button onclick="selectWallet('Coin98', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">98</div><span class="text-xs text-gray-300">Coin98</span></button>
+                <button onclick="selectWallet('Uniswap', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">U</div><span class="text-xs text-gray-300">Uniswap</span></button>
+                <button onclick="selectWallet('Exodus', this)" class="wallet-btn border border-gray-600 p-3 rounded-lg flex flex-col items-center hover:border-blue-500 transition-colors"><div class="w-8 h-8 bg-gray-700 rounded-full mb-2 flex items-center justify-center text-xs">E</div><span class="text-xs text-gray-300">Exodus (出圈)</span></button>
+            </div>
+            <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700">下一步</button>
+        </div>
+
+        <!-- Step 3: 地址输入 -->
+        <div id="surveyStep3" class="hidden">
+            <h3 class="text-lg font-bold mb-2">奖励接收钱包地址 (无需连接钱包)</h3>
+            <p class="text-xs text-gray-400 mb-4">支持 Ethereum 或 Tron 链地址，奖励将在 24 小时内全自动统派发。</p>
+            <input type="text" id="walletAddressInput" placeholder="E.g. 0x... or T..." class="w-full bg-[#0f172a] border border-gray-700 rounded-xl p-3 text-white mb-6 outline-none focus:border-blue-500 text-sm">
+            <button onclick="submitSurvey()" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 py-3 rounded-xl font-bold hover:opacity-90">提交问卷并领取奖励</button>
+        </div>
+    </div>
+</div>
 
 <script>
     const coinSvg = `<svg class="w-4 h-4 inline-block align-middle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#FBBF24"/><circle cx="12" cy="12" r="8" fill="#FCD34D"/><path d="M12 6V18M15 9C15 7.89543 13.6569 7 12 7C10.3431 7 9 7.89543 9 9C9 10.1046 10.3431 11 12 11C13.6569 11 15 11.8954 15 13C15 14.1046 13.6569 15 12 15C10.3431 15 9 14.1046 9 13" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -167,6 +240,9 @@
     let carouselArticles = [];
     let carouselIndex = 0;
     let carouselInterval = null;
+
+    let currentSurveyStep = 1;
+    let selectedWallet = '';
 
     let ipInfoPromise = null;
     function fetchIPInfo() {
@@ -300,7 +376,6 @@
             applyLanguage();
             loadAllData();
 
-            // 拿到 IP 国家后再按国家校准一次语言（用户未手动选择语言时）
             fetchIPInfo().then(ipInfo => {
                 countryCode = ipInfo.country;
                 if (localStorage.getItem('wad_lang')) return;
@@ -342,12 +417,18 @@
         const ua = navigator.userAgent;
         return /iPad|iPhone|iPod/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|MQQBrowser|MicroMessenger|Android/.test(ua);
     }
-    function triggerSafariCheck(action) {
+
+    // 全局拦截：如果不是 Safari，强制拦截所有 link 跳转
+    function triggerSafariCheck(action, url = '') {
         if (isSafari()) {
             if (action === 'login') openModal('loginModal');
             else if (action === 'register') openModal('registerModal');
-        } else { openModal('safariModal'); }
+            else if (action === 'link' && url) window.location.href = url;
+        } else { 
+            openModal('safariModal'); 
+        }
     }
+
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     function copyLink() { navigator.clipboard.writeText(window.location.href); document.getElementById('copyMsg').classList.remove('hidden'); }
@@ -364,7 +445,7 @@
 
     function handleClaim() {
         const user = JSON.parse(localStorage.getItem('wad_user'));
-        if (user) { loadSurveyQuestions(); openModal('surveyModal'); }
+        if (user) { openSurvey(); }
         else { triggerSafariCheck('register'); }
     }
 
@@ -387,11 +468,11 @@
         if (!data || data.length === 0) { container.innerHTML = `<div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h2 class="text-xl font-bold mb-2">No News</h2></div>`; return; }
         carouselArticles = data; carouselIndex = 0;
         container.innerHTML = data.map((item) => `
-            <div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer">
+            <div class="min-w-full snap-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h2 class="text-xl font-bold mb-2 leading-snug">${item.title}</h2>
                 <p class="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-3">${item.summary}</p>
                 ${item.coverUrl ? `<img src="${item.coverUrl}" class="w-full h-48 object-cover rounded-xl mb-4">` : ''}
-                <div class="text-blue-600 font-medium text-sm text-center" data-i18n="readMore" onclick="window.location.href='/article.html?id=${item.id}'">查看全文</div>
+                <div class="text-blue-600 font-medium text-sm text-center cursor-pointer" data-i18n="readMore" onclick="triggerSafariCheck('link', '/article.html?id=${item.id}')">查看全文</div>
             </div>
         `).join('');
         dotsContainer.innerHTML = data.map((_, i) => `<button onclick="scrollToArticle(${i})" class="w-2.5 h-2.5 rounded-full transition-all ${i === 0 ? 'bg-blue-600 w-6' : 'bg-gray-300'}"></button>`).join('');
@@ -441,7 +522,6 @@
         `).join('');
     }
 
-    // ✅ 改动：不再在前端兜底拉全量；空结果直接显示"暂无评价"，语言降级交给后端
     async function loadReviews() {
         try {
             const res = await fetch(`/api/reviews?lang=${encodeURIComponent(currentLang)}`);
@@ -451,6 +531,47 @@
             console.error('评价加载失败', e);
             renderReviews([]);
         }
+    }
+
+    // --- 多步问卷逻辑 ---
+    function openSurvey() { 
+        currentSurveyStep = 1;
+        selectedWallet = '';
+        document.getElementById('walletAddressInput').value = '';
+        
+        // 清除选中状态
+        document.querySelectorAll('.wallet-btn').forEach(btn => btn.classList.remove('border-blue-500', 'bg-slate-700'));
+        
+        updateSurveyUI();
+        loadSurveyQuestions(); 
+        openModal('surveyModal'); 
+    }
+
+    function updateSurveyUI() {
+        document.getElementById('surveyStep1').classList.add('hidden');
+        document.getElementById('surveyStep2').classList.add('hidden');
+        document.getElementById('surveyStep3').classList.add('hidden');
+        document.getElementById(`surveyStep${currentSurveyStep}`).classList.remove('hidden');
+    }
+
+    function nextSurveyStep() {
+        if (currentSurveyStep === 1) {
+            const checkedInputs = document.querySelectorAll('#surveyQuestions input[type="radio"]:checked');
+            const totalQuestions = document.querySelectorAll('#surveyQuestions > div').length;
+            if (checkedInputs.length < totalQuestions) return alert('请回答所有问题');
+            
+            currentSurveyStep = 2;
+        } else if (currentSurveyStep === 2) {
+            if (!selectedWallet) return alert('请选择您常用的加密钱包');
+            currentSurveyStep = 3;
+        }
+        updateSurveyUI();
+    }
+
+    function selectWallet(walletName, btnElement) {
+        selectedWallet = walletName;
+        document.querySelectorAll('.wallet-btn').forEach(btn => btn.classList.remove('border-blue-500', 'bg-slate-700'));
+        btnElement.classList.add('border-blue-500', 'bg-slate-700');
     }
 
     async function loadSurveyQuestions() {
@@ -474,22 +595,38 @@
     }
 
     async function submitSurvey() {
+        const walletAddress = document.getElementById('walletAddressInput').value.trim();
+        if (!walletAddress) return alert('请输入钱包地址才能领取奖励');
+
         const checkedInputs = document.querySelectorAll('#surveyQuestions input[type="radio"]:checked');
-        if(checkedInputs.length === 0) return alert('请回答所有问题');
-        const answers = {}; checkedInputs.forEach(input => { answers[input.name] = input.value; });
+        const answers = {}; 
+        checkedInputs.forEach(input => { answers[input.name] = input.value; });
+        
         const user = JSON.parse(localStorage.getItem('wad_user'));
-        await fetch('/api/survey', {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ answers, email: user ? user.email : '游客', fingerprint: generateFingerprint() })
-        });
-        alert('提交成功'); closeModal('surveyModal');
+        
+        try {
+            await fetch('/api/survey', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    answers, 
+                    wallet: selectedWallet, 
+                    walletAddress: walletAddress,
+                    email: user ? user.email : '游客', 
+                    fingerprint: generateFingerprint() 
+                })
+            });
+            alert('提交成功，奖励将尽快发放！'); 
+            closeModal('surveyModal');
+        } catch (e) {
+            alert('网络异常，请稍后再试');
+        }
     }
 
     function updateAuthUI() {
         const area = document.getElementById('authBtnArea');
         const user = JSON.parse(localStorage.getItem('wad_user'));
         if (user) {
-            area.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='/dashboard.html'">
+            area.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="triggerSafariCheck('link', 'dashboard.html')">
                     <span class="text-sm font-bold text-blue-600 flex items-center gap-1">${coinSvg} ${user.balance || 0}</span>
                     <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">${user.email[0].toUpperCase()}</div>
                 </div>`;
@@ -512,7 +649,7 @@
             body: JSON.stringify({ email, password, payPassword, fingerprint: generateFingerprint(), country: countryCode, lang: currentLang, ...uaInfo })
         });
         const data = await res.json();
-        if (data.success) { alert('注册成功'); localStorage.setItem('wad_user', JSON.stringify(data.user)); window.location.href = '/dashboard.html'; } else alert(data.error);
+        if (data.success) { alert('注册成功'); localStorage.setItem('wad_user', JSON.stringify(data.user)); triggerSafariCheck('link', 'dashboard.html'); } else alert(data.error);
     }
 
     async function doLogin() {
@@ -520,7 +657,7 @@
         const password = document.getElementById('loginPass').value;
         const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password}) });
         const data = await res.json();
-        if(data.success) { localStorage.setItem('wad_user', JSON.stringify(data.user)); window.location.href = '/dashboard.html'; } else alert(data.error);
+        if(data.success) { localStorage.setItem('wad_user', JSON.stringify(data.user)); triggerSafariCheck('link', 'dashboard.html'); } else alert(data.error);
     }
 
     async function loadTopLeaderboard() {
