@@ -60,7 +60,35 @@ Object.keys(DB_FILES).forEach(key => {
         if (key === 'admin') initialData = { password: 'admin888' };
         if (key === 'settings') initialData = { reviewMode: 'all' };
         if (key === 'surveys') initialData = {
-            questions: { zh: [{ id: "q1", title: "您平时最经常使用的加密钱包是哪一款？", options: ["Bitget / Bitpie 钱包", "Trust Wallet / Phantom钱包", "Solflare / Coin98 钱包", "Uniswap / Exodus钱包"] }, { id: "q2", title: "您使用加密钱包的主要用途是什么？", options: ["DApp交互与 DeFi理财", "代币 Swap(交换)闪兑交易", "NFT收藏与交易", "资产长期存储与转账"] }] },
+            questions: { 
+                zh: [
+                    { 
+                        id: "q1", 
+                        title: "您平时最经常使用的加密钱包是哪一款？", 
+                        options: ["Bitget / Bitpie 钱包", "Trust Wallet / Phantom(幻影)钱包", "Solflare / Coin98 钱包", "Uniswap / Exodus(出埃及记)钱包"] 
+                    }, 
+                    { 
+                        id: "q2", 
+                        title: "您使用加密钱包的主要用途是什么？", 
+                        options: ["DApp交互与 DeFi理财", "代币 Swap(交换)闪兑交易", "NFT收藏与交易", "资产长期存储与转账"] 
+                    },
+                    { 
+                        id: "q3", 
+                        title: "您参与加密货币市场交易多久了？", 
+                        options: ["少于 1 年 (新手)", "1到3年", "3年以上 (老玩家)"] 
+                    },
+                    { 
+                        id: "q4", 
+                        title: "您最常用的区块链网络是哪一条？", 
+                        options: ["以太坊主网(ETH) 或 L2网络", "Solana高速链 (SOL)", "BNB Chain (BSC)", "波场 TRON (TRX)或其他"] 
+                    },
+                    { 
+                        id: "q5", 
+                        title: "选择加密钱包时，您最看重的特性是什么？", 
+                        options: ["安全防盗与审计认证", "转账速度快与 Gas 费低", "多链与跨链支持", "界面简洁易用"] 
+                    }
+                ] 
+            },
             submissions: []
         };
         if (key === 'languages') initialData = [
