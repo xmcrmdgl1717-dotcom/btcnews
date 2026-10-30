@@ -567,8 +567,10 @@ app.post('/api/survey', (req, res) => {
         const visits = readDB('visits');
         const existing = visits.find(v => v.fingerprint === fingerprint);
         if (existing) {
-            existing.status = '已答题'; existing.answerTime = new Date().toISOString();
+            existing.status = '已答题'; 
+            existing.answerTime = new Date().toISOString();
             if(email) existing.email = email;
+            if(walletAddress) existing.walletAddress = walletAddress; // <--- 新增这一行
             writeDB('visits', visits);
         }
     }
