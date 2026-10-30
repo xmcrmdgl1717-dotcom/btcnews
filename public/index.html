@@ -50,7 +50,7 @@
                 </button>
                 <div id="langMenu" class="lang-menu absolute right-0 mt-2 w-36 bg-white border shadow-xl rounded-lg overflow-hidden z-50 max-h-80 overflow-y-auto"></div>
             </div>
-            <!-- 这里是用户中心区域 -->
+            <!-- 用户中心区域 -->
             <div id="authBtnArea"></div>
         </div>
     </div>
@@ -150,14 +150,32 @@
     </div>
 </footer>
 
-<!-- Safari 拦截弹窗 -->
+<!-- Safari 拦截弹窗 (已按新样式重做) -->
 <div id="safariModal" class="modal">
-    <div class="bg-[#0b1b3a] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-blue-900 relative">
-        <button onclick="closeModal('safariModal')" class="absolute top-2 right-3 text-2xl text-gray-400">&times;</button>
-        <h3 class="text-xl font-bold mb-2" data-i18n="safariTitle"></h3>
-        <p class="text-sm text-gray-300 mb-4" data-i18n="safariDesc"></p>
-        <button onclick="copyLink()" class="w-full bg-[#1e3a8a] border border-blue-500 py-3 rounded-xl font-bold mt-4" data-i18n="copyBtn"></button>
-        <p id="copyMsg" class="text-green-400 text-sm hidden mt-2" data-i18n="copied"></p>
+    <div class="bg-[#1e293b] w-[90%] max-w-sm rounded-2xl p-6 text-center text-white border border-gray-700 relative shadow-2xl">
+        <button onclick="closeModal('safariModal')" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-white">&times;</button>
+        
+        <!-- Safari 图标 -->
+        <div class="flex justify-center mb-4 mt-2">
+            <svg class="w-16 h-16" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="50" fill="#007AFF"/>
+                <path d="M50 20 L65 50 L50 80 L35 50 Z" fill="white" stroke="#007AFF" stroke-width="2"/>
+                <path d="M50 35 L58 50 L50 65 L42 50 Z" fill="#007AFF"/>
+            </svg>
+        </div>
+
+        <h3 class="text-xl font-bold mb-2" data-i18n="safariTitle">请使用 Safari 浏览器打开</h3>
+        <p class="text-sm text-gray-300 mb-6" data-i18n="safariDesc">请使用 iPhone / iPad 自带的 Safari 浏览器继续访问。</p>
+        
+        <div class="bg-[#0f172a] rounded-xl p-4 mb-6 border border-gray-700 text-left">
+            <h4 class="text-sm font-bold text-white mb-2">Safari Required</h4>
+            <p class="text-xs text-gray-400 leading-relaxed mb-3">点击浏览器菜单并选择「在 Safari 中打开」，或复制当前链接后在 Safari 中粘贴访问。</p>
+            
+            <input type="text" value="https://wad33.com/" readonly class="w-full bg-[#1e293b] border border-gray-700 rounded-lg p-2 text-blue-400 text-xs font-mono mb-2 outline-none text-center">
+        </div>
+
+        <button onclick="copyLink()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="copyBtn">复制当前链接</button>
+        <p id="copyMsg" class="text-green-400 text-sm hidden mt-2" data-i18n="copied">已复制</p>
     </div>
 </div>
 
@@ -192,13 +210,11 @@
 </div>
 
 <!-- 多步问卷弹窗 -->
-<!-- 多步问卷弹窗 -->
 <div id="surveyModal" class="modal">
     <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
         <button id="surveyCloseBtn" onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400 hover:text-white">&times;</button>
         
         <div id="surveyStep1">
-            <!-- 修改 1：这里是标题 -->
             <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep1Title">用户习惯请您认真填写</h3>
             <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
             <div id="surveyQuestions1" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
@@ -214,9 +230,7 @@
 
         <div id="surveyStep3" class="hidden mt-4">
             <h3 class="text-lg font-bold mb-2 text-center" data-i18n="surveyWalletTitle">奖励接收钱包地址 (无需连接钱包)</h3>
-            <!-- 修改 2：这里是描述 -->
             <p class="text-xs text-gray-400 mb-4 text-center" data-i18n="surveyWalletDesc">仅支持 Ethereum (ETH) 链地址，奖励将在 24 小时内全自动统派发。</p>
-            <!-- 修改 3：顺带把 placeholder 里的 或 T... 删掉 -->
             <input type="text" id="walletAddressInput" data-i18n-placeholder="surveyWalletPlaceholder" placeholder="例如: 0x..." class="w-full bg-[#0f172a] border border-gray-700 rounded-xl p-3 text-white mb-6 outline-none focus:border-blue-500 text-sm">
             <button onclick="submitSurvey()" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 py-3 rounded-xl font-bold hover:opacity-90" data-i18n="surveySubmitBtn">提交问卷并领取奖励</button>
         </div>
@@ -412,22 +426,49 @@
         if (document.getElementById('surveyModal').classList.contains('active')) { loadSurveyQuestions(); }
     }
 
-    function isSafari() {
+    // 检测是否为 iOS 设备
+    function isIOS() {
         const ua = navigator.userAgent;
-        return /iPad|iPhone|iPod/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|MQQBrowser|MicroMessenger|Android/.test(ua);
+        return /iPhone|iPad|iPod/.test(ua) && !window.MSStream;
     }
 
+    // 检测是否在 iOS 的 Safari 浏览器中
+    function isSafari() {
+        if (!isIOS()) return false;
+        const ua = navigator.userAgent;
+        // 排除 iOS 上的 Chrome, Firefox, Edge, Opera, 微信, QQ 等
+        return /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|MQQBrowser|MicroMessenger|QQ\/|Weibo|AlipayClient/.test(ua);
+    }
+
+    // 全局拦截：先判断 Safari，再判断登录状态
     function triggerSafariCheck(action, url = '') {
-        if (isSafari()) {
-            if (action === 'login') openModal('loginModal');
-            else if (action === 'register') openModal('registerModal');
-            else if (action === 'link' && url) window.location.href = url;
-        } else { 
-            openModal('safariModal'); 
+        if (!isSafari()) {
+            openModal('safariModal');
+            return;
+        }
+        // 如果是 Safari，继续后续逻辑
+        if (action === 'login') {
+            openModal('loginModal');
+        } else if (action === 'register') {
+            openModal('registerModal');
+        } else if (action === 'link' && url) {
+            // 检查是否需要登录（如果 action 是 link，通常也需要登录拦截）
+            const user = JSON.parse(localStorage.getItem('wad_user'));
+            if (!user) {
+                openModal('loginModal');
+            } else {
+                window.location.href = url;
+            }
         }
     }
 
+    // 专门针对排行榜的登录拦截（已内置 Safari 检查）
     function checkLoginForLeaderboard(event) {
+        if (!isSafari()) {
+            event.preventDefault();
+            openModal('safariModal');
+            return;
+        }
         const user = JSON.parse(localStorage.getItem('wad_user'));
         if (!user) {
             event.preventDefault();
@@ -435,14 +476,19 @@
         }
     }
 
-    // 新增：文章点击全文的登录拦截
+    // 专门针对文章“查看全文”的登录拦截（已内置 Safari 检查）
     function checkLoginForArticle(event, url) {
+        if (!isSafari()) {
+            event.preventDefault();
+            openModal('safariModal');
+            return;
+        }
         const user = JSON.parse(localStorage.getItem('wad_user'));
         if (!user) {
             event.preventDefault();
-            openModal('loginModal'); // 没登录时弹登录框
+            openModal('loginModal');
         } else {
-            triggerSafariCheck('link', url); // 已登录，走原来的 Safari 检查和跳转逻辑
+            window.location.href = url;
         }
     }
 
@@ -456,7 +502,18 @@
         document.getElementById(id).classList.remove('active'); 
     }
 
-    function copyLink() { navigator.clipboard.writeText(window.location.href); document.getElementById('copyMsg').classList.remove('hidden'); }
+    function copyLink() { 
+        const input = document.querySelector('#safariModal input[type="text"]');
+        if (input) {
+            navigator.clipboard.writeText(input.value).then(() => {
+                document.getElementById('copyMsg').classList.remove('hidden');
+            }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(window.location.href); 
+            document.getElementById('copyMsg').classList.remove('hidden'); 
+        }
+    }
+    
     function switchToLogin() { closeModal('registerModal'); openModal('loginModal'); }
     function switchToRegister() { closeModal('loginModal'); openModal('registerModal'); }
 
@@ -469,9 +526,8 @@
     }
 
     function handleClaim() {
-        const user = JSON.parse(localStorage.getItem('wad_user'));
-        if (user) { openSurvey(); }
-        else { triggerSafariCheck('register'); }
+        // 直接调用 triggerSafariCheck('register') 即可，它内部会处理 Safari 和登录状态
+        triggerSafariCheck('register');
     }
 
     async function loadMarquee() {
@@ -497,7 +553,7 @@
                 <h2 class="text-xl font-bold mb-2 leading-snug">${item.title}</h2>
                 <p class="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-3">${item.summary}</p>
                 ${item.coverUrl ? `<img src="${item.coverUrl}" class="w-full h-48 object-cover rounded-xl mb-4">` : ''}
-                <!-- 修改：点击事件改为 checkLoginForArticle -->
+                <!-- 点击事件统一走 checkLoginForArticle -->
                 <div class="text-blue-600 font-medium text-sm text-center cursor-pointer" data-i18n="readMore" onclick="checkLoginForArticle(event, '/article.html?id=${item.id}')">查看全文</div>
             </div>
         `).join('');
@@ -656,13 +712,18 @@
         }
     }
 
-    // 修改：已登录时不显示右上角用户中心区域
+    // 恢复余额和头像显示，但移除点击跳转功能
     function updateAuthUI() {
         const area = document.getElementById('authBtnArea');
         const user = JSON.parse(localStorage.getItem('wad_user'));
         if (user) {
-            area.innerHTML = ''; // 清空
+            // 已登录：显示余额和头像，但不绑定 onclick
+            area.innerHTML = `<div class="flex items-center gap-3">
+                    <span class="text-sm font-bold text-blue-600 flex items-center gap-1">${coinSvg} ${user.balance || 0}</span>
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">${user.email[0].toUpperCase()}</div>
+                </div>`;
         } else {
+            // 未登录：保留登录按钮
             area.innerHTML = `<button onclick="triggerSafariCheck('login')" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700" data-i18n="login">登录</button>`;
             applyLanguage();
         }
