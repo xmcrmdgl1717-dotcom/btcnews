@@ -394,13 +394,26 @@
     let currentEditArticleGroupId = null;
     let currentEditArticleMainLang = 'zh';
 
-    function formatTranslateError(data) {
+        function formatTranslateError(data) {
         let msg = data.error || '操作失败';
         if (data.reason) msg += '\n原因: ' + data.reason;
+
         if (Array.isArray(data.details) && data.details.length) {
             msg += '\n\n各服务商失败明细:';
             data.details.forEach(d => {
-                msg += `\n- ${d.provider} [${d.type}]: ${d.message}`;
+                // 将原始错误信息中的网址等精简掉，只保留核心原因
+                let shortMsg = d.message;
+                if (shortMsg.includes('portal.libretranslate.com') || shortMsg.includes('api key')) {
+                    shortMsg = '官方接口需要 API Key，已自动切换其他节点';
+                } else if (shortMsg.includes('unsupported')) {
+                    shortMsg = '不支持该语言对 (已跳过)';
+                } else if (shortMsg.includes('EMPTY_RESULT') || shortMsg.includes('返回空结果')) {
+                    shortMsg = '返回空结果 (已跳过)';
+                } else if (shortMsg.includes('fetch failed') || shortMsg.includes('网络')) {
+                    shortMsg = '网络连接失败';
+                }
+
+                msg += `\n- ${d.provider}: ${shortMsg}`;
             });
         }
         return msg;
