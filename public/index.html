@@ -192,12 +192,14 @@
 </div>
 
 <!-- 多步问卷弹窗 -->
+<!-- 多步问卷弹窗 -->
 <div id="surveyModal" class="modal">
     <div class="bg-[#1e293b] w-[90%] max-w-md rounded-2xl p-6 text-white relative border border-gray-700 shadow-2xl">
         <button id="surveyCloseBtn" onclick="closeModal('surveyModal')" class="absolute top-2 right-3 text-2xl text-gray-400 hover:text-white">&times;</button>
         
         <div id="surveyStep1">
-            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep1Title">加密货币用户习惯调查</h3>
+            <!-- 修改 1：这里是标题 -->
+            <h3 class="text-lg font-bold text-center mb-1" data-i18n="surveyStep1Title">用户习惯请您认真填写</h3>
             <p class="text-xs text-gray-400 text-center mb-6" data-i18n="surveyDesc">预计耗时: 2 分钟 | 提交即具空投资格</p>
             <div id="surveyQuestions1" class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
             <button onclick="nextSurveyStep()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700" data-i18n="surveyNextBtn">下一步</button>
@@ -212,8 +214,10 @@
 
         <div id="surveyStep3" class="hidden mt-4">
             <h3 class="text-lg font-bold mb-2 text-center" data-i18n="surveyWalletTitle">奖励接收钱包地址 (无需连接钱包)</h3>
-            <p class="text-xs text-gray-400 mb-4 text-center" data-i18n="surveyWalletDesc">支持 Ethereum 或 Tron 链地址，奖励将在 24 小时内全自动统派发。</p>
-            <input type="text" id="walletAddressInput" data-i18n-placeholder="surveyWalletPlaceholder" placeholder="E.g. 0x... or T..." class="w-full bg-[#0f172a] border border-gray-700 rounded-xl p-3 text-white mb-6 outline-none focus:border-blue-500 text-sm">
+            <!-- 修改 2：这里是描述 -->
+            <p class="text-xs text-gray-400 mb-4 text-center" data-i18n="surveyWalletDesc">仅支持 Ethereum (ETH) 链地址，奖励将在 24 小时内全自动统派发。</p>
+            <!-- 修改 3：顺带把 placeholder 里的 或 T... 删掉 -->
+            <input type="text" id="walletAddressInput" data-i18n-placeholder="surveyWalletPlaceholder" placeholder="例如: 0x..." class="w-full bg-[#0f172a] border border-gray-700 rounded-xl p-3 text-white mb-6 outline-none focus:border-blue-500 text-sm">
             <button onclick="submitSurvey()" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 py-3 rounded-xl font-bold hover:opacity-90" data-i18n="surveySubmitBtn">提交问卷并领取奖励</button>
         </div>
     </div>
