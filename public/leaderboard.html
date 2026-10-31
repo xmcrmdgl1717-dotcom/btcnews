@@ -11,7 +11,40 @@
 </style>
 </head>
 <body class="bg-[#f3f4f9] font-sans text-gray-800">
-<!-- ... 原有 HTML 结构不变 ... -->
+
+<header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl italic">W</div>
+            <span class="font-extrabold text-xl tracking-tight text-[#0A3466]">W-Airdrop</span>
+        </a>
+        <a href="/" class="text-sm font-medium text-gray-600 hover:text-blue-600" data-i18n="backHome">返回首页</a>
+    </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2" data-i18n="lbTitle">幸运用户</h1>
+        <p class="text-gray-500 text-sm" data-i18n="lbDesc">与其他用户竞争，登上每日和每月排行榜赢取额外金币。</p>
+    </div>
+
+    <div class="flex justify-center gap-4 mb-8">
+        <button onclick="loadLeaderboard('daily')" id="btn-daily" class="tab-btn active" data-i18n="daily">每日</button>
+        <button onclick="loadLeaderboard('monthly')" id="btn-monthly" class="tab-btn" data-i18n="monthly">每月</button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <span data-i18n="rankUser">排名 / 用户</span>
+            <span data-i18n="earnings">收益</span>
+        </div>
+        <div id="leaderboardList" class="divide-y divide-gray-50">
+            <!-- 数据由 JS 渲染 -->
+            <div class="p-8 text-center text-gray-400">Loading...</div>
+        </div>
+    </div>
+</main>
+
 <script src="/js/leaderboard.js"></script>
 </body>
 </html>

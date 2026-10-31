@@ -607,6 +607,49 @@ app.get('/api/admin/data', auth, (req, res) => {
     });
 });
 
+app.get('/api/admin/stats', auth, (req, res) => {
+    try {
+        const STATS_FILE = path.join(DB_DIR, 'stats.json');
+        if (!fs.existsSync(STATS_FILE)) return res.json({ reqCount: 0, charCount: 0 });
+        res.json(JSON.parse(fs.readFileSync(STATS_FILE, 'utf8')));
+    } catch (e) {
+        res.status(500).json({ error: '读取统计失败' });
+    }
+});
+
+app.get('/api/admin/translation-logs', auth, (req, res) => {
+    try {
+        const LOGS_FILE = path.join(DB_DIR, 'translation_logs.json');
+        if (!fs.existsSync(LOGS_FILE)) return res.json({ totalCount: 0, totalChars: 0, logs: [] });
+        
+        let logs = JSON.parse(fs.readFileSync(LOGS_FILE, 'utf8'));
+        const { startDate, endDate, apiKey, keyword } = req.query;
+        
+        // 使用字符串截取（YYYY-MM-DD）比较，完美避开服务器时区和浏览器时区不一致的问题
+        if (startDate) {
+            logs = logs.filter(l => l.time.substring(0, 10) >= startDate);
+        }
+        if (endDate) {
+            logs = logs.filter(l => l.time.substring(0, 10) <= endDate);
+        }
+        if (apiKey && apiKey !== 'all') {
+            logs = logs.filter(l => l.apiKey === apiKey);
+        }
+        if (keyword) {
+            logs = logs.filter(l => l.apiKey.includes(keyword) || l.targetLang.toLowerCase().includes(keyword.toLowerCase()));
+        }
+
+        const totalCount = logs.length;
+        const totalChars = logs.reduce((sum, l) => sum + (Number(l.chars) || 0), 0);
+        logs.sort((a, b) => new Date(b.time) - new Date(a.time));
+        
+        res.json({ totalCount, totalChars, logs });
+    } catch (e) {
+        console.error('读取翻译日志失败:', e);
+        res.status(500).json({ error: '获取日志失败' });
+    }
+});
+
 app.put('/api/admin/settings', auth, (req, res) => {
     const settings = readDB('settings');
     const newSettings = { ...settings, ...req.body };
@@ -614,6 +657,7 @@ app.put('/api/admin/settings', auth, (req, res) => {
     res.json({ success: true });
 });
 
+// ====== 文章相关 (批量翻译优化) ======
 app.put('/api/admin/article/group/:groupId', auth, async (req, res) => {
     const groupId = req.params.groupId;
     const { sourceLang, targetLangs, title, summary, content, coverUrl } = req.body;
@@ -639,23 +683,28 @@ app.put('/api/admin/article/group/:groupId', auth, async (req, res) => {
     try {
         for (let lang of foreignLangs) {
             const googleLang = lang.split('-')[0];
-            const [tTitle, tSummary, tContent] = await Promise.all([
-                translateWithPolling(title, googleLang, sourceLang),
-                translateWithPolling(summary, googleLang, sourceLang),
-                translateWithPolling(content, googleLang, sourceLang)
-            ]);
+            
+            // 批量翻译：把标题、摘要、内容打包成数组一次性发送
+            const textsToTranslate = [title, summary, content];
+            const translatedTexts = await translateWithPolling(textsToTranslate, googleLang, sourceLang);
             
             let existing = groupArticles.find(a => a.lang === lang);
             if (existing) {
-                existing.title = tTitle;
-                existing.summary = tSummary;
-                existing.content = tContent;
+                existing.title = translatedTexts[0];
+                existing.summary = translatedTexts[1];
+                existing.content = translatedTexts[2];
                 existing.coverUrl = coverUrl;
                 existing.time = new Date().toISOString();
             } else {
-                articles.push({ id: uuidv4(), groupId, lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });
+                articles.push({ 
+                    id: uuidv4(), groupId, lang, 
+                    title: translatedTexts[0], 
+                    summary: translatedTexts[1], 
+                    content: translatedTexts[2], 
+                    coverUrl, time: new Date().toISOString() 
+                });
             }
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 1000));
         }
         writeDB('articles', articles);
         res.json({ success: true });
@@ -676,6 +725,7 @@ app.delete('/api/admin/survey/group', auth, (req, res) => {
     res.json({ success: true });
 });
 
+// ====== 问卷 (批量翻译优化) ======
 app.post('/api/admin/survey/translate', auth, async (req, res) => {
     const { questions, targetLangs, sourceLang = 'zh' } = req.body;
     const surveys = readDB('surveys');
@@ -685,16 +735,31 @@ app.post('/api/admin/survey/translate', auth, async (req, res) => {
     try {
         for (let lang of foreignLangs) {
             const googleLang = lang.split('-')[0];
-            const translated = [];
+            
+            // 批量翻译：把所有题目和选项提取成数组
+            const textsToTranslate = [];
             for (let q of questions) {
-                const tTitle = await translateWithPolling(q.title, googleLang, sourceLang);
+                textsToTranslate.push(q.title);
+                for (let opt of q.options) {
+                    textsToTranslate.push(opt);
+                }
+            }
+            
+            const translatedTexts = await translateWithPolling(textsToTranslate, googleLang, sourceLang);
+            
+            // 重组翻译结果
+            const translated = [];
+            let textIndex = 0;
+            for (let q of questions) {
+                const tTitle = translatedTexts[textIndex++];
                 const tOptions = [];
                 for (let opt of q.options) {
-                    tOptions.push(await translateWithPolling(opt, googleLang, sourceLang));
+                    tOptions.push(translatedTexts[textIndex++]);
                 }
                 translated.push({ id: q.id, title: tTitle, options: tOptions });
             }
             surveys.questions[lang] = translated;
+            await new Promise(r => setTimeout(r, 1000));
         }
         writeDB('surveys', surveys);
         res.json({ success: true });
@@ -725,6 +790,7 @@ app.put('/api/admin/languages/:code', auth, (req, res) => {
     else res.status(404).json({ error: '语言不存在' });
 });
 
+// ====== 文章新建 (批量翻译优化) ======
 app.post('/api/admin/article/translate', auth, async (req, res) => {
     const { title, summary, content, coverUrl, targetLangs } = req.body;
     const articles = readDB('articles');
@@ -735,13 +801,18 @@ app.post('/api/admin/article/translate', auth, async (req, res) => {
         const translatedArticles = [];
         for (let lang of foreignLangs) {
             const googleLang = lang.split('-')[0];
-            const [tTitle, tSummary, tContent] = await Promise.all([
-                translateWithPolling(title, googleLang, 'zh'),
-                translateWithPolling(summary, googleLang, 'zh'),
-                translateWithPolling(content, googleLang, 'zh')
-            ]);
-            translatedArticles.push({ id: uuidv4(), groupId, lang, title: tTitle, summary: tSummary, content: tContent, coverUrl, time: new Date().toISOString() });
-            await new Promise(r => setTimeout(r, 500));
+            
+            const textsToTranslate = [title, summary, content];
+            const translatedTexts = await translateWithPolling(textsToTranslate, googleLang, 'zh');
+            
+            translatedArticles.push({ 
+                id: uuidv4(), groupId, lang, 
+                title: translatedTexts[0], 
+                summary: translatedTexts[1], 
+                content: translatedTexts[2], 
+                coverUrl, time: new Date().toISOString() 
+            });
+            await new Promise(r => setTimeout(r, 1000));
         }
         articles.push(...translatedArticles);
         writeDB('articles', articles);
@@ -785,6 +856,7 @@ app.delete('/api/admin/partners/:id', auth, (req, res) => {
     let partners = readDB('partners').filter(p => p.id !== req.params.id); writeDB('partners', partners); res.json({ success: true });
 });
 
+// ====== 评论 (批量翻译优化) ======
 app.post('/api/admin/reviews', auth, async (req, res) => {
     const { targetLangs, stars, name, text } = req.body;
     const reviews = readDB('reviews');
@@ -799,10 +871,17 @@ app.post('/api/admin/reviews', auth, async (req, res) => {
 
         for (let lang of foreignLangs) {
             const googleLang = lang.split('-')[0];
-            const tText = await translateWithPolling(text, googleLang, sourceLang);
-            const tName = await translateWithPolling(name, googleLang, sourceLang);
-            reviews.push({ id: uuidv4(), groupId, lang, stars: Number(stars) || 5, name: tName, text: tText });
-            await new Promise(r => setTimeout(r, 300));
+            
+            const textsToTranslate = [name, text];
+            const translatedTexts = await translateWithPolling(textsToTranslate, googleLang, sourceLang);
+            
+            reviews.push({ 
+                id: uuidv4(), groupId, lang, 
+                stars: Number(stars) || 5, 
+                name: translatedTexts[0], 
+                text: translatedTexts[1] 
+            });
+            await new Promise(r => setTimeout(r, 1000));
         }
 
         writeDB('reviews', reviews);

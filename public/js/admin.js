@@ -10,20 +10,20 @@ const ADMIN_I18N = {
     zh: {
         navDashboard: '📊 数据汇总', navUsers: '👥 用户管理', navArticles: '📝 文章管理',
         navReviews: '💬 评论管理', navSurveys: '📋 问卷管理', navOffers: '🎁 优惠管理',
-        navPartners: '🤝 合作墙管理', navLanguages: '🌐 多语言管理', navSettings: '⚙️ 系统设置',
+        navPartners: '🤝 合作墙管理', navLanguages: '🌐 多语言管理', navTranslationLogs: '📈 翻译汇总', navSettings: '⚙️ 系统设置',
         changePwd: '修改密码', logout: '退出登录', loginTitle: '后台登录', loginPlaceholder: '请输入后台密码', loginBtn: '登录',
         pageDashboard: '数据汇总', pageUsers: '用户管理', pageArticles: '文章管理', pageReviews: '评论管理',
         pageSurveys: '问卷管理', pageOffers: '优惠管理', pagePartners: '合作墙管理', pageLanguages: '多语言管理',
-        pageSettings: '系统设置'
+        pageTranslationLogs: '翻译汇总', pageSettings: '系统设置'
     },
     en: {
         navDashboard: '📊 Dashboard', navUsers: '👥 Users', navArticles: '📝 Articles',
         navReviews: '💬 Reviews', navSurveys: '📋 Surveys', navOffers: '🎁 Offers',
-        navPartners: '🤝 Partners', navLanguages: '🌐 Languages', navSettings: '⚙️ Settings',
+        navPartners: '🤝 Partners', navLanguages: '🌐 Languages', navTranslationLogs: '📈 Trans Logs', navSettings: '⚙️ Settings',
         changePwd: 'Change Password', logout: 'Logout', loginTitle: 'Admin Login', loginPlaceholder: 'Enter admin password', loginBtn: 'Login',
         pageDashboard: 'Dashboard', pageUsers: 'Users', pageArticles: 'Articles', pageReviews: 'Reviews',
         pageSurveys: 'Surveys', pageOffers: 'Offers', pagePartners: 'Partners', pageLanguages: 'Languages',
-        pageSettings: 'Settings'
+        pageTranslationLogs: 'Translation Logs', pageSettings: 'Settings'
     }
 };
 let adminLang = localStorage.getItem('wad_admin_lang') || 'zh';
@@ -35,10 +35,6 @@ function formatTranslateError(data) {
         msg += '\n\n各服务商失败明细:';
         data.details.forEach(d => {
             let shortMsg = d.message;
-            if (shortMsg.includes('portal.libretranslate.com') || shortMsg.includes('api key')) shortMsg = '官方接口需要 API Key，已自动切换其他节点';
-            else if (shortMsg.includes('unsupported')) shortMsg = '不支持该语言对 (已跳过)';
-            else if (shortMsg.includes('EMPTY_RESULT') || shortMsg.includes('返回空结果')) shortMsg = '返回空结果 (已跳过)';
-            else if (shortMsg.includes('fetch failed') || shortMsg.includes('网络')) shortMsg = '网络连接失败';
             msg += `\n- ${d.provider}: ${shortMsg}`;
         });
     }
@@ -120,6 +116,11 @@ function switchTab(tabId, el) {
     const navKey = el.getAttribute('data-i18n');
     const pageKey = navKey ? navKey.replace(/^nav/, 'page') : '';
     document.getElementById('pageTitle').innerText = dict[pageKey] || el.innerText;
+    
+    if (tabId === 'translogs') {
+        initLogDates();
+        loadTranslationLogs();
+    }
 }
 
 function openChangePwd() { document.getElementById('changePwdModal').classList.add('active'); }
@@ -134,6 +135,64 @@ async function uploadImage(file) {
     const formData = new FormData(); formData.append('image', file);
     const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'x-admin-pwd': adminPwd }, body: formData });
     const data = await res.json(); return data.url;
+}
+
+/* ================= 翻译汇总逻辑 ================= */
+function initLogDates() {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 30); // 默认展示最近 30 天
+    if (!document.getElementById('logEndDate').value) {
+        document.getElementById('logEndDate').value = end.toISOString().split('T')[0];
+        document.getElementById('logStartDate').value = start.toISOString().split('T')[0];
+    }
+}
+
+async function loadTranslationLogs() {
+    const startDate = document.getElementById('logStartDate').value;
+    const endDate = document.getElementById('logEndDate').value;
+    const apiKey = document.getElementById('logApiKey').value;
+    const keyword = document.getElementById('logKeyword').value.trim();
+
+    let url = `/api/admin/translation-logs?startDate=${startDate}&endDate=${endDate}&apiKey=${apiKey}`;
+    if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+
+    try {
+        const res = await fetch(url, { headers: { 'x-admin-pwd': adminPwd } });
+        const data = await res.json();
+        
+        document.getElementById('logTotalCount').innerText = data.totalCount.toLocaleString();
+        document.getElementById('logTotalChars').innerText = data.totalChars.toLocaleString();
+
+        // 更新 Key 下拉框
+        const keySelect = document.getElementById('logApiKey');
+        const currentVal = keySelect.value;
+        const uniqueKeys = [...new Set(data.logs.map(l => l.apiKey))];
+        keySelect.innerHTML = '<option value="all">全部 Key</option>' + uniqueKeys.map(k => `<option value="${k}">${k}</option>`).join('');
+        if (uniqueKeys.includes(currentVal)) keySelect.value = currentVal;
+
+        // 渲染表格
+        document.getElementById('translationLogList').innerHTML = data.logs.map(l => `
+            <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800">
+                <td class="p-4 whitespace-nowrap text-gray-500">${new Date(l.time).toLocaleString()}</td>
+                <td class="p-4 font-mono text-blue-500">${l.apiKey}</td>
+                <td class="p-4"><span class="bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs font-bold">${l.targetLang}</span></td>
+                <td class="p-4 text-right font-bold text-green-600">${Number(l.chars).toLocaleString()}</td>
+            </tr>
+        `).join('') || '<tr><td colspan="4" class="text-center py-8 text-gray-500">暂无数据</td></tr>';
+
+    } catch (e) {
+        alert('查询失败');
+    }
+}
+
+function resetTranslationLogs() {
+    document.getElementById('logStartDate').value = '';
+    document.getElementById('logEndDate').value = '';
+    document.getElementById('logApiKey').value = 'all';
+    document.getElementById('logKeyword').value = '';
+    initLogDates();
+    loadTranslationLogs();
 }
 
 /* ================= 表单与渲染逻辑 ================= */
@@ -432,6 +491,18 @@ async function fetchData() {
     currentReviewMode = settings.reviewMode || 'all';
     updateReviewModeButtons(currentReviewMode);
 
+    document.getElementById('deeplKey1').value = settings.deeplKey1 || '';
+    document.getElementById('deeplKey2').value = settings.deeplKey2 || '';
+
+    try {
+        const statsRes = await fetch('/api/admin/stats', { headers: { 'x-admin-pwd': adminPwd } });
+        if (statsRes.ok) {
+            const stats = await statsRes.json();
+            document.getElementById('statTransCount').innerText = (stats.reqCount || 0).toLocaleString();
+            document.getElementById('statTransChars').innerText = (stats.charCount || 0).toLocaleString();
+        }
+    } catch(e) {}
+
     const logoImg = document.getElementById('currentSafariLogo'); const noLogo = document.getElementById('noSafariLogo');
     if (settings.safariLogo) {
         logoImg.src = settings.safariLogo; logoImg.classList.remove('hidden'); if(noLogo) noLogo.classList.add('hidden');
@@ -442,6 +513,20 @@ async function fetchData() {
     document.getElementById('offerList').innerHTML = data.offers.map(o => `<tr><td class="p-4"><div class="w-6 h-6 rounded" style="background-color: ${o.color}"></div></td><td class="p-4">${o.category}</td><td class="p-4 font-bold">${o.title}</td><td class="p-4 text-yellow-600">${o.reward}</td><td class="p-4"><button onclick="deleteOffer('${o.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
     document.getElementById('partnerList').innerHTML = data.partners.map(p => `<tr><td class="p-4">${p.imageUrl ? `<img src="${p.imageUrl}" class="h-8 w-auto object-contain">` : '<span class="text-gray-400">无图</span>'}</td><td class="p-4 font-bold">${p.name}</td><td class="p-4"><button onclick="editPartner('${p.id}')" class="text-blue-500 hover:underline mr-2">编辑</button><button onclick="deletePartner('${p.id}')" class="text-red-500 hover:underline">删除</button></td></tr>`).join('');
     document.getElementById('languageList').innerHTML = data.languages.map(l => `<tr><td class="p-4 font-bold">${l.code}</td><td class="p-4">${l.flag} ${l.name}</td><td class="p-4"><button onclick="toggleLangStatus('${l.code}', ${l.active})" class="px-3 py-1 rounded text-xs font-bold ${l.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300'}">${l.active ? '启用中' : '已禁用'}</button></td><td class="p-4"><button onclick="openEditLang('${l.code}')" class="text-blue-500 hover:underline">编辑字典</button></td></tr>`).join('');
+}
+
+async function saveDeepLKeys() {
+    const deeplKey1 = document.getElementById('deeplKey1').value.trim();
+    const deeplKey2 = document.getElementById('deeplKey2').value.trim();
+    try {
+        const res = await fetch('/api/admin/settings', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-admin-pwd': adminPwd },
+            body: JSON.stringify({ deeplKey1, deeplKey2 })
+        });
+        if (res.ok) alert('DeepL 密钥保存成功！');
+        else alert('保存失败');
+    } catch (e) { alert('网络错误'); }
 }
 
 function editArticleGroup(groupId) {

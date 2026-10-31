@@ -36,14 +36,17 @@ async function loadLeaderboard(period) {
             else if (index === 1) { rankClass = 'text-slate-400 font-extrabold text-lg'; avatarClass = 'bg-slate-200 text-slate-600'; }
             else if (index === 2) { rankClass = 'text-orange-400 font-extrabold text-lg'; avatarClass = 'bg-orange-100 text-orange-700'; }
 
+            // 防错：强制转为数字后再格式化
+            const amountStr = (Number(user.amount) || 0).toLocaleString();
+
             html += `<div class="flex justify-between items-center p-4 hover:bg-gray-50 transition-colors ${user.isReal ? 'bg-blue-50/30' : ''}">
                     <div class="flex items-center gap-4">
                         <span class="w-6 text-center ${rankClass}">#${index + 1}</span>
-                        <div class="w-10 h-10 rounded-full ${avatarClass} flex items-center justify-center font-bold text-sm">${user.avatar}</div>
+                        <div class="w-10 h-10 rounded-full ${avatarClass} flex items-center justify-center font-bold text-sm">${user.avatar || 'U'}</div>
                         <div><span class="font-medium text-sm text-gray-900">${user.name}</span>
                         ${user.isReal ? `<span class="ml-2 text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded" data-i18n="you">${currentDict.you || '你'}</span>` : ''}</div>
                     </div>
-                    <span class="font-bold text-yellow-500 text-sm flex items-center gap-1">${coinSvg} ${user.amount.toLocaleString()}</span>
+                    <span class="font-bold text-yellow-500 text-sm flex items-center gap-1">${coinSvg} ${amountStr}</span>
                 </div>`;
         });
         listContainer.innerHTML = html;
