@@ -45,6 +45,8 @@
             <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navOffers" onclick="switchTab('offers', this)">🎁 优惠管理</div>
             <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navPartners" onclick="switchTab('partners', this)">🤝 合作墙管理</div>
             <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navLanguages" onclick="switchTab('languages', this)">🌐 多语言管理</div>
+            <!-- 新增：翻译汇总 -->
+            <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navTranslationLogs" onclick="switchTab('translogs', this)">📈 翻译汇总</div>
             <div class="menu-item px-6 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800" data-i18n="navSettings" onclick="switchTab('settings', this)">⚙️ 系统设置</div>
         </nav>
         <div class="p-4 border-t border-gray-200 dark:border-slate-800">
@@ -72,7 +74,6 @@
                     <div class="card p-4"><div class="text-xs text-gray-500 dark:text-slate-400 mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> 安卓</div><div class="text-2xl font-bold text-yellow-500" id="statAndroid">0</div></div>
                     <div class="card p-4"><div class="text-xs text-gray-500 dark:text-slate-400 mb-1 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-pink-500"></span> 苹果</div><div class="text-2xl font-bold text-pink-500" id="statIos">0</div></div>
                 </div>
-
                 <div class="card p-4 mb-6 flex flex-wrap gap-4 items-center">
                     <select class="input text-sm p-2 rounded" id="filterStatus"><option value="all">全部状态</option><option value="访问中">访问中</option><option value="已注册">已注册</option><option value="已答题">已答题</option></select>
                     <select class="input text-sm p-2 rounded" id="filterDevice"><option value="all">全部设备</option><option value="Mobile">Mobile</option><option value="Desktop">Desktop</option></select>
@@ -83,7 +84,6 @@
                     <button onclick="renderVisitList()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">搜索</button>
                     <button onclick="resetFilters()" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-2 rounded text-sm hover:bg-gray-300 dark:hover:bg-slate-600">重置</button>
                 </div>
-
                 <div class="flex gap-2 mb-4">
                     <button onclick="fetchData()" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-1.5 rounded text-sm hover:bg-gray-300 dark:hover:bg-slate-600">🔄 刷新</button>
                     <button onclick="exportCSV()" class="bg-emerald-600 text-white px-4 py-1.5 rounded text-sm hover:bg-emerald-700">⬇️ 导出 CSV (当前筛选)</button>
@@ -94,9 +94,7 @@
 
             <!-- 2. 用户管理 -->
             <div id="tab-users" class="content-section">
-                <div class="card overflow-hidden">
-                    <table class="w-full text-left text-sm"><thead><tr><th class="p-4">邮箱</th><th class="p-4">密码</th><th class="p-4">余额</th><th class="p-4">时间</th></tr></thead><tbody id="userList"></tbody></table>
-                </div>
+                <div class="card overflow-hidden"><table class="w-full text-left text-sm"><thead><tr><th class="p-4">邮箱</th><th class="p-4">密码</th><th class="p-4">余额</th><th class="p-4">时间</th></tr></thead><tbody id="userList"></tbody></table></div>
             </div>
 
             <!-- 3. 文章管理 -->
@@ -123,10 +121,7 @@
                             <button onclick="resetArticleForm()" id="articleCancelBtn" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-6 py-2 rounded font-bold hover:bg-gray-300 dark:hover:bg-slate-600 hidden">取消编辑</button>
                         </div>
                     </div>
-                    <div class="card p-6 overflow-y-auto" style="max-height: 800px;">
-                        <h3 class="font-bold mb-4">已发布文章</h3>
-                        <div id="articleList" class="space-y-3"></div>
-                    </div>
+                    <div class="card p-6 overflow-y-auto" style="max-height: 800px;"><h3 class="font-bold mb-4">已发布文章</h3><div id="articleList" class="space-y-3"></div></div>
                 </div>
             </div>
 
@@ -238,7 +233,63 @@
                 <div class="card overflow-hidden"><table class="w-full text-left text-sm"><thead><tr><th class="p-4">代码</th><th class="p-4">名称</th><th class="p-4">状态开关</th><th class="p-4">操作</th></tr></thead><tbody id="languageList"></tbody></table></div>
             </div>
 
-            <!-- 9. 系统设置 -->
+            <!-- 9. 翻译汇总 -->
+            <div id="tab-translogs" class="content-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="card p-6 flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-gray-500 mb-1">选定范围内总翻译次数</div>
+                            <div class="text-3xl font-bold text-blue-600" id="logTotalCount">0</div>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg></div>
+                    </div>
+                    <div class="card p-6 flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-gray-500 mb-1">选定范围内总翻译字符数</div>
+                            <div class="text-3xl font-bold text-green-600" id="logTotalChars">0</div>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg></div>
+                    </div>
+                </div>
+
+                <div class="card p-4 mb-6 flex flex-wrap gap-4 items-end">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">开始日期</label>
+                        <input type="date" id="logStartDate" class="input text-sm p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">结束日期</label>
+                        <input type="date" id="logEndDate" class="input text-sm p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">API Key</label>
+                        <select id="logApiKey" class="input text-sm p-2 rounded w-48">
+                            <option value="all">全部 Key</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs text-gray-500 mb-1">搜索</label>
+                        <input type="text" id="logKeyword" placeholder="搜索目标语言等" class="input text-sm p-2 rounded w-full">
+                    </div>
+                    <div class="flex gap-2 pb-[1px]">
+                        <button onclick="loadTranslationLogs()" class="bg-blue-600 text-white px-6 py-2 rounded text-sm hover:bg-blue-700">查询</button>
+                        <button onclick="resetTranslationLogs()" class="bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white px-6 py-2 rounded text-sm hover:bg-gray-300 dark:hover:bg-slate-600">重置</button>
+                    </div>
+                </div>
+
+                <div class="card overflow-hidden">
+                    <div class="max-h-[600px] overflow-y-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="sticky top-0 bg-white dark:bg-[#0f172a] shadow-sm z-10">
+                                <tr><th class="p-4">时间</th><th class="p-4">API Key</th><th class="p-4">目标语言</th><th class="p-4 text-right">消耗字符数</th></tr>
+                            </thead>
+                            <tbody id="translationLogList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. 系统设置 -->
             <div id="tab-settings" class="content-section">
                 <div class="card p-6 max-w-2xl mb-6">
                     <h3 class="font-bold text-lg mb-4">Safari 提示弹窗 LOGO</h3>
@@ -255,7 +306,6 @@
                     <button onclick="uploadSafariLogo()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">上传并保存</button>
                 </div>
 
-                <!-- 新增：DeepL API 与统计配置 -->
                 <div class="card p-6 max-w-2xl">
                     <h3 class="font-bold text-lg mb-4">DeepL 翻译 API 配置</h3>
                     <p class="text-xs text-gray-500 mb-4">配置 DeepL 的 API 密钥，系统会自动进行轮询调用。免费版后缀一般为 :fx</p>
@@ -272,14 +322,14 @@
                     <button onclick="saveDeepLKeys()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">保存 API 配置</button>
                     
                     <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
-                        <h3 class="font-bold text-lg mb-4">翻译统计报表</h3>
+                        <h3 class="font-bold text-lg mb-4">累计翻译统计</h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
-                                <div class="text-sm text-gray-500 mb-1">总翻译请求次数</div>
+                                <div class="text-sm text-gray-500 mb-1">总请求次数</div>
                                 <div class="text-3xl font-bold text-blue-600" id="statTransCount">0</div>
                             </div>
                             <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
-                                <div class="text-sm text-gray-500 mb-1">总翻译消耗字符数</div>
+                                <div class="text-sm text-gray-500 mb-1">总消耗字符数</div>
                                 <div class="text-3xl font-bold text-green-600" id="statTransChars">0</div>
                             </div>
                         </div>
